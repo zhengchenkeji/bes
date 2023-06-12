@@ -3,3 +3,5 @@ target/
 *.log
 .idea/
 node_modules/
+.svn/
+.vscode/
