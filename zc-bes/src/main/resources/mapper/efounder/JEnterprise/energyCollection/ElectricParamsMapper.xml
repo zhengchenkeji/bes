@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zc.efounder.JEnterprise.mapper.energyCollection.ElectricParamsMapper">
+
+    <resultMap type="ElectricParams" id="ElectricParamsResult">
+        <result property="id" column="id"/>
+        <result property="code" column="code"/>
+        <result property="energyCode" column="energy_code"/>
+        <result property="energyName" column="energy_name"/>
+        <result property="name" column="name"/>
+        <result property="offsetAddress" column="offset_address"/>
+        <result property="dataLength" column="data_length"/>
+        <result property="dataEncodeType" column="data_encode_type"/>
+        <result property="unit" column="unit"/>
+        <result property="pointLocation" column="point_location"/>
+        <result property="dataType" column="data_type"/>
+        <result property="codeSeq" column="code_seq"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="parkCode" column="park_code"/>
+        <result property="remarks" column="remarks"/>
+    </resultMap>
+
+    <sql id="selectElectricParamsVo">
+        select t1.id, t1.code, t1.energy_code, t2.name energy_name, t1.name, t1.offset_address, t1.data_length, t1.data_encode_type, t1.unit,
+        t1.point_location, t1.data_type, t1.code_seq, t1.create_time, t1.update_time, t1.park_code, t1.remarks from athena_bes_electric_params t1
+        LEFT JOIN athena_bes_energy_type t2 ON t1.energy_code = t2.code
+    </sql>
+
+    <!--查询采集参数列表-->
+    <select id="selectElectricParamsList" parameterType="ElectricParams" resultMap="ElectricParamsResult">
+        <include refid="selectElectricParamsVo"/>
+        <where>
+            <if test="code != null  and code != ''">and t1.code like concat('%', #{code}, '%')</if>
+            <if test="energyCode != null ">and t1.energy_code = #{energyCode}</if>
+            <if test="name != null  and name != ''">and t1.name like concat('%', #{name}, '%')</if>
+            <if test="offsetAddress != null  and offsetAddress != ''">and t1.offset_address = #{offsetAddress}</if>
+            <if test="dataLength != null ">and t1.data_length = #{dataLength}</if>
+            <if test="dataEncodeType != null ">and t1.data_encode_type = #{dataEncodeType}</if>
+            <if test="unit != null  and unit != ''">and t1.unit = #{unit}</if>
+            <if test="pointLocation != null ">and t1.point_location = #{pointLocation}</if>
+            <if test="dataType != null ">and t1.data_type = #{dataType}</if>
+            <if test="codeSeq != null ">and t1.code_seq = #{codeSeq}</if>
+            <if test="parkCode != null  and parkCode != ''">and t1.park_code = #{parkCode}</if>
+        </where>
+    </select>
+
+    <select id="selectElectricParamsById" parameterType="Long" resultMap="ElectricParamsResult">
+        <include refid="selectElectricParamsVo"/>
+        where t1.id = #{id}
+    </select>
+
+    <select id="selectElectricParamsByCode" parameterType="String" resultMap="ElectricParamsResult">
+        <include refid="selectElectricParamsVo"/>
+        where t1.code = #{code}
+    </select>
+
+    <select id="selectElectricParamsCheck" parameterType="ElectricParams" resultMap="ElectricParamsResult">
+        <include refid="selectElectricParamsVo"/>
+        where
+        t1.name = #{name}
+        <if test="code != null and code != ''">and t1.code != #{code}</if>
+    </select>
+
+    <!--新增采集参数-->
+    <insert id="insertElectricParams" parameterType="ElectricParams" useGeneratedKeys="true" keyProperty="id">
+        insert into athena_bes_electric_params
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="code != null and code != ''">code,</if>
+            <if test="energyCode != null">energy_code,</if>
+            <if test="name != null and name != ''">name,</if>
+            <if test="offsetAddress != null and offsetAddress != ''">offset_address,</if>
+            <if test="dataLength != null">data_length,</if>
+            <if test="dataEncodeType != null">data_encode_type,</if>
+            <if test="unit != null and unit != ''">unit,</if>
+            <if test="pointLocation != null">point_location,</if>
+            <if test="dataType != null">data_type,</if>
+            <if test="codeSeq != null">code_seq,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="parkCode != null">park_code,</if>
+            <if test="remarks != null">remarks,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="code != null and code != ''">#{code},</if>
+            <if test="energyCode != null">#{energyCode},</if>
+            <if test="name != null and name != ''">#{name},</if>
+            <if test="offsetAddress != null and offsetAddress != ''">#{offsetAddress},</if>
+            <if test="dataLength != null">#{dataLength},</if>
+            <if test="dataEncodeType != null">#{dataEncodeType},</if>
+            <if test="unit != null and unit != ''">#{unit},</if>
+            <if test="pointLocation != null">#{pointLocation},</if>
+            <if test="dataType != null">#{dataType},</if>
+            <if test="codeSeq != null">#{codeSeq},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="parkCode != null">#{parkCode},</if>
+            <if test="remarks != null">#{remarks},</if>
+        </trim>
+    </insert>
+
+    <!--修改采集参数-->
+    <update id="updateElectricParams" parameterType="ElectricParams">
+        update athena_bes_electric_params
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="code != null and code != ''">code = #{code},</if>
+            <if test="energyCode != null">energy_code = #{energyCode},</if>
+            <if test="name != null and name != ''">name = #{name},</if>
+            <if test="offsetAddress != null and offsetAddress != ''">offset_address = #{offsetAddress},</if>
+            <if test="dataLength != null">data_length = #{dataLength},</if>
+            <if test="dataEncodeType != null">data_encode_type = #{dataEncodeType},</if>
+            <if test="unit != null and unit != ''">unit = #{unit},</if>
+            <if test="pointLocation != null">point_location = #{pointLocation},</if>
+            <if test="dataType != null">data_type = #{dataType},</if>
+            <if test="codeSeq != null">code_seq = #{codeSeq},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="parkCode != null">park_code = #{parkCode},</if>
+            <if test="remarks != null">remarks = #{remarks},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <!--删除采集参数-->
+    <delete id="deleteElectricParamsById" parameterType="Long">
+        delete from athena_bes_electric_params where id = #{id}
+    </delete>
+
+    <!--删除采集参数-->
+    <delete id="deleteElectricParamsByIds" parameterType="String">
+        delete from athena_bes_electric_params where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <select id="loadAll" parameterType="ElectricParams" resultMap="ElectricParamsResult">
+        <include refid="selectElectricParamsVo"/>
+    </select>
+
+</mapper>

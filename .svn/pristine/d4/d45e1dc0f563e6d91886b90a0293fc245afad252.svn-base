@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zc.efounder.JEnterprise.mapper.electricPowerTranscription.PowerDataMapper">
+
+    <select id="getAllPark" resultType="java.util.Map">
+        select code,name from athena_bes_park order by code
+    </select>
+
+    <!--查询支路下电表-->
+    <select id="getCheckMeterList" parameterType="PowerData" resultType="java.util.Map">
+        SELECT t1.meter_id id, t2.alias name, t3.sys_name sysName,t2.type  FROM athena_bes_branch_meter_link t1
+        LEFT JOIN athena_bes_electric_meter t2 ON t1.meter_id = t2.meter_id
+		LEFT JOIN athena_bes_device_tree t3 ON t2.device_tree_id = t3.device_tree_id
+        WHERE branch_id = #{branchId} order by t1.meter_id
+    </select>
+
+    <!--查询采集参数-->
+    <select id="getCheckMeterParamsList" resultType="java.util.Map">
+        SELECT id,name FROM athena_bes_params order by id
+    </select>
+
+    <!--查询采集参数下分项-->
+    <select id="getMeterParamsList" parameterType="ExtremeValueReport" resultType="java.util.Map">
+        SELECT params_id id FROM athena_bes_params_config WHERE param_id = #{paramsId}
+    </select>
+
+    <!--查询电表下采集参数-->
+    <select id="getMeterParams" parameterType="PowerData" resultType="java.util.Map">
+        SELECT t1.electric_code id, t2.name FROM athena_bes_electric_coll_rlgl t1 LEFT JOIN
+        athena_bes_electric_params t2 ON electric_code = t2.code WHERE
+	    coll_id = ( SELECT collection_method_code FROM athena_bes_electric_meter WHERE meter_id = #{meterId})
+    </select>
+
+    <!--日原始数据-->
+    <select id="queryDayChartsData" parameterType="PowerData" resultType="Map">
+        SELECT DATE_FORMAT(F_CJSJ,'%Y-%m-%d %H:%i:%s') CJSJ,round(F_DATA,2) dataInfo FROM athena_bes_original_data
+        WHERE F_DBSYS_NAME = #{sysName} AND F_DNBH = #{paramsId} AND DATE_FORMAT( F_CJSJ, '%Y-%m-%d' ) &gt;= #{startTime}
+        AND DATE_FORMAT( F_CJSJ, '%Y-%m-%d' ) &lt;= #{endTime} GROUP BY DATE_FORMAT(
+		concat( date( F_CJSJ ), ' ', HOUR ( F_CJSJ ), ':', floor( MINUTE ( F_CJSJ ) / 5 ) * 5 ), '%Y-%m-%d %H:%i'  )
+		order by F_CJSJ
+    </select>
+
+    <!--逐日极值数据-->
+    <select id="queryMaxChartsData" parameterType="PowerData" resultType="Map">
+        SELECT DATE_FORMAT( F_CJSJ, '%Y-%m-%d' ) CJSJ,
+        round(MAX(F_DATA),2) maxInfo,
+        (SELECT DATE_FORMAT( F_CJSJ, '%Y-%m-%d %H:%i' ) FROM athena_bes_original_data WHERE F_DATA = MAX(a.F_DATA) AND DATE_FORMAT( F_CJSJ, '%Y-%m-%d') = DATE_FORMAT( a.F_CJSJ, '%Y-%m-%d') LIMIT 1 ) maxVTime,
+        round(MIN(F_DATA),2) minInfo,
+        (SELECT DATE_FORMAT( F_CJSJ, '%Y-%m-%d %H:%i' ) FROM athena_bes_original_data WHERE F_DATA = MIN(a.F_DATA) AND DATE_FORMAT( F_CJSJ, '%Y-%m-%d') = DATE_FORMAT( a.F_CJSJ, '%Y-%m-%d') LIMIT 1) minVTime,
+        round(AVG(F_DATA),2) avgInfo
+        FROM athena_bes_original_data a
+        WHERE F_DBSYS_NAME = #{sysName} AND F_DNBH = #{paramsItemId} AND
+        DATE_FORMAT( F_CJSJ, '%Y-%m-%d' ) &gt;= #{startTime} AND DATE_FORMAT( F_CJSJ, '%Y-%m-%d' ) &lt;= #{endTime}
+        GROUP BY DATE_FORMAT( F_CJSJ, '%Y-%m-%d' ) order by F_CJSJ
+    </select>
+</mapper>

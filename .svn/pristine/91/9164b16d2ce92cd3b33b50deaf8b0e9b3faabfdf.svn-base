@@ -1,0 +1,171 @@
+package com.zc.connect.nettyClient.OrderCombination;
+
+import com.ruoyi.common.utils.spring.SpringUtils;
+import com.zc.connect.config.NettyClientConfig;
+import com.zc.connect.config.NettyClientConfigAttr;
+import com.zc.connect.nettyClient.NettyClient;
+import org.springframework.stereotype.Component;
+
+import javax.annotation.PostConstruct;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * @author Athena-YangChao
+ * @description 指令组装类
+ * 当前类是各业务组拼装指令得类
+ * order传过来是下发指令得类型 通过这个类拼装指令(包括一系列算法)
+ * @date 2021/11/23/023
+ * @apiNote 定时任务无法使用 @Autowired 注解 使用工具类获取
+ */
+@Component
+public class OrderCombinationSuiDao {
+    /**
+     * NettyClient 客户端
+     */
+    private NettyClient nettyClient = SpringUtils.getBean(NettyClient.class);
+    /**
+     * NettyClient 配置文件参数
+     */
+    private NettyClientConfig nettyClientConfig = SpringUtils.getBean(NettyClientConfig.class);
+
+
+    // 定义模板数据
+    private static List<Map<String, String>> list = new ArrayList<>();
+
+    @PostConstruct
+    private void init() {
+        Map<String, String> map = new HashMap<>();
+        map.put("aaa", "123123");
+
+
+        Map<String, String> map1 = new HashMap<>();
+        map.put("aaa", "123123");
+
+
+        Map<String, String> map2 = new HashMap<>();
+        map.put("aaa", "123123");
+
+        list.add(map);
+    }
+
+
+    /**
+     * 指令下发
+     */
+    public void orderSend() {
+        // 1.0循环每一个配置的 ip+port 设备（plc）
+        for (NettyClientConfigAttr configAttr : nettyClientConfig.getConfig()) {
+            // ip
+            String ip = configAttr.getIp();
+            // 端口
+            int port = configAttr.getPort();
+            // 回令处理类
+            String handler_name = configAttr.getHandler_name();
+            // 指令码类型
+            String order_type = configAttr.getOrder();
+
+            StringBuffer sb = new StringBuffer();
+
+            // 根据ip+port方式查询通道是否存在
+            boolean channel = NettyClient.channels.containsKey(ip + port);
+            if (channel) {
+                // 存在，握手包通过，继续下发指令即可
+                combination(order_type, sb);
+                nettyClient.clientOrderSend(ip, port, sb.toString(), handler_name);
+            } else {
+                // 通道不存在，继续下发握手包
+                // 握手包
+                sb.append("11111");
+                nettyClient.clientOrderSend(ip, port, sb.toString(), handler_name);
+            }
+        }
+    }
+
+
+    /**
+     * 指令拼装
+     */
+    private StringBuffer combination(String order_type, StringBuffer sb) {
+
+        /**
+         * CIO协议分解
+         * 下发46 49 4E 53 00 00 00 1A 00 00 00 02 00 00 00 00 80 00 02 00 18 00 00 f1 00 00 01 01 80 00 00 00 00 02
+         * 回令46 49 4E 53 00 00 00 1A 00 00 00 02 00 00 00 00 C0 00 02 00 F1 00 00 18 00 00 01 01 00 00 05 55 05 50
+         *
+         *
+         * 46494E530000001A0000000200000000800002 000c00 004D00 00010180 07D200 0001
+         * 0-38（固定 46494E530000001A0000000200000000800002 ）head
+         * 38-44(000c00 中间0C：目标ip地址，计算方式：ip点后最后一位（最多255)) [40-42]targetIp 目标ip（ip最后小数点之后的数） plc IP
+         * 44-50(004D00 中间4D，本地ip，计算方式同上) 【46-48】 localIp 本地ip
+         * 50-58(00010180 0101：查询，0102控制。80是CIO，82代表DM点位) [52-56]orderType(指令类型) 【56-58】pointType 点类型
+         * 58-64(07D200 前4位07D2，代表开始点位)【58-62】pointStart 开始点
+         * 64-68(0001 0001 代表查询个数，一般16个位)queryNum 查询个数
+         *
+         * 串组装  head + [00 targetIp 00] + [00 localIp 00] + [00 orderType pointType] + [pointStart 00] + [queryNum]
+         */
+
+        // 固定头
+        String head = "";
+        // 目标ip
+        String targetIp = "";
+        // 本地ip
+        String localIp = "";
+        // 指令类型
+        String orderType = "";
+        // 点类型
+        String pointType = "";
+        // 开始点
+        String pointStart = "";
+        // 查询个数
+        String queryNum = "";
+        // 补位
+        String covering = "";
+
+        switch (order_type) {
+            case "chaxun_CIO":
+                head = "46494E530000001A0000000200000000800002";
+                targetIp = "29";
+                localIp = "11";
+                orderType = "0101";
+                pointType = "80";
+                pointStart = "0000";
+                queryNum = "0001";
+                covering = "00";
+                break;
+            case "chaxun_DM":
+                // DM 一对一
+                head = "46494E530000001A0000000200000000800002";
+                targetIp = "29";
+                localIp = "11";
+                orderType = "0101";
+                pointType = "80";
+                pointStart = "0000";
+                queryNum = "0001";
+                covering = "00";
+                break;
+            default:
+                break;
+        }
+
+        sb.append(head)
+                .append(covering)
+                .append(targetIp)
+                .append(covering)
+                .append(covering)
+                .append(localIp)
+                .append(covering)
+                .append(covering)
+                .append(orderType)
+                .append(pointType)
+                .append(pointStart)
+                .append(covering)
+                .append(queryNum);
+
+
+        return sb;
+    }
+
+}

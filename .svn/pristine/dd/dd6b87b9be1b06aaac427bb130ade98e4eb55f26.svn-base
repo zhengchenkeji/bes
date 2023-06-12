@@ -1,0 +1,76 @@
+package com.zc.relay.handler;
+
+import com.zc.relay.dto.TradeItemLifecycleInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.ServiceLoader;
+
+/**
+ * 生命周期钩调度器
+ * @author Athena-xiepufeng
+ *
+ */
+@Component
+public class TradeItemLifecycleHookDispatcher implements TradeItemLifecycleHook
+{
+    private static final Logger log = LoggerFactory.getLogger(TradeItemLifecycleHookDispatcher.class);
+
+    private static final List<TradeItemLifecycleHook> tradeItemLifecycleHooks = new ArrayList<>();
+
+    public TradeItemLifecycleHookDispatcher()
+    {
+
+        ServiceLoader<TradeItemLifecycleHook> load = ServiceLoader.load(TradeItemLifecycleHook.class);
+
+        if (!load.iterator().hasNext())
+        {
+            log.warn("TradeItemLifecycleHook 没有实现类");
+            return;
+        }
+
+        try {
+            load.forEach(tradeItemLifecycleHooks::add);
+        } catch (Exception e) {
+            log.warn("TradeItemLifecycleHook 实现类加载失败");
+            e.printStackTrace();
+        }
+
+    }
+
+    /**
+     * 创建
+     *
+     * @param info 生命周期信息
+     */
+    @Override
+    public void create(TradeItemLifecycleInfo info)
+    {
+        tradeItemLifecycleHooks.forEach(tradeItemLifecycleHook -> tradeItemLifecycleHook.create(info));
+    }
+
+    /**
+     * 更新
+     *
+     * @param info 生命周期信息
+     */
+    @Override
+    public void update(TradeItemLifecycleInfo info)
+    {
+        tradeItemLifecycleHooks.forEach(tradeItemLifecycleHook -> tradeItemLifecycleHook.update(info));
+    }
+
+    /**
+     * 销毁
+     *
+     * @param info 生命周期信息
+     */
+    @Override
+    public void destroy(TradeItemLifecycleInfo info)
+    {
+        tradeItemLifecycleHooks.forEach(tradeItemLifecycleHook -> tradeItemLifecycleHook.destroy(info));
+    }
+}

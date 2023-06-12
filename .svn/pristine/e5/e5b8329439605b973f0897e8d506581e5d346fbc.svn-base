@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zc.efounder.JEnterprise.mapper.deviceTreeNode.AthenaDeviceNodeMapper">
+
+    <resultMap type="AthenaDeviceNode" id="AthenaDeviceNodeResult">
+        <result property="deviceNodeId" column="device_node_id"/>
+        <result property="deviceNodeCode" column="device_node_code"/>
+        <result property="deviceNodeIsNode" column="device_node_is_node"/>
+        <result property="deviceNodeName" column="device_node_name"/>
+        <result property="deviceNodeFunName" column="device_node_fun_name"/>
+        <result property="deviceNodeFunType" column="device_node_fun_type"/>
+        <result property="onlineIcon" column="online_icon"/>
+        <result property="offlineIcon" column="offline_icon"/>
+        <result property="url" column="url"/>
+        <result property="remark" column="remark"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <sql id="selectAthenaDeviceNodeVo">
+        select device_node_id,
+               device_node_code,
+               device_node_is_node,
+               device_node_name,
+               device_node_fun_name,
+               device_node_fun_type,
+               online_icon,
+               offline_icon,
+               url,
+               remark,
+               create_time,
+               update_time
+        from athena_bes_device_node
+    </sql>
+
+    <select id="selectAthenaDeviceNodeList" parameterType="AthenaDeviceNode" resultMap="AthenaDeviceNodeResult">
+        <include refid="selectAthenaDeviceNodeVo"/>
+        <where>
+            <if test="deviceNodeCode != null  and deviceNodeCode != ''">and device_node_code = #{deviceNodeCode}</if>
+            <if test="deviceNodeIsNode != null ">and device_node_is_node = #{deviceNodeIsNode}</if>
+            <if test="deviceNodeName != null  and deviceNodeName != ''">and device_node_name like concat('%',
+                #{deviceNodeName}, '%')
+            </if>
+            <if test="deviceNodeFunName != null  and deviceNodeFunName != ''">and device_node_fun_name like concat('%',
+                #{deviceNodeFunName}, '%')
+            </if>
+            <if test="deviceNodeFunType != null  and deviceNodeFunType != ''">and device_node_fun_type =
+                #{deviceNodeFunType}
+            </if>
+            <if test="onlineIcon != null  and onlineIcon != ''">and online_icon = #{onlineIcon}</if>
+            <if test="offlineIcon != null  and offlineIcon != ''">and offline_icon = #{offlineIcon}</if>
+            <if test="url != null  and url != ''">and url = #{url}</if>
+        </where>
+        ORDER BY create_time DESC,update_time DESC
+    </select>
+
+    <select id="selectAthenaDeviceNodeByDeviceNodeId" parameterType="Long" resultMap="AthenaDeviceNodeResult">
+        <include refid="selectAthenaDeviceNodeVo"/>
+        where device_node_id = #{deviceNodeId}
+    </select>
+
+    <select id="selectAthenaDeviceNodeByDeviceNodeCode" parameterType="String" resultMap="AthenaDeviceNodeResult">
+        <include refid="selectAthenaDeviceNodeVo"/>
+        where device_node_code = #{deviceNodeCode}
+    </select>
+
+    <select id="selectAthenaDeviceNodeCount" resultType="java.lang.Integer">
+        select COUNT(1) from athena_bes_device_node
+        <where>
+            <if test="deviceNodeId != null">device_node_id != #{deviceNodeId}</if>
+            and (device_node_code = #{deviceNodeCode}
+            or device_node_name =#{deviceNodeName})
+        </where>
+    </select>
+    <select id="selectAthenaDeviceNodeDelete" resultMap="AthenaDeviceNodeResult" parameterType="Long">
+        select device_node_id,
+        device_node_code,
+        device_node_is_node,
+        device_node_name,
+        device_node_fun_name,
+        device_node_fun_type,
+        online_icon,
+        offline_icon,
+        url,
+        remark,
+        create_time,
+        update_time
+        from athena_bes_device_node
+        <where>
+            device_node_id NOT IN
+            <foreach collection="deviceNodeIds" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </where>
+    </select>
+    <select id="selectAthenaDeviceNodeDeleteList"
+            resultType="com.zc.efounder.JEnterprise.domain.deviceTreeNode.AthenaDeviceNode" parameterType="Long">
+        select device_node_id,
+        device_node_code,
+        device_node_is_node,
+        device_node_name,
+        device_node_fun_name,
+        device_node_fun_type,
+        online_icon,
+        offline_icon,
+        url,
+        remark,
+        create_time,
+        update_time
+        from athena_bes_device_node
+        <where>
+            device_node_id IN
+            <foreach collection="deviceNodeIds" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </where>
+    </select>
+
+    <insert id="insertAthenaDeviceNode" parameterType="AthenaDeviceNode" useGeneratedKeys="true"
+            keyProperty="deviceNodeId">
+        insert into athena_bes_device_node
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="deviceNodeCode != null and deviceNodeCode != ''">device_node_code,</if>
+            <if test="deviceNodeIsNode != null">device_node_is_node,</if>
+            <if test="deviceNodeName != null and deviceNodeName != ''">device_node_name,</if>
+            <if test="deviceNodeFunName != null">device_node_fun_name,</if>
+            <if test="deviceNodeFunType != null">device_node_fun_type,</if>
+            <if test="onlineIcon != null and onlineIcon != ''">online_icon,</if>
+            <if test="offlineIcon != null and offlineIcon != ''">offline_icon,</if>
+            <if test="url != null">url,</if>
+            <if test="remark != null">remark,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="deviceNodeCode != null and deviceNodeCode != ''">#{deviceNodeCode},</if>
+            <if test="deviceNodeIsNode != null">#{deviceNodeIsNode},</if>
+            <if test="deviceNodeName != null and deviceNodeName != ''">#{deviceNodeName},</if>
+            <if test="deviceNodeFunName != null">#{deviceNodeFunName},</if>
+            <if test="deviceNodeFunType != null">#{deviceNodeFunType},</if>
+            <if test="onlineIcon != null and onlineIcon != ''">#{onlineIcon},</if>
+            <if test="offlineIcon != null and offlineIcon != ''">#{offlineIcon},</if>
+            <if test="url != null">#{url},</if>
+            <if test="remark != null">#{remark},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+        </trim>
+    </insert>
+
+    <update id="updateAthenaDeviceNode" parameterType="AthenaDeviceNode">
+        update athena_bes_device_node
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="deviceNodeCode != null ">device_node_code = #{deviceNodeCode},</if>
+            <if test="deviceNodeIsNode != null">device_node_is_node = #{deviceNodeIsNode},</if>
+            <if test="deviceNodeName != null ">device_node_name = #{deviceNodeName},</if>
+            <if test="deviceNodeFunName != null">device_node_fun_name = #{deviceNodeFunName},</if>
+            <if test="deviceNodeFunType != null">device_node_fun_type = #{deviceNodeFunType},</if>
+            <if test="onlineIcon != null ">online_icon = #{onlineIcon},</if>
+            <if test="offlineIcon != null ">offline_icon = #{offlineIcon},</if>
+            <if test="url != null">url = #{url},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where device_node_id = #{deviceNodeId}
+    </update>
+    <update id="updateStringByFunName">
+        UPDATE athena_bes_device_node
+        SET device_node_fun_name = REPLACE(
+                device_node_fun_name,
+                #{oldFunName},
+                #{newFunName}
+            )
+        WHERE device_node_fun_name LIKE concat('%',#{oldFunName}, '%')
+    </update>
+
+    <delete id="deleteAthenaDeviceNodeByDeviceNodeId" parameterType="Long">
+        delete
+        from athena_bes_device_node
+        where device_node_id = #{deviceNodeId}
+    </delete>
+
+    <delete id="deleteAthenaDeviceNodeByDeviceNodeIds" parameterType="String">
+        delete from athena_bes_device_node where device_node_id in
+        <foreach item="deviceNodeId" collection="array" open="(" separator="," close=")">
+            #{deviceNodeId}
+        </foreach>
+    </delete>
+</mapper>

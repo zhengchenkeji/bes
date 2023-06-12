@@ -1,0 +1,95 @@
+package com.ruoyi.systemSetting.electricityPriceSetting.service;
+
+import java.util.List;
+
+import com.ruoyi.common.core.domain.AjaxResult;
+import com.ruoyi.systemSetting.electricityPriceSetting.domain.ElectricityPriceRule;
+import com.ruoyi.systemSetting.electricityPriceSetting.domain.ElectricityPriceSetting;
+
+/**
+ * 电价设置Service接口
+ * 
+ * @author ruoyi
+ * @date 2022-11-29
+ */
+public interface ElectricityPriceSettingService
+{
+    /**
+     *
+     * @Description: 获取电价规则列表
+     *
+     * @auther: gaojikun
+     * @param: [electricityPriceRule]
+     * @return: AjaxResult
+     */
+    AjaxResult periceConfigListInfo(ElectricityPriceRule electricityPriceRule);
+
+    /**
+     * 批量删除电价设置
+     *
+     * @param ids 需要删除的电价设置主键集合
+     * @return 结果
+     */
+    int deletepriceConfig(Long[] ids);
+
+    /**
+     * 添加电价规则
+     */
+    AjaxResult addPriceConfig(ElectricityPriceRule electricityPriceRule);
+
+    /**
+     * 修改电价规则
+     */
+    AjaxResult updatePriceConfig(ElectricityPriceRule electricityPriceRule);
+
+
+
+
+    /**
+     * 查询电价设置
+     * 
+     * @param id 电价设置主键
+     * @return 电价设置
+     */
+    public ElectricityPriceSetting selectElectricityPriceSettingById(Long id);
+
+    /**
+     * 查询电价设置列表
+     * 
+     * @param ElectricityPriceSetting 电价设置
+     * @return 电价设置集合
+     */
+    List<ElectricityPriceSetting> selectElectricityPriceSettingList(ElectricityPriceSetting ElectricityPriceSetting);
+
+    /**
+     * 新增电价设置
+     * 
+     * @param ElectricityPriceSetting 电价设置
+     * @return 结果
+     */
+    AjaxResult insertElectricityPriceSetting(ElectricityPriceSetting ElectricityPriceSetting);
+
+    /**
+     * 修改电价设置
+     * 
+     * @param ElectricityPriceSetting 电价设置
+     * @return 结果
+     */
+    AjaxResult updateElectricityPriceSetting(ElectricityPriceSetting ElectricityPriceSetting);
+
+    /**
+     * 批量删除电价设置
+     * 
+     * @param ids 需要删除的电价设置主键集合
+     * @return 结果
+     */
+    AjaxResult deleteElectricityPriceSettingByIds(Long[] ids);
+
+    /**
+     * 删除电价设置信息
+     * 
+     * @param id 电价设置主键
+     * @return 结果
+     */
+    AjaxResult deleteElectricityPriceSettingById(Long id);
+}

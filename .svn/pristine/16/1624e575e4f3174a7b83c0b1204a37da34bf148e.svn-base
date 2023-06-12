@@ -1,0 +1,38 @@
+package com.zc.relay.dto;
+
+import java.util.Map;
+
+/**
+ * 上报数据设备实时数据
+ * @author Athena-xiepufeng
+ */
+public class UplinkDeviceData {
+
+    /**
+     * 设备编号
+     */
+    private String deviceCode;
+
+    /**
+     * 功能实时数据
+     * key: 功能标识符
+     * value: 上报的实时数据
+     */
+    private Map<String, Number> uplinkFunctionData;
+
+    public String getDeviceCode() {
+        return deviceCode;
+    }
+
+    public void setDeviceCode(String deviceCode) {
+        this.deviceCode = deviceCode;
+    }
+
+    public Map<String, Number> getUplinkFunctionData() {
+        return uplinkFunctionData;
+    }
+
+    public void setUplinkFunctionData(Map<String, Number> uplinkFunctionData) {
+        this.uplinkFunctionData = uplinkFunctionData;
+    }
+}

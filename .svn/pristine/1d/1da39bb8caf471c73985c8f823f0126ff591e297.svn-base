@@ -1,0 +1,116 @@
+package com.zc.efounder.JEnterprise.service.subrealtimedatamanage.Impl;
+
+import com.ruoyi.common.core.domain.AjaxResult;
+import com.ruoyi.common.core.redis.RedisCache;
+import com.ruoyi.common.utils.StringUtils;
+import com.zc.efounder.JEnterprise.domain.baseData.Equipment;
+import com.zc.efounder.JEnterprise.domain.baseData.ProductFunction;
+import com.zc.efounder.JEnterprise.domain.baseData.ProductItemData;
+import com.zc.efounder.JEnterprise.domain.deviceTree.DeviceTree;
+import com.zc.efounder.JEnterprise.Cache.SubRealTimeDataCache;
+import com.zc.efounder.JEnterprise.service.subrealtimedatamanage.SubRealTimeDataService;
+import com.zc.common.constant.RedisKeyConstants;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
+
+/**
+ * @Author: wanghongjie
+ * @Description:客户端实时数据订阅
+ * @Date: Created in 14:25 2022/9/24
+ * @Modified By:
+ */
+@Service
+public class SubRealTimeDataServiceImpl implements SubRealTimeDataService {
+
+    @Resource
+    private RedisCache redisCache;
+
+    @Resource
+    private SubRealTimeDataCache subRealTimeDataCache;
+
+    //初始化客户端实时数据订阅缓存
+    @PostConstruct
+    public void init() {
+
+        initSubRealTimeDataCache();
+    }
+
+    public void initSubRealTimeDataCache() {
+        // 清空 redis 客户端实时数据订阅缓存数据
+        redisCache.deleteObject(RedisKeyConstants.SUB_REAL_TIME_DATA_CACHE);
+    }
+
+    /**
+     * 客户端订阅消息
+     *
+     * @param event
+     * @return
+     */
+    @Override
+    public AjaxResult subscribe(String event) {
+
+        if (StringUtils.isBlank(event)) {
+            return AjaxResult.error("参数错误！");
+        }
+        /**判断是本地设备还是第三方设备*/
+        if(event.indexOf("+")==-1){
+            /**bes设备*/
+            DeviceTree deviceTree = redisCache.getCacheMapValue(RedisKeyConstants.BES_BasicData_DeviceTree, Long.valueOf(event) );
+            if (deviceTree == null) {
+                return AjaxResult.success("传入的点位或者功能信息无效，无法订阅！");
+            }
+        }else{
+            /**第三方设备*/
+            /**截取数据项id*/
+            String itemId=event.substring(0,event.indexOf("+"));
+            /**截取设备id*/
+            String equipmentId=event.substring(event.indexOf("+")+1,event.length());
+            ProductItemData itemData= redisCache.getCacheMapValue(RedisKeyConstants.BES_BasicData_Product_ItemData,itemId);
+            Equipment equipment= redisCache.getCacheMapValue(RedisKeyConstants.BES_BasicData_Equipment,equipmentId);
+            if(itemData==null||equipment==null){
+                return AjaxResult.success("传入的第三方设备信息无效！");
+            }
+        }
+
+        /**处理设备树订阅*/
+        if (!subRealTimeDataCache.subscribeCache(event)) {
+            return AjaxResult.error("订阅失败！");
+        }
+        return AjaxResult.success("订阅成功！");
+
+
+
+    }
+
+
+    /**
+     * 客户端取消订阅
+     *
+     * @param event
+     * @return
+     */
+    @Override
+    public AjaxResult unsubscribe(String event) {
+
+        if (event == null) {
+            return AjaxResult.error("参数错误！");
+        }
+
+//        DeviceTree deviceTree = redisCache.getCacheMapValue(RedisKeyConstants.BES_BasicData_DeviceTree, Long.valueOf(event));
+//
+//        if (deviceTree == null) {
+////            ProductFunction productFunction = redisCache.getCacheMapValue(RedisKeyConstants.BES_BasicData_Product_Function, (long) event);
+////            if (productFunction == null) {
+////                return AjaxResult.success("传入的点位或者功能信息无效，无法订阅！");
+////            }
+//        }
+
+        if (!subRealTimeDataCache.unsubscribeCache(event)) {
+            return AjaxResult.error("取消订阅失败！");
+        }
+
+        return AjaxResult.success("取消订阅成功！");
+    }
+}

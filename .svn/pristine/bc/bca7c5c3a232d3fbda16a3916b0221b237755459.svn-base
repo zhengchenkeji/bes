@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zc.iot.mapper.IotCategoryMapper">
+    
+    <resultMap type="IotCategory" id="IotCategoryResult">
+        <result property="id"    column="id"    />
+        <result property="categoryMark"    column="category_mark"    />
+        <result property="parentId"    column="parent_id"    />
+        <result property="categoryName"    column="category_name"    />
+        <result property="description"    column="description"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectIotCategoryVo">
+        select id, category_mark, parent_id, category_name, description, create_time, update_time from athena_iot_category
+    </sql>
+
+    <select id="selectIotCategoryList" parameterType="IotCategory" resultMap="IotCategoryResult">
+        <include refid="selectIotCategoryVo"/>
+        <where>  
+            <if test="categoryMark != null  and categoryMark != ''"> and category_mark = #{categoryMark}</if>
+            <if test="categoryName != null  and categoryName != ''"> and category_name like concat('%', #{categoryName}, '%')</if>
+        </where>
+    </select>
+    
+    <select id="selectIotCategoryById" parameterType="Long" resultMap="IotCategoryResult">
+        <include refid="selectIotCategoryVo"/>
+        where id = #{id}
+    </select>
+
+    <select id="selectIotCategoryByParentId" parameterType="Long" resultMap="IotCategoryResult">
+        <include refid="selectIotCategoryVo"/>
+        where parent_id = #{parentId}
+    </select>
+
+    <select id="selectIotCategoryByMark" parameterType="String" resultMap="IotCategoryResult">
+        <include refid="selectIotCategoryVo"/>
+        where category_mark = #{categoryMark}
+    </select>
+
+    <insert id="insertIotCategory" parameterType="IotCategory">
+        insert into athena_iot_category
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">id,</if>
+            <if test="categoryMark != null and categoryMark != ''">category_mark,</if>
+            <if test="parentId != null">parent_id,</if>
+            <if test="categoryName != null and categoryName != ''">category_name,</if>
+            <if test="description != null">description,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">#{id},</if>
+            <if test="categoryMark != null and categoryMark != ''">#{categoryMark},</if>
+            <if test="parentId != null">#{parentId},</if>
+            <if test="categoryName != null and categoryName != ''">#{categoryName},</if>
+            <if test="description != null">#{description},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateIotCategory" parameterType="IotCategory">
+        update athena_iot_category
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="categoryMark != null and categoryMark != ''">category_mark = #{categoryMark},</if>
+            <if test="parentId != null">parent_id = #{parentId},</if>
+            <if test="categoryName != null and categoryName != ''">category_name = #{categoryName},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteIotCategoryById" parameterType="Long">
+        delete from athena_iot_category where id = #{id}
+    </delete>
+
+    <delete id="deleteIotCategoryByIds" parameterType="String">
+        delete from athena_iot_category where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

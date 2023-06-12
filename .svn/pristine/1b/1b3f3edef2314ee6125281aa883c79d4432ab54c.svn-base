@@ -1,0 +1,129 @@
+package com.ruoyi.energyDataReport.buildBaseInfo.service.impl;
+
+import java.util.List;
+
+import com.ruoyi.common.utils.DateUtils;
+import com.ruoyi.energyDataReport.buildGroupInfo.domain.BuildGroupInfo;
+import com.ruoyi.energyDataReport.dataCenterBaseInfo.domain.DataCenterBaseInfo;
+import com.ruoyi.energyInfo.parkInfo.domain.Park;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import com.ruoyi.energyDataReport.buildBaseInfo.mapper.BuildBaseInfoMapper;
+import com.ruoyi.energyDataReport.buildBaseInfo.domain.BuildBaseInfo;
+import com.ruoyi.energyDataReport.buildBaseInfo.service.BuildBaseInfoService;
+
+/**
+ * 建筑基本项数据Service业务层处理
+ *
+ * @author ruoyi
+ * @date 2022-09-14
+ */
+@Service
+public class BuildBaseInfoServiceImpl implements BuildBaseInfoService
+{
+    @Autowired
+    private BuildBaseInfoMapper buildBaseInfoMapper;
+
+    /**
+     * 查询建筑基本项数据
+     *
+     * @param id 建筑基本项数据主键
+     * @return 建筑基本项数据
+     */
+    @Override
+    public BuildBaseInfo selectBuildBaseInfoById(Long id)
+    {
+        return buildBaseInfoMapper.selectBuildBaseInfoById(id);
+    }
+
+    /**
+     * 查询建筑基本项数据列表
+     *
+     * @param buildBaseInfo 建筑基本项数据
+     * @return 建筑基本项数据
+     */
+    @Override
+    public List<BuildBaseInfo> selectBuildBaseInfoList(BuildBaseInfo buildBaseInfo)
+    {
+        return buildBaseInfoMapper.selectBuildBaseInfoList(buildBaseInfo);
+    }
+
+    /**
+     * 新增建筑基本项数据
+     *
+     * @param buildBaseInfo 建筑基本项数据
+     * @return 结果
+     */
+    @Override
+    public int insertBuildBaseInfo(BuildBaseInfo buildBaseInfo)
+    {
+        buildBaseInfo.setCreateTime(DateUtils.getNowDate());
+        return buildBaseInfoMapper.insertBuildBaseInfo(buildBaseInfo);
+    }
+
+    /**
+     * 修改建筑基本项数据
+     *
+     * @param buildBaseInfo 建筑基本项数据
+     * @return 结果
+     */
+    @Override
+    public int updateBuildBaseInfo(BuildBaseInfo buildBaseInfo)
+    {
+        return buildBaseInfoMapper.updateBuildBaseInfo(buildBaseInfo);
+    }
+
+    /**
+     * 批量删除建筑基本项数据
+     *
+     * @param ids 需要删除的建筑基本项数据主键
+     * @return 结果
+     */
+    @Override
+    public int deleteBuildBaseInfoByIds(Long[] ids)
+    {
+        return buildBaseInfoMapper.deleteBuildBaseInfoByIds(ids);
+    }
+
+    /**
+     * 删除建筑基本项数据信息
+     *
+     * @param id 建筑基本项数据主键
+     * @return 结果
+     */
+    @Override
+    public int deleteBuildBaseInfoById(Long id)
+    {
+        return buildBaseInfoMapper.deleteBuildBaseInfoById(id);
+    }
+
+    /**
+     * 查询所有数据中心
+     */
+    @Override
+    public List<DataCenterBaseInfo> getAllDataCenterBaseInfo(){
+        return buildBaseInfoMapper.getAllDataCenterBaseInfo();
+    }
+
+    /**
+     * 查询所有建筑群
+     */
+    @Override
+    public List<BuildGroupInfo> getAllBuildGroup(){
+        return buildBaseInfoMapper.getAllBuildGroup();
+    }
+
+    /**
+     * 查询所有园区
+     */
+    @Override
+    public List<Park> getAllPark(){
+        return buildBaseInfoMapper.getAllPark();
+    }
+
+    @Override
+    public List<BuildBaseInfo> selectAllInfo(BuildBaseInfo buildBaseInfo)
+    {
+        return buildBaseInfoMapper.selectAllInfo(buildBaseInfo);
+    }
+}

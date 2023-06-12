@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruoyi.efounder.JEnterprise.mapper.SubitemDataMapper">
+
+
+    <!-- 更新支路统计数据 -->
+    <update id="updateGradeData" parameterType="SubitemData">
+        update athena_bes_subitem_data
+        <set>
+            <if test="dataValue != null">
+                data_value = data_value + #{dataValue},
+            </if>
+
+            update_time = current_timestamp(),
+        </set>
+        where subitem_id = #{subitemId}
+        and collect_time = #{collectTime}
+        and date_type = #{dateType}
+    </update>
+
+    <!-- 查询分项数据根据时间和类型 -->
+    <select id="getSubitemDataByTimeAndType" resultType="com.ruoyi.efounder.JEnterprise.domain.SubitemData">
+        SELECT * FROM athena_bes_subitem_data
+        <where>
+            <if test="time != null and time!=''">
+                AND collect_time=#{time}
+            </if>
+            <if test="type != null and type!=''">
+                AND date_type=#{type}
+            </if>
+        </where>
+    </select>
+
+    <!-- 保存分项统计数据 -->
+    <insert id="saveGradeData" parameterType="SubitemData">
+        insert into athena_bes_subitem_data
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                id,
+            </if>
+            <if test="subitemId != null">
+                subitem_id,
+            </if>
+            <if test="collectTime != null">
+                collect_time,
+            </if>
+            <if test="dataValue != null">
+                data_value,
+            </if>
+            <if test="dateType != null">
+                date_type,
+            </if>
+            <if test="parkId != null">
+                park_id,
+            </if>
+            create_time,
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                #{id},
+            </if>
+            <if test="subitemId != null">
+                #{subitemId},
+            </if>
+            <if test="collectTime != null">
+                #{collectTime},
+            </if>
+            <if test="dataValue != null">
+                #{dataValue},
+            </if>
+            <if test="dateType != null">
+                #{dateType},
+            </if>
+            <if test="parkId != null">
+                #{parkId},
+            </if>
+            current_timestamp(),
+
+        </trim>
+    </insert>
+
+</mapper>

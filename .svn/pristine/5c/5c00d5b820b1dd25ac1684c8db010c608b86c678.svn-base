@@ -1,0 +1,162 @@
+package com.ruoyi.efounder.JEnterprise.controller.deviceTree;
+
+import java.util.List;
+import java.util.Map;
+import javax.servlet.http.HttpServletResponse;
+
+import com.ruoyi.efounder.JEnterprise.domain.deviceTree.Point;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+import com.ruoyi.common.annotation.Log;
+import com.ruoyi.common.core.controller.BaseController;
+import com.ruoyi.common.core.domain.AjaxResult;
+import com.ruoyi.common.enums.BusinessType;
+import com.ruoyi.efounder.JEnterprise.domain.deviceTree.Module;
+import com.ruoyi.efounder.JEnterprise.service.deviceTree.ModuleService;
+import com.ruoyi.common.utils.poi.ExcelUtil;
+import com.ruoyi.common.core.page.TableDataInfo;
+
+/**
+ * 模块Controller
+ *
+ * @author sunshangeng
+ * @date 2022-09-14
+ */
+@RestController
+@RequestMapping("/deviceTree/module")
+public class ModuleController extends BaseController {
+    @Autowired
+    private ModuleService moduleService;
+
+    /**
+     * 查询模块列表
+     */
+    @PreAuthorize("@ss.hasPermi('basicData:deviceTree:module:list')")
+    @GetMapping("/list")
+    public TableDataInfo list(Module module) {
+        startPage();
+        List<Module> list = moduleService.selectModuleList(module);
+        return getDataTable(list);
+    }
+
+    /**
+     * 导出模块列表
+     */
+    @PreAuthorize("@ss.hasPermi('basicData:deviceTree:module:export')")
+    @Log(title = "模块", businessType = BusinessType.EXPORT)
+    @PostMapping("/export")
+    public void export(HttpServletResponse response, Module module) {
+        List<Module> list = moduleService.selectModuleList(module);
+        ExcelUtil<Module> util = new ExcelUtil<>(Module.class);
+        util.exportExcel(response, list, "模块数据");
+    }
+
+    /**
+     * 获取模块详细信息
+     */
+    @PreAuthorize("@ss.hasPermi('basicData:deviceTree:module:query')")
+    @GetMapping(value = "/{id}")
+    public AjaxResult getInfo(@PathVariable("id") Long id) {
+        return AjaxResult.success(moduleService.selectModuleById(id));
+    }
+
+    /**
+     * 新增模块
+     */
+    @PreAuthorize("@ss.hasPermi('basicData:deviceTree:module:add')")
+    @PostMapping("/insertModule")
+    public AjaxResult insertModule(Module module) {
+        return moduleService.insertModule(module);
+    }
+
+    /**
+     * 修改模块
+     */
+    @PreAuthorize("@ss.hasPermi('basicData:deviceTree:module:edit')")
+    @GetMapping("/updateModule")
+    public AjaxResult updateModule(Module module) {
+        return moduleService.updateModule(module);
+    }
+
+    /**
+     * 删除模块
+     */
+    @PreAuthorize("@ss.hasPermi('basicData:deviceTree:module:remove')")
+    @Log(title = "模块", businessType = BusinessType.DELETE)
+    @DeleteMapping("/{ids}")
+    public AjaxResult remove(@PathVariable Long[] ids) {
+        return moduleService.deleteModuleByIds(ids);
+    }
+
+
+    /**
+     * 同步模块
+     *
+     * @param params
+     * @return {@code AjaxResult }
+     * @Author qindehua
+     * @Date 2022/09/24
+     **/
+    @PreAuthorize("@ss.hasPermi('basicData:deviceTree:module:sync')")
+    @GetMapping("/synchronizeModule")
+    @ResponseBody
+    public AjaxResult synchronizeModule(@RequestParam Map<String, Object> params) {
+        Module module = new Module();
+        module.setDeviceTreeId(Long.parseLong(String.valueOf(params.get("deviceTreeId"))));
+        module.setNodeType(params.get("nodeType").toString());
+        return moduleService.synchronizeModule(module);
+    }
+
+    /**
+     * 同步模块点
+     *
+     * @param params
+     * @return {@code AjaxResult }
+     * @Author gaojikun
+     * @Date 2022/09/29
+     **/
+    @PreAuthorize("@ss.hasPermi('basicData:deviceTree:point:sync')")
+    @GetMapping("/synchronizePoint")
+    @ResponseBody
+    public AjaxResult synchronizePoint(@RequestParam Map<String, Object> params) {
+        Point point = new Point();
+        point.setTreeId(Long.parseLong(String.valueOf(params.get("treeId"))));
+        point.setNodeType(params.get("nodeType").toString());
+        return moduleService.synchronizePoint(point);
+    }
+
+    /**
+     * 同步虚点
+     *
+     * @param params
+     * @return {@code AjaxResult }
+     * @Author gaojikun
+     * @Date 2022/09/29
+     **/
+    @PreAuthorize("@ss.hasPermi('basicData:deviceTree:vpoint:sync')")
+    @GetMapping("/synVirtualPoint")
+    @ResponseBody
+    public AjaxResult synVirtualPoint(@RequestParam Map<String, Object> params) {
+        Point point = new Point();
+        point.setTreeId(Long.parseLong(String.valueOf(params.get("treeId"))));
+        point.setNodeType(params.get("nodeType").toString());
+        return moduleService.synVirtualPoint(point);
+    }
+
+
+    /**
+     * 数据对比
+     *
+     * @param deviceTreeId 设备树id
+     * @param type         类型
+     * @return {@code AjaxResult }
+     * @Author gaojikun
+     * @Date 2022/09/29
+     **/
+    @PreAuthorize("@ss.hasPermi('basicData:deviceTree:module:contrast')")
+    @GetMapping("/getDataInfoParam")
+    public AjaxResult getDataInfoParam(Long deviceTreeId, Integer type) {
+        return moduleService.getDataInfoParam(deviceTreeId, type);
+    }
+}

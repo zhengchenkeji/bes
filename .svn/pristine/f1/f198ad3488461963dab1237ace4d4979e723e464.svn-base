@@ -1,0 +1,256 @@
+package com.ruoyi.energyInfo.parkInfo.domain;
+
+import java.util.Date;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
+import com.ruoyi.common.annotation.Excel;
+import com.ruoyi.common.core.domain.BaseEntity;
+
+/**
+ * 园区对象 park
+ * 
+ * @author ruoyi
+ * @date 2022-09-08
+ */
+public class Park extends BaseEntity
+{
+    private static final long serialVersionUID = 1L;
+
+    /** 园区编号 */
+    @Excel(name = "园区编号")
+    private String code;
+
+    /** 用户名称 */
+    /*@Excel(name = "用户名称")*/
+    private String userName;
+
+    /** 组织机构id */
+    /*@Excel(name = "组织机构id")*/
+    private String organizationId;
+
+    /** 园区名称 */
+    @Excel(name = "园区名称")
+    private String name;
+
+    /** 节点编码 */
+//    @Excel(name = "节点编码")
+    private String nodeCode;
+
+    /** 总面积 */
+    @Excel(name = "总面积")
+    private String allArea;
+
+    /** 监测面积 */
+    @Excel(name = "监测面积")
+    private String monitorArea;
+
+    /** 供暖面积 */
+    @Excel(name = "供暖面积")
+    private String heatArea;
+
+    /** 总人口 */
+    @Excel(name = "总人口")
+    private String personNums;
+
+    /** 建筑时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    @Excel(name = "建筑时间", width = 30, dateFormat = "yyyy-MM-dd")
+    private Date buildTime;
+
+    /** 设备运行时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd")
+//    @Excel(name = "设备运行时间", width = 30, dateFormat = "yyyy-MM-dd")
+    private Date equipmentRuntime;
+
+    /** 联系人 */
+    @Excel(name = "联系人")
+    private String contactName;
+
+    /** 联系人电话 */
+    @Excel(name = "联系人电话")
+    private String contactPhone;
+
+    /** 联系人邮箱 */
+    @Excel(name = "联系人邮箱")
+    private String contactEmail;
+
+    /** $column.columnComment */
+//    @Excel(name = "经度", readConverterExp = "$column.readConverterExp()")
+    @Excel(name = "经度")
+    private String longitude;
+
+    /** $column.columnComment */
+    //@Excel(name = "纬度", readConverterExp = "$column.readConverterExp()")
+    @Excel(name = "纬度")
+    private String latitude;
+
+    public void setCode(String code) 
+    {
+        this.code = code;
+    }
+
+    public String getCode() 
+    {
+        return code;
+    }
+    public void setUserName(String userName) 
+    {
+        this.userName = userName;
+    }
+
+    public String getUserName() 
+    {
+        return userName;
+    }
+    public void setOrganizationId(String organizationId) 
+    {
+        this.organizationId = organizationId;
+    }
+
+    public String getOrganizationId() 
+    {
+        return organizationId;
+    }
+    public void setName(String name) 
+    {
+        this.name = name;
+    }
+
+    public String getName() 
+    {
+        return name;
+    }
+    public void setNodeCode(String nodeCode) 
+    {
+        this.nodeCode = nodeCode;
+    }
+
+    public String getNodeCode() 
+    {
+        return nodeCode;
+    }
+    public void setAllArea(String allArea) 
+    {
+        this.allArea = allArea;
+    }
+
+    public String getAllArea() 
+    {
+        return allArea;
+    }
+    public void setMonitorArea(String monitorArea) 
+    {
+        this.monitorArea = monitorArea;
+    }
+
+    public String getMonitorArea() 
+    {
+        return monitorArea;
+    }
+    public void setHeatArea(String heatArea) 
+    {
+        this.heatArea = heatArea;
+    }
+
+    public String getHeatArea() 
+    {
+        return heatArea;
+    }
+    public void setPersonNums(String personNums) 
+    {
+        this.personNums = personNums;
+    }
+
+    public String getPersonNums() 
+    {
+        return personNums;
+    }
+    public void setBuildTime(Date buildTime) 
+    {
+        this.buildTime = buildTime;
+    }
+
+    public Date getBuildTime() 
+    {
+        return buildTime;
+    }
+    public void setEquipmentRuntime(Date equipmentRuntime) 
+    {
+        this.equipmentRuntime = equipmentRuntime;
+    }
+
+    public Date getEquipmentRuntime() 
+    {
+        return equipmentRuntime;
+    }
+    public void setContactName(String contactName) 
+    {
+        this.contactName = contactName;
+    }
+
+    public String getContactName() 
+    {
+        return contactName;
+    }
+    public void setContactPhone(String contactPhone) 
+    {
+        this.contactPhone = contactPhone;
+    }
+
+    public String getContactPhone() 
+    {
+        return contactPhone;
+    }
+    public void setContactEmail(String contactEmail) 
+    {
+        this.contactEmail = contactEmail;
+    }
+
+    public String getContactEmail() 
+    {
+        return contactEmail;
+    }
+    public void setLongitude(String longitude) 
+    {
+        this.longitude = longitude;
+    }
+
+    public String getLongitude() 
+    {
+        return longitude;
+    }
+    public void setLatitude(String latitude) 
+    {
+        this.latitude = latitude;
+    }
+
+    public String getLatitude() 
+    {
+        return latitude;
+    }
+
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this,ToStringStyle.MULTI_LINE_STYLE)
+            .append("code", getCode())
+            .append("userName", getUserName())
+            .append("organizationId", getOrganizationId())
+            .append("name", getName())
+            .append("nodeCode", getNodeCode())
+            .append("allArea", getAllArea())
+            .append("monitorArea", getMonitorArea())
+            .append("heatArea", getHeatArea())
+            .append("personNums", getPersonNums())
+            .append("buildTime", getBuildTime())
+            .append("equipmentRuntime", getEquipmentRuntime())
+            .append("contactName", getContactName())
+            .append("contactPhone", getContactPhone())
+            .append("contactEmail", getContactEmail())
+            .append("createTime", getCreateTime())
+            .append("updateTime", getUpdateTime())
+            .append("longitude", getLongitude())
+            .append("latitude", getLatitude())
+            .toString();
+    }
+}

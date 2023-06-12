@@ -1,0 +1,109 @@
+package com.zc.efounder.JEnterprise.mapper.baseData;
+
+import com.zc.efounder.JEnterprise.domain.baseData.Equipment;
+import com.zc.efounder.JEnterprise.domain.baseData.HistoryItemData;
+import org.apache.ibatis.annotations.Param;
+
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * 物联设备Mapper接口
+ * 
+ * @author gaojikun
+ * @date 2023-03-08
+ */
+public interface EquipmentMapper
+{
+    /**
+     * 查询物联设备
+     * 
+     * @param id 物联设备主键
+     * @return 物联设备
+     */
+    public Equipment selectAthenaBesEquipmentById(Long id);
+
+    public Equipment getInfoByCode(String code);
+
+    /**
+     * 查询物联设备子设备
+     *
+     * @param id 物联设备主键
+     * @return 物联设备
+     */
+    List<Equipment> selectAthenaBesEquipmentSonList(Long id);
+
+    /**
+     * 查询物联设备详情
+     *
+     * @param id 物联设备主键
+     * @return 物联设备详情
+     */
+    public Map<String,Object> selectAthenaBesEquipmentInfoById(Long id);
+
+    /**
+     * 查询物联设备列表
+     * 
+     * @param athenaBesEquipment 物联设备
+     * @return 物联设备集合
+     */
+    List<Equipment> selectAthenaBesEquipmentList(Equipment athenaBesEquipment);
+
+    /**
+     * 查重物联设备
+     *
+     * @param athenaBesEquipment 物联设备
+     * @return 物联设备集合
+     */
+    List<Equipment> selectAthenaBesEquipmentListCheck(Equipment athenaBesEquipment);
+
+    /**
+     * 新增物联设备
+     * 
+     * @param athenaBesEquipment 物联设备
+     * @return boolean
+     */
+    boolean insertAthenaBesEquipment(Equipment athenaBesEquipment);
+
+    /**
+     * 修改物联设备
+     * 
+     * @param athenaBesEquipment 物联设备
+     * @return boolean
+     */
+    boolean updateAthenaBesEquipment(Equipment athenaBesEquipment);
+
+    /**
+     * 删除物联设备
+     * 
+     * @param id 物联设备主键
+     * @return boolean
+     */
+    boolean deleteAthenaBesEquipmentById(Long id);
+
+    /**
+     * 删除所有物联子设备
+     *
+     * @param id 物联设备主键
+     * @return boolean
+     */
+    boolean deleteSonAthenaBesEquipmentByIds(Long id);
+
+
+    /**
+     * 批量删除物联设备
+     * 
+     * @param ids 需要删除的数据主键集合
+     * @return boolean
+     */
+    boolean deleteAthenaBesEquipmentByIds(Long[] ids);
+
+    /**
+     * 查询物联设备历史数据
+     *
+     * @param ids 数据项id集合
+     * @return boolean
+     */
+    List<HistoryItemData> selectItemDataHistoryListById(@Param("ids") List<Long> ids,@Param("startDate") Date startDate,@Param("endDate") Date endDate);
+}

@@ -1,0 +1,27 @@
+package com.zc.relay.handler;
+
+import com.zc.relay.dto.DownDeviceParam;
+
+import java.util.List;
+
+/**
+ * @author Athena-xiepufeng
+ *
+ * 通讯所参数获取
+ */
+public interface DownParamGetter
+{
+
+    /**
+     * 获取全部设备和功能参数
+     * @return
+     */
+    List<DownDeviceParam> getDeviceFunctionParam();
+
+    /**
+     * 根据设备编号获取设备和功能参数
+     * @param deviceCode
+     * @return
+     */
+    DownDeviceParam getDeviceFunctionParam(String deviceCode);
+}

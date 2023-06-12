@@ -1,0 +1,128 @@
+{
+  "id": "",
+  "name": "",
+  "font_family": "iconfont",
+  "css_prefix_text": "icon-",
+  "description": "",
+  "glyphs": [
+    {
+      "icon_id": "147460",
+      "name": "图片_填充",
+      "font_class": "tupiantianchong",
+      "unicode": "e6b2",
+      "unicode_decimal": 59058
+    },
+    {
+      "icon_id": "383678",
+      "name": "空五角星",
+      "font_class": "kongwujiaoxing",
+      "unicode": "e62d",
+      "unicode_decimal": 58925
+    },
+    {
+      "icon_id": "577322",
+      "name": "圆形未选中",
+      "font_class": "yuanxingweixuanzhong",
+      "unicode": "e72f",
+      "unicode_decimal": 59183
+    },
+    {
+      "icon_id": "577357",
+      "name": "删除",
+      "font_class": "shanchu",
+      "unicode": "e74b",
+      "unicode_decimal": 59211
+    },
+    {
+      "icon_id": "1503655",
+      "name": "表格",
+      "font_class": "biaoge",
+      "unicode": "e637",
+      "unicode_decimal": 58935
+    },
+    {
+      "icon_id": "4354256",
+      "name": "形状-三角形",
+      "font_class": "xingzhuang-sanjiaoxing",
+      "unicode": "eb99",
+      "unicode_decimal": 60313
+    },
+    {
+      "icon_id": "4906240",
+      "name": "按钮组",
+      "font_class": "anniuzu",
+      "unicode": "e782",
+      "unicode_decimal": 59266
+    },
+    {
+      "icon_id": "6420504",
+      "name": "吊灯",
+      "font_class": "diaodeng-",
+      "unicode": "e60d",
+      "unicode_decimal": 58893
+    },
+    {
+      "icon_id": "8229196",
+      "name": "向右旋转",
+      "font_class": "xiangyouxuanzhuan",
+      "unicode": "e66a",
+      "unicode_decimal": 58986
+    },
+    {
+      "icon_id": "10043643",
+      "name": "组合",
+      "font_class": "zuhe",
+      "unicode": "e615",
+      "unicode_decimal": 58901
+    },
+    {
+      "icon_id": "10352343",
+      "name": "文本",
+      "font_class": "wenben",
+      "unicode": "e61c",
+      "unicode_decimal": 58908
+    },
+    {
+      "icon_id": "12323764",
+      "name": "上移",
+      "font_class": "shangyi",
+      "unicode": "e656",
+      "unicode_decimal": 58966
+    },
+    {
+      "icon_id": "12323767",
+      "name": "密码",
+      "font_class": "mima",
+      "unicode": "e657",
+      "unicode_decimal": 58967
+    },
+    {
+      "icon_id": "12323774",
+      "name": "下移",
+      "font_class": "xiayi",
+      "unicode": "e658",
+      "unicode_decimal": 58968
+    },
+    {
+      "icon_id": "14918853",
+      "name": "多选未选中",
+      "font_class": "juxing1604",
+      "unicode": "e628",
+      "unicode_decimal": 58920
+    },
+    {
+      "icon_id": "17521049",
+      "name": "直线",
+      "font_class": "zhixian",
+      "unicode": "e602",
+      "unicode_decimal": 58882
+    },
+    {
+      "icon_id": "20323710",
+      "name": "关闭",
+      "font_class": "icon_guanbi",
+      "unicode": "e60e",
+      "unicode_decimal": 58894
+    }
+  ]
+}

@@ -1,0 +1,79 @@
+import request from '@/utils/request'
+
+// 查询物联设备列表
+export function listEquipment(query) {
+  return request({
+    url: '/baseData/equipment/list',
+    method: 'get',
+    params: query
+  })
+}
+
+// 查询物联子设备列表
+export function listEquipmentSon(query) {
+  return request({
+    url: '/baseData/equipment/sonList',
+    method: 'get',
+    params: query
+  })
+}
+
+
+// 查询物联设备详细
+export function getEquipment(id) {
+  return request({
+    url: '/baseData/equipment/' + id,
+    method: 'get'
+  })
+}
+
+// 查询物联设备详情
+export function getEquipmentInfo(id) {
+  return request({
+    url: '/baseData/equipment/info/' + id,
+    method: 'get'
+  })
+}
+
+// 查询物联设备实时数据
+export function getEquipmentActualTimeList(id) {
+  return request({
+    url: '/baseData/equipment/actualTime/' + id,
+    method: 'get'
+  })
+}
+
+// 新增物联设备
+export function addEquipment(data) {
+  return request({
+    url: '/baseData/equipment',
+    method: 'post',
+    data: data
+  })
+}
+
+// 修改物联设备
+export function updateEquipment(data) {
+  return request({
+    url: '/baseData/equipment',
+    method: 'put',
+    data: data
+  })
+}
+
+// 删除物联设备
+export function delEquipment(id) {
+  return request({
+    url: '/baseData/equipment/' + id,
+    method: 'delete'
+  })
+}
+
+// 导出物联设备
+export function exportEquipment(query) {
+  return request({
+    url: '/baseData/equipment/export',
+    method: 'get',
+    params: query
+  })
+}

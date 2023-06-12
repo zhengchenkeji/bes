@@ -1,0 +1,27 @@
+package com.ruoyi.electricPowerTranscription.extremeValueReport.service;
+
+import com.ruoyi.common.core.domain.AjaxResult;
+import com.ruoyi.electricPowerTranscription.extremeValueReport.domain.ExtremeValueReport;
+import com.ruoyi.electricPowerTranscription.powerData.domain.PowerData;
+import com.ruoyi.energyInfo.energy.domain.EnergyType;
+import com.ruoyi.energyInfo.parkInfo.domain.Park;
+
+import java.util.List;
+import java.util.Map;
+
+/**
+ * @Description 用能概况Service
+ *
+ * @author gaojikun
+ * @date 2022/11/9 10:42
+ */
+public interface ExtremeValueReportService {
+
+    /**
+     * 查询极值报表
+     */
+    AjaxResult queryDayChartsData(ExtremeValueReport extremeValueReport);
+
+    List<Map<String, Object>> queryDayChartsDataList(ExtremeValueReport extremeValueReport);
+
+}

@@ -1,0 +1,74 @@
+package com.ruoyi.energyInfo.subitemConfig.domain.vo;
+
+import com.ruoyi.common.core.domain.entity.AthenaBranchConfig;
+
+import java.util.List;
+
+public class SubitemBranchVo {
+
+    private static final long serialVersionUID = 1L;
+
+    /**
+     * 操作之后 该节点的支路列表
+     */
+    private List<AthenaBranchConfig> branchList;
+    /**
+     * 分项当前节点
+     */
+    private String subitemId;
+
+    /**
+     * 分项当前父节点
+     */
+    private String fatherId;
+
+    /**
+     * 所属园区
+     */
+    private String parkCode;
+
+    /**
+     * 所属能源
+     */
+    private String energyCode;
+
+    public List<AthenaBranchConfig> getBranchList() {
+        return branchList;
+    }
+
+    public void setBranchList(List<AthenaBranchConfig> branchList) {
+        this.branchList = branchList;
+    }
+
+    public String getSubitemId() {
+        return subitemId;
+    }
+
+    public void setSubitemId(String subitemId) {
+        this.subitemId = subitemId;
+    }
+
+    public String getFatherId() {
+        return fatherId;
+    }
+
+    public void setFatherId(String fatherId) {
+        this.fatherId = fatherId;
+    }
+
+    public String getParkCode() {
+        return parkCode;
+    }
+
+    public void setParkCode(String parkCode) {
+        this.parkCode = parkCode;
+    }
+
+    public String getEnergyCode() {
+        return energyCode;
+    }
+
+    public void setEnergyCode(String energyCode) {
+        this.energyCode = energyCode;
+    }
+}

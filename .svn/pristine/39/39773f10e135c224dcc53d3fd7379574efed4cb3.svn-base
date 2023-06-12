@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zc.iot.mapper.IotDeviceMapper">
+    
+    <resultMap type="IotDevice" id="IotDeviceResult">
+        <result property="id"    column="id"    />
+        <result property="gatewayDevice"    column="gateway_device"    />
+        <result property="productKey"    column="product_key"    />
+        <result property="groupKey"    column="group_key"    />
+        <result property="deviceName"    column="device_name"    />
+        <result property="deviceCode"    column="device_code"    />
+        <result property="onlineState"    column="online_state"    />
+        <result property="enabled"    column="enabled"    />
+        <result property="version"    column="version"    />
+        <result property="ipAddr"    column="ip_addr"    />
+        <result property="location"    column="location"    />
+        <result property="lastInlineTime"    column="last_inline_time"    />
+        <result property="lastOfflineTime"    column="last_offline_time"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectIotDeviceVo">
+        select id, gateway_device, product_key, group_key, device_name, device_code, online_state, enabled, version, ip_addr, location, last_inline_time, last_offline_time, create_time, update_time from athena_iot_device
+    </sql>
+
+    <select id="selectIotDeviceList" parameterType="IotDevice" resultMap="IotDeviceResult">
+        <include refid="selectIotDeviceVo"/>
+        <where>
+            <if test="gatewayDevice != null "> and gateway_device = #{gatewayDevice}</if>
+            <if test="productKey != null "> and product_key = #{productKey}</if>
+            <if test="groupKey != null "> and group_key = #{groupKey}</if>
+            <if test="deviceName != null  and deviceName != ''"> and device_name like concat('%', #{deviceName}, '%')</if>
+            <if test="deviceCode != null  and deviceCode != ''"> and device_code like concat('%', #{deviceCode}, '%')</if>
+            <if test="onlineState != null "> and online_state = #{onlineState}</if>
+            <if test="enabled != null "> and enabled = #{enabled}</if>
+            <if test="version != null  and version != ''"> and version = #{version}</if>
+            <if test="ipAddr != null  and ipAddr != ''"> and ip_addr = #{ipAddr}</if>
+        </where>
+    </select>
+
+    <select id="selectIotDeviceGatewayList" parameterType="IotDevice" resultMap="IotDeviceResult">
+        select d.id,
+               d.gateway_device,
+               d.product_key,
+               d.group_key,
+               d.device_name,
+               d.device_code,
+               d.online_state,
+               d.enabled,
+               d.version,
+               d.ip_addr,
+               d.location,
+               d.last_inline_time,
+               d.last_offline_time,
+               d.create_time,
+               d.update_time
+        from athena_iot_device d, athena_iot_product p
+        <where>
+            d.product_key = p.id
+            and p.node_type = 3
+            <if test="productKey != null "> and product_key = #{productKey}</if>
+            <if test="groupKey != null "> and group_key = #{groupKey}</if>
+            <if test="deviceName != null  and deviceName != ''"> and device_name like concat('%', #{deviceName}, '%')</if>
+            <if test="deviceCode != null  and deviceCode != ''"> and device_code like concat('%', #{deviceCode}, '%')</if>
+            <if test="onlineState != null "> and online_state = #{onlineState}</if>
+            <if test="enabled != null "> and enabled = #{enabled}</if>
+            <if test="version != null  and version != ''"> and version = #{version}</if>
+            <if test="ipAddr != null  and ipAddr != ''"> and ip_addr = #{ipAddr}</if>
+        </where>
+    </select>
+
+    <select id="selectIotDeviceById" parameterType="Long" resultMap="IotDeviceResult">
+        <include refid="selectIotDeviceVo"/>
+        where id = #{id}
+    </select>
+
+    <select id="selectIotDeviceByCode" parameterType="String" resultMap="IotDeviceResult">
+        <include refid="selectIotDeviceVo"/>
+        where device_code = #{deviceCode}
+    </select>
+
+    <select id="selectIotDeviceCount" resultType="java.lang.Integer">
+        select COUNT(id) from athena_iot_device
+    </select>
+
+    <select id="selectIotDeviceOnlineCount" resultType="java.lang.Integer">
+        select COUNT(id) from athena_iot_device where online_state = 1
+    </select>
+
+    <select id="selectIotDeviceEnabledCount" resultType="java.lang.Integer">
+        select COUNT(id) from athena_iot_device where enabled = 1
+    </select>
+
+    <insert id="insertIotDevice" parameterType="IotDevice" useGeneratedKeys="true" keyProperty="id">
+        insert into athena_iot_device
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="gatewayDevice != null">gateway_device,</if>
+            <if test="productKey != null">product_key,</if>
+            <if test="groupKey != null">group_key,</if>
+            <if test="deviceName != null and deviceName != ''">device_name,</if>
+            <if test="deviceCode != null and deviceCode != ''">device_code,</if>
+            <if test="onlineState != null">online_state,</if>
+            <if test="enabled != null">enabled,</if>
+            <if test="version != null">version,</if>
+            <if test="ipAddr != null">ip_addr,</if>
+            <if test="location != null">location,</if>
+            <if test="lastInlineTime != null">last_inline_time,</if>
+            <if test="lastOfflineTime != null">last_offline_time,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="gatewayDevice != null">#{gatewayDevice},</if>
+            <if test="productKey != null">#{productKey},</if>
+            <if test="groupKey != null">#{groupKey},</if>
+            <if test="deviceName != null and deviceName != ''">#{deviceName},</if>
+            <if test="deviceCode != null and deviceCode != ''">#{deviceCode},</if>
+            <if test="onlineState != null">#{onlineState},</if>
+            <if test="enabled != null">#{enabled},</if>
+            <if test="version != null">#{version},</if>
+            <if test="ipAddr != null">#{ipAddr},</if>
+            <if test="location != null">#{location},</if>
+            <if test="lastInlineTime != null">#{lastInlineTime},</if>
+            <if test="lastOfflineTime != null">#{lastOfflineTime},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateIotDevice" parameterType="IotDevice">
+        update athena_iot_device
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="gatewayDevice != null">gateway_device = #{gatewayDevice},</if>
+            <if test="productKey != null">product_key = #{productKey},</if>
+            <if test="groupKey != null">group_key = #{groupKey},</if>
+            <if test="deviceName != null and deviceName != ''">device_name = #{deviceName},</if>
+            <if test="deviceCode != null and deviceCode != ''">device_code = #{deviceCode},</if>
+            <if test="onlineState != null">online_state = #{onlineState},</if>
+            <if test="enabled != null">enabled = #{enabled},</if>
+            <if test="version != null">version = #{version},</if>
+            <if test="ipAddr != null">ip_addr = #{ipAddr},</if>
+            <if test="location != null">location = #{location},</if>
+            <if test="lastInlineTime != null">last_inline_time = #{lastInlineTime},</if>
+            <if test="lastOfflineTime != null">last_offline_time = #{lastOfflineTime},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteIotDeviceById" parameterType="Long">
+        delete from athena_iot_device where id = #{id}
+    </delete>
+
+    <delete id="deleteIotDeviceByIds" parameterType="String">
+        delete from athena_iot_device where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

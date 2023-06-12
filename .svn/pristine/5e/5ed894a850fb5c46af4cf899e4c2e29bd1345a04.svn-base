@@ -1,0 +1,408 @@
+<template>
+  <div>
+      <template v-if="sideTheme == 'theme-dark'|| sideTheme == 'theme-light'">
+        <!-- 左右结构 -->
+        <div :class="classObj" class="app-wrapper">
+          <div v-if="device==='mobile'&&sidebar.opened" class="drawer-bg" @click="handleClickOutside"/>
+          <template v-if="topNav == false">
+            <sidebar class="sidebar-container" style="max-height: 100vh"/>
+            <div :class="{hasTagsView:needTagsView}" class="main-container">
+              <div :class="{'fixed-header':fixedHeader}" :style="fixedHeader?'background-color:white;':''">
+                <navbar />
+                <tags-view v-if="needTagsView" />
+              </div>
+              <app-main />
+              <right-panel>
+                <settings />
+              </right-panel>
+            </div>
+          </template>
+          <!-- 上下结构 -->
+          <template v-else>
+            <div :class="{'fixed-header':fixedHeader}" :style="fixedHeader?'width:100%;':''">
+              <div class="topNav_head" style="box-shadow:2px 0 6px rgb(0 21 41 / 35%)">
+                <sidebar class="sidebar-container index_menu blue_index_menu" style="width: 74% !important;height:50px;position: relative;box-shadow:unset;float:left;"/>
+<!--                <el-button type="primary" @click="dddd()">确 定</el-button>-->
+                <template v-if="weatherView">
+
+                  <div class="weather">
+                    <img :src="weather_weatherimg">
+                    <p>{{weather_weather}}</p>
+                  </div>
+                </template>
+                <navbar :class="sideTheme=='theme-light'?'theme-light-navbar':'theme-dark-navbar'" :style="weatherView?'width: 11%!important;height:50px;':'width: 26%!important;height:50px;'"/>
+              </div>
+            </div>
+            <div :class="{hasTagsView:needTagsView}" class="main-container" :style="fixedHeader?'margin-left:0px;':'margin-left:0px;'">
+              <breadcrumb :style="$route.path == '/index'?'display:none;':''" ref="Breadcrumb" id="breadcrumb-container" class="breadcrumb-container" style="margin-left:20px;" />
+              <app-main />
+              <right-panel>
+                <settings />
+              </right-panel>
+            </div>
+          </template>
+        </div>
+      </template>
+      <!-- add -->
+      <template v-else>
+        <div :class="classObj" class="app-wrapper">
+          <div :class="{'fixed-header':fixedHeader}">
+            <div class="topNavHeadBlue" :style="'background-image:url('+navBg+');'">
+              <sidebarblue class="sidebar-container index_menu blue_index_menu" style="width: 73% !important;float:left;"/>
+              <template v-if="weatherView == true">
+                <div class="weather">
+                  <img :src="weather_weatherimg">
+                  <p>{{weather_weather}}</p>
+                </div>
+              </template>
+              <navbar class="theme-blue-navbar" :style="weatherView?'width: 12%!important;height:50px;float:left;':'margin-left:10%;width: 12%!important;height:50px;float:left;'"/>
+              <div class="clear"></div>
+            </div>
+          </div>
+          <div :class="{hasTagsView:needTagsView}" class="main-container" :style="fixedHeader?'margin-left:0;':'margin-left:0;'">
+            <template v-if="is_breadcrumb == 'true' && path != '/index'">
+              <breadcrumb ref="Breadcrumb" id="breadcrumb-container" class="breadcrumb-container" style="margin-top:20px;margin-left:20px;" />
+            </template>
+            <app-main :style="fixedHeader?'min-height: calc(100vh - 125px);padding-top:2.7%;':'min-height: calc(100vh - 125px);'"/>
+            <right-panel>
+              <settings />
+            </right-panel>
+          </div>
+        </div>
+      </template>
+  </div>
+</template>
+
+<script>
+import Breadcrumb from '@/components/Breadcrumb'
+import RightPanel from '@/components/RightPanel'
+import TopNav from '@/components/TopNav'
+import { AppMain, Navbar, Settings, Sidebar, TagsView,Sidebarblue} from './components'
+import ResizeMixin from './mixin/ResizeHandler'
+import { mapState } from 'vuex'
+import variables from '@/assets/styles/variables.scss'
+import axios from 'axios'
+import navBg from '@/assets/logo/nav_bg.png'
+
+import AllCityCode from "./cityCode"
+export default {
+  name: 'Layout',
+  components: {
+    Sidebarblue,
+    Breadcrumb,
+    AppMain,
+    Navbar,
+    RightPanel,
+    Settings,
+    Sidebar,
+    TagsView,
+    TopNav,
+  },
+  data(){
+    return{
+      // 天气
+      weather_weather:'',
+      // 天气图标
+      weather_weatherimg: '',
+      navBg:navBg,
+      is_weather:null,
+      is_breadcrumb:null,
+      breadcrumbStyle:null,
+      AllCityCode: AllCityCode.allCityCode
+    }
+  },
+  mixins: [ResizeMixin],
+  computed: {
+    ...mapState({
+      theme: state => state.settings.theme,
+      sideTheme: state => state.settings.sideTheme,
+      sidebar: state => state.app.sidebar,
+      device: state => state.app.device,
+      needTagsView: state => state.settings.tagsView,
+      weatherView:state => state.settings.weatherView,
+      fixedHeader: state => state.settings.fixedHeader
+    }),
+    classObj() {
+      return {
+        hideSidebar: !this.sidebar.opened,
+        openSidebar: this.sidebar.opened,
+        withoutAnimation: this.sidebar.withoutAnimation,
+        mobile: this.device === 'mobile'
+      }
+    },
+    variables() {
+      return variables;
+    },
+    topNav(){
+        return this.$store.state.settings.topNav
+    },
+    weatherView(){
+      return this.$store.state.settings.weatherView
+    }
+  },
+  methods: {
+    dddd() {
+      let routeUrl = this.$router.resolve({
+        path: '/indexplus'
+      });
+      //新窗口打开页面
+      window.open(routeUrl.href, '_blank');
+      //原窗口保持原来的页面
+      // this.$router.go(-1);
+      return 0;
+    },
+    getWeather(){
+      const that = this;
+      // let city = 'city=济南';
+      // let word = 'tianqi';
+      // const key='key=0c7ebab2461621aeb2c34b3a82e4c702';
+      // const header='http://api.tianapi.com/txapi';
+      // const url = `${header}/${word}/?${key}&${city}`;
+      // axios.get(url).then(res => {
+      //     const data = res.data.newslist[0];
+      //     this.weather_weather = data.area +':'+data.weather + data.lowest + data.wind + data.windsc;
+      //     this.weather_weatherimg = require('@/assets/weather/'+data.weatherimg+'');
+      // })
+
+
+      //获取当前城市信息
+      var data = {
+        key: "PT5BZ-IGY64-4MGUZ-XZFWH-WRGYV-NMBHN"  //这个key就是你申请的密钥
+      };
+      var url = "https://apis.map.qq.com/ws/location/v1/ip"; //这个就是地理位置信息的接口
+      data.output = "jsonp";
+      this.$jsonp(url, data)
+        .then(res => {
+          let province = res.result.ad_info.province;//省份
+          let city  = res.result.ad_info.city;//市名
+          let cityCodeNum = null;
+          for (let i = 0; i < that.AllCityCode.length; i++) {
+            if (province.indexOf(that.AllCityCode[i].province) >= 0) {
+              for (let j = 0; j < that.AllCityCode[i].city.length; j++) {
+                if (city.indexOf(that.AllCityCode[i].city[j].cityName) >= 0) {
+                  cityCodeNum = that.AllCityCode[i].city[j].cityCode;
+                }
+              }
+            }
+          };
+
+          if (cityCodeNum == null) {
+            cityCodeNum = "101120101";//赋值初始城市  济南
+          }
+
+          this.$fetchJsonp(
+            "http://cdn.weather.hao.360.cn/sed_api_weather_info.php?app=360chrome&code=" + cityCodeNum,
+            {jsonpCallback: "_jsonp"}
+          ).then((response) => {
+            return response.json();
+          }).then((data) => {
+            //当前温度
+
+            let nowTemp = data.realtime.weather.temperature;
+
+            //天气情况
+            let weatherInfo = data.realtime.weather.info;
+//湿度
+            let humidity = data.realtime.weather.humidity;
+//最低气温、最高气温
+            let minTemp = data.weather[0].info.dawn[2];
+            let maxTemp = data.weather[0].info.day[2];
+            this.weather_weather = weatherInfo + "  " +nowTemp + "℃";
+//空气质量
+            let pm25 = data.pm25.pm25[0];
+            if (pm25 <= 35) {
+              let airQuality = "优";
+            } else if (pm25 <= 75) {
+              let airQuality = "良";
+            } else if (pm25 <= 115) {
+              let airQuality = "轻度污染";
+            } else if (pm25 <= 150) {
+              let airQuality = "中度污染";
+            } else if (pm25 <= 250) {
+              let airQuality = "重度污染";
+            } else {
+              let airQuality = "严重污染";
+            }
+
+
+
+          //天气图标
+            let weatherIcon = null;
+            switch (weatherInfo) {
+              case "小雪":
+                weatherIcon = "xiaoxue";
+                break;
+              case "暴雪":
+                weatherIcon = "baoxue";
+                break;
+              case "暴雨":
+                weatherIcon = "baoyu";
+                break;
+              case "大雪":
+                weatherIcon = "daxue";
+                break;
+              case "大雨":
+                weatherIcon = "dayu";
+                break;
+              case "冻雨":
+                weatherIcon = "dongyu";
+                break;
+              case "多云":
+                weatherIcon = "duoyun";
+                break;
+              case "浮尘":
+                weatherIcon = "fuchen";
+                break;
+              case "雷阵雨":
+                weatherIcon = "leizhenyu";
+                break;
+              case "霾":
+                weatherIcon = "mai";
+                break;
+              case "晴":
+                weatherIcon = "qing";
+                break;
+              case "沙尘暴":
+                weatherIcon = "shachenbao";
+                break;
+              case "霜":
+                weatherIcon = "shuang";
+                break;
+              case "特大暴雨":
+                weatherIcon = "tedabaoyu";
+                break;
+              case "雾":
+                weatherIcon = "wu";
+                break;
+              case "小雨":
+                weatherIcon = "xiaoyu";
+                break;
+              case "小雨转晴":
+                weatherIcon = "xiaoyuzhuanqing";
+                break;
+              case "雪转晴":
+                weatherIcon = "xuezhuanqing";
+                break;
+              case "扬沙":
+                weatherIcon = "yangsha";
+                break;
+              case "阴":
+                weatherIcon = "yin";
+                break;
+              case "雨夹雪":
+                weatherIcon = "yujiaxue";
+                break;
+              case "阵雪":
+                weatherIcon = "zhenxue";
+                break;
+              case "阵雨":
+                weatherIcon = "zhenyu";
+                break;
+              case "中雪":
+                weatherIcon = "zhongxue";
+                break;
+              case "中雨":
+                weatherIcon = "zhongyu";
+                break;
+              default:
+                weatherIcon = "duoyun";
+            }
+
+            this.weather_weatherimg = require('@/assets/weather1/'+weatherIcon+'.png');
+          });
+
+        })
+        .catch(error => {
+          console.log(error);
+        });
+    },
+
+  },
+  watch: {
+    sideTheme(val) {
+      document.getElementsByTagName('body')[0].className = val;
+    }
+  },
+  mounted() {
+    if(this.weatherView == undefined) {
+      this.weatherView = false;
+    }
+    this.getWeather();
+    document.getElementsByTagName('body')[0].className = this.sideTheme;
+    // this.is_weather = systemConfig.navBarShow(systemConfig.systemType)['weather'];
+    this.is_breadcrumb = systemConfig.navBarShow(systemConfig.systemType)['breadcrumb'];
+    // console.log(this.$route.path)
+    // if(this.$route.path == '/index'){
+    //   this.breadcrumbStyle = {display:'none'};
+    // }
+  },
+}
+</script>
+
+<style lang="scss" scoped>
+  @import "~@/assets/styles/mixin.scss";
+  @import "~@/assets/styles/variables.scss";
+  // 区分不同主题下导航栏颜色
+  .theme-light-navbar{background-color:white;}
+  .theme-dark-navbar{background-color:#1D58A9;}
+  .app-wrapper {
+    @include clearfix;
+    position: relative;
+    height: 100%;
+    width: 100%;
+    // overflow: hidden;
+    overflow-y: auto;
+    &.mobile.openSidebar {
+      position: fixed;
+      top: 0;
+    }
+  }
+
+  .drawer-bg {
+    background: #000;
+    opacity: 0.3;
+    width: 100%;
+    top: 0;
+    height: 100%;
+    position: absolute;
+    z-index: 999;
+  }
+
+  .fixed-header {
+    position: fixed;
+    top: 0;
+    right: 0;
+    z-index: 9;
+    width: calc(100% - #{$base-sidebar-width});
+    // transition: width 0.28s;
+  }
+
+  .hideSidebar .fixed-header {
+    width: calc(100% - 54px)
+  }
+
+  .mobile .fixed-header {
+    width: 100%;
+  }
+  .index_menu{display: flex;height:50px;position: relative;box-shadow:unset;}
+  .blue_index_menu{}
+  .theme-dark .topNav_head{background-color: #1D58A9;}
+  .theme-light .topNav_head{background-color: #ffffff;}
+  .topNavHeadBlue{box-shadow:2px 0 6px rgb(0 21 41 / 35%);background-size: 100% 100%;width:100%;color:white;}
+
+  .topNavHeadBlue .index_menu .theme-blue{background-color: unset!important;;}
+  .theme-blue-navbar{box-shadow:unset;}
+  .theme-blue{
+    .theme-blue-navbar{background-color:unset;}
+  }
+  .weather p{color: #37ff30;height:50px;line-height:50px;text-indent: 10px;white-space: nowrap;font-size: 14px;}
+  .weather img{width:25px;height:25px;}
+  .weather{display: flex;justify-content: center;align-items: center;width:15%;float:left;}
+  .theme-blue-box{height:100%;}
+  .theme-light{
+    .weather{
+      p{color:#000000;}
+    }
+  }
+
+</style>

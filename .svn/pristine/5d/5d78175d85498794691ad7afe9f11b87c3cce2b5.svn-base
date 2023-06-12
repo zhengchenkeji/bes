@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zc.efounder.JEnterprise.mapper.electricPowerTranscription.ParamMapper">
+
+
+    <select id="selectDataByParamsCode" resultType="java.util.Map" >
+        SELECT
+        DATE_FORMAT(F_CJSJ,'%Y-%m-%d %H:%i:%s') as `time`,
+        <foreach collection="paramVO.paramsId" separator="," item="item">
+            SUM( CASE `F_DNBH` WHEN #{item} THEN `F_DATA` ELSE 0 END ) AS #{item}
+        </foreach>
+        FROM
+        `athena_bes_original_data`
+        WHERE
+        F_DBSYS_NAME=#{name}
+        AND F_DNBH IN
+        <foreach collection="paramVO.paramsId" separator="," open="(" close=")" item="item">
+            #{item}
+        </foreach>
+        AND DATE_FORMAT( F_CJSJ, '%Y-%m-%d' ) BETWEEN #{paramVO.startTime} AND #{paramVO.endTime}
+        GROUP BY F_CJSJ
+        ORDER BY F_CJSJ DESC
+    </select>
+</mapper>

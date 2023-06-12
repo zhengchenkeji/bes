@@ -1,0 +1,577 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.deviceManagement.deviceTree.mapper.PointMapper">
+
+    <resultMap type="deviceTree" id="deviceTreeResult">
+        <result property="deviceTreeId" column="device_tree_id"/>
+        <result property="deviceNodeId" column="device_node_id"/>
+        <result property="sysName" column="sys_name"/>
+        <result property="deviceType" column="device_type"/>
+        <result property="park" column="park"/>
+        <result property="deviceTreeFatherId" column="device_tree_father_id"/>
+        <result property="deviceNodeFunName" column="device_node_fun_name"/>
+        <result property="deviceNodeFunType" column="device_node_fun_type"/>
+        <result property="deviceTreeStatus" column="device_tree_status"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <resultMap type="buildNode" id="BuildNodeResult">
+        <result property="id" column="id"/>
+        <result property="treeId" column="tree_id"/>
+        <result property="sysName" column="sys_name"/>
+        <result property="nickName" column="nick_name"/>
+        <result property="portNum" column="port_num"/>
+        <result property="nodeType" column="node_type"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <resultMap type="NodeConfigSet" id="NodeConfigSetResult">
+        <result property="id" column="id"/>
+        <result property="sysName" column="sys_name"/>
+        <result property="initVal" column="init_val"/>
+        <result property="description" column="description"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <resultMap type="Point" id="PointResult">
+        <result property="guid" column="guid"/>
+        <result property="treeId" column="tree_id"/>
+        <result property="equipmentId" column="equipment_id"/>
+        <result property="sysName" column="sys_name"/>
+        <result property="nickName" column="nick_name"/>
+        <result property="nodeType" column="node_type"/>
+        <result property="vpointType" column="vpoint_type"/>
+        <result property="enabled" column="enabled"/>
+        <result property="initVal" column="init_val"/>
+        <result property="validInputType" column="valid_input_type"/>
+        <result property="accuracy" column="accuracy"/>
+        <result property="moduleId" column="module_id"/>
+        <result property="channelIndex" column="channel_index"/>
+        <result property="engineerUnit" column="engineer_unit"/>
+        <result property="sinnalType" column="sinnal_type"/>
+        <result property="minVal" column="min_val"/>
+        <result property="maxVal" column="max_val"/>
+        <result property="reversed" column="reversed"/>
+        <result property="sourced" column="sourced"/>
+        <result property="workMode" column="work_mode"/>
+        <result property="alarmEnable" column="alarm_enable"/>
+        <result property="alarmType" column="alarm_type"/>
+        <result property="highLimit" column="high_limit"/>
+        <result property="lowLimit" column="low_limit"/>
+        <result property="closeState" column="close_state"/>
+        <result property="alarmPriority" column="alarm_priority"/>
+        <result property="description" column="description"/>
+        <result property="energyStatics" column="energy_statics"/>
+        <result property="staticsTime" column="statics_time"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="energyCode" column="energy_code"/>
+        <result property="syncState" column="sync_state"/>
+        <result property="faultState" column="fault_state"/>
+        <result property="controllerId" column="controller_id"/>
+    </resultMap>
+
+    <sql id="selectPointVo">
+        select guid, tree_id, equipment_id, sys_name, nick_name, node_type, vpoint_type, enabled, init_val, valid_input_type, accuracy, module_id, channel_index, engineer_unit, sinnal_type, min_val, max_val, reversed, sourced, work_mode, alarm_enable, alarm_type, high_limit, low_limit, close_state, alarm_priority, description, energy_statics, statics_time, create_time, update_time, energy_code, sync_state, fault_state, controller_id from athena_bes_point
+    </sql>
+
+    <sql id="selectTreeVo">
+        SELECT device_tree_id,device_node_id,sys_name,device_type,device_tree_father_id,park,create_time,update_time,device_tree_status FROM athena_bes_device_tree
+    </sql>
+
+    <!--查询点位列表-->
+    <select id="selectPointList" parameterType="Point" resultMap="PointResult">
+        <include refid="selectPointVo"/>
+        <where>
+            <if test="treeId != null ">and tree_id = #{treeId}</if>
+            <if test="equipmentId != null  and equipmentId != ''">and equipment_id = #{equipmentId}</if>
+            <if test="sysName != null  and sysName != ''">and sys_name = #{sysName}</if>
+            <if test="nickName != null  and nickName != ''">and nick_name = #{nickName}</if>
+            <if test="nodeType != null  and nodeType != ''">and node_type = #{nodeType}</if>
+            <if test="vpointType != null  and vpointType != ''">and vpoint_type = #{vpointType}</if>
+            <if test="enabled != null ">and enabled = #{enabled}</if>
+            <if test="initVal != null  and initVal != ''">and init_val = #{initVal}</if>
+            <if test="validInputType != null ">and valid_input_type = #{validInputType}</if>
+            <if test="accuracy != null ">and accuracy = #{accuracy}</if>
+            <if test="moduleId != null ">and module_id = #{moduleId}</if>
+            <if test="channelIndex != null ">and channel_index = #{channelIndex}</if>
+            <if test="engineerUnit != null  and engineerUnit != ''">and engineer_unit = #{engineerUnit}</if>
+            <if test="sinnalType != null ">and sinnal_type = #{sinnalType}</if>
+            <if test="minVal != null  and minVal != ''">and min_val = #{minVal}</if>
+            <if test="maxVal != null  and maxVal != ''">and max_val = #{maxVal}</if>
+            <if test="reversed != null ">and reversed = #{reversed}</if>
+            <if test="sourced != null ">and sourced = #{sourced}</if>
+            <if test="workMode != null ">and work_mode = #{workMode}</if>
+            <if test="alarmEnable != null ">and alarm_enable = #{alarmEnable}</if>
+            <if test="alarmType != null ">and alarm_type = #{alarmType}</if>
+            <if test="highLimit != null ">and high_limit = #{highLimit}</if>
+            <if test="lowLimit != null ">and low_limit = #{lowLimit}</if>
+            <if test="closeState != null ">and close_state = #{closeState}</if>
+            <if test="alarmPriority != null ">and alarm_priority = #{alarmPriority}</if>
+            <if test="description != null  and description != ''">and description = #{description}</if>
+            <if test="energyStatics != null ">and energy_statics = #{energyStatics}</if>
+            <if test="staticsTime != null ">and statics_time = #{staticsTime}</if>
+            <if test="energyCode != null  and energyCode != ''">and energy_code = #{energyCode}</if>
+            <if test="syncState != null  and syncState != ''">and sync_state = #{syncState}</if>
+            <if test="faultState != null ">and fault_state = #{faultState}</if>
+        </where>
+    </select>
+
+    <!--查询总线、虚点、线路-->
+    <select id="selectBuildNodeList" resultMap="BuildNodeResult">
+        select * from athena_bes_build_node
+    </select>
+
+    <select id="selectBuildNodeListByBusId" resultMap="deviceTreeResult">
+        SELECT * FROM athena_bes_device_tree WHERE device_tree_father_id = #{fatherId}
+    </select>
+
+    <!--线路端口查重-->
+    <select id="selectBuildNodeByPort" parameterType="BuildNode" resultMap="BuildNodeResult">
+        SELECT * FROM athena_bes_build_node
+        <where>
+            sys_name like concat( #{sysName}, '%') AND port_num = #{portNum}
+            <if test="treeId != null">and tree_id != #{treeId}</if>
+        </where>
+    </select>
+
+    <select id="selectBuildNodeByTreeId" parameterType="BuildNode" resultMap="BuildNodeResult">
+        SELECT * FROM athena_bes_build_node where tree_id = #{treeId}
+    </select>
+
+    <!--查询点位-->
+    <select id="selectPointByGuid" parameterType="Long" resultMap="PointResult">
+        <include refid="selectPointVo"/>
+        where guid = #{guid}
+    </select>
+
+    <!--查询点位-->
+    <select id="selectPointByTreeId" parameterType="Long" resultMap="PointResult">
+        <include refid="selectPointVo"/>
+        where tree_id = #{treeId}
+    </select>
+
+    <!--新增点位-->
+    <insert id="insertPoint" parameterType="Point" useGeneratedKeys="true" keyProperty="guid">
+        insert into athena_bes_point
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="treeId != null">tree_id,</if>
+            <if test="equipmentId != null">equipment_id,</if>
+            <if test="sysName != null and sysName != ''">sys_name,</if>
+            <if test="nickName != null">nick_name,</if>
+            <if test="nodeType != null">node_type,</if>
+            <if test="vpointType != null">vpoint_type,</if>
+            <if test="enabled != null">enabled,</if>
+            <if test="initVal != null">init_val,</if>
+            <if test="validInputType != null">valid_input_type,</if>
+            <if test="accuracy != null">accuracy,</if>
+            <if test="moduleId != null">module_id,</if>
+            <if test="channelIndex != null">channel_index,</if>
+            <if test="engineerUnit != null">engineer_unit,</if>
+            <if test="sinnalType != null">sinnal_type,</if>
+            <if test="minVal != null">min_val,</if>
+            <if test="maxVal != null">max_val,</if>
+            <if test="reversed != null">reversed,</if>
+            <if test="sourced != null">sourced,</if>
+            <if test="workMode != null">work_mode,</if>
+            <if test="alarmEnable != null">alarm_enable,</if>
+            <if test="alarmType != null">alarm_type,</if>
+            <if test="highLimit != null">high_limit,</if>
+            <if test="lowLimit != null">low_limit,</if>
+            <if test="closeState != null">close_state,</if>
+            <if test="alarmPriority != null">alarm_priority,</if>
+            <if test="description != null">description,</if>
+            <if test="energyStatics != null">energy_statics,</if>
+            <if test="staticsTime != null">statics_time,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="energyCode != null">energy_code,</if>
+            <if test="syncState != null">sync_state,</if>
+            <if test="faultState != null">fault_state,</if>
+            <if test="controllerId != null">controller_id,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="treeId != null">#{treeId},</if>
+            <if test="equipmentId != null">#{equipmentId},</if>
+            <if test="sysName != null and sysName != ''">#{sysName},</if>
+            <if test="nickName != null">#{nickName},</if>
+            <if test="nodeType != null">#{nodeType},</if>
+            <if test="vpointType != null">#{vpointType},</if>
+            <if test="enabled != null">#{enabled},</if>
+            <if test="initVal != null">#{initVal},</if>
+            <if test="validInputType != null">#{validInputType},</if>
+            <if test="accuracy != null">#{accuracy},</if>
+            <if test="moduleId != null">#{moduleId},</if>
+            <if test="channelIndex != null">#{channelIndex},</if>
+            <if test="engineerUnit != null">#{engineerUnit},</if>
+            <if test="sinnalType != null">#{sinnalType},</if>
+            <if test="minVal != null">#{minVal},</if>
+            <if test="maxVal != null">#{maxVal},</if>
+            <if test="reversed != null">#{reversed},</if>
+            <if test="sourced != null">#{sourced},</if>
+            <if test="workMode != null">#{workMode},</if>
+            <if test="alarmEnable != null">#{alarmEnable},</if>
+            <if test="alarmType != null">#{alarmType},</if>
+            <if test="highLimit != null">#{highLimit},</if>
+            <if test="lowLimit != null">#{lowLimit},</if>
+            <if test="closeState != null">#{closeState},</if>
+            <if test="alarmPriority != null">#{alarmPriority},</if>
+            <if test="description != null">#{description},</if>
+            <if test="energyStatics != null">#{energyStatics},</if>
+            <if test="staticsTime != null">#{staticsTime},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="energyCode != null">#{energyCode},</if>
+            <if test="syncState != null">#{syncState},</if>
+            <if test="faultState != null">#{faultState},</if>
+            <if test="controllerId != null">#{controllerId},</if>
+        </trim>
+    </insert>
+
+    <!--修改点位-->
+    <update id="updatePoint" parameterType="Point">
+        update athena_bes_point
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="sysName != null">sys_name = #{sysName},</if>
+            <if test="nodeType != null">node_type = #{nodeType},</if>
+            <if test="equipmentId != null">equipment_id = #{equipmentId},</if>
+            <if test="nickName != null">nick_name = #{nickName},</if>
+            <if test="vpointType != null">vpoint_type = #{vpointType},</if>
+            <if test="enabled != null">enabled = #{enabled},</if>
+            <if test="initVal != null">init_val = #{initVal},</if>
+            <if test="validInputType != null">valid_input_type = #{validInputType},</if>
+            <if test="accuracy != null">accuracy = #{accuracy},</if>
+            <if test="channelIndex != null">channel_index = #{channelIndex},</if>
+            <if test="engineerUnit != null">engineer_unit = #{engineerUnit},</if>
+            <if test="sinnalType != null">sinnal_type = #{sinnalType},</if>
+            <if test="minVal != null">min_val = #{minVal},</if>
+            <if test="maxVal != null">max_val = #{maxVal},</if>
+            <if test="reversed != null">reversed = #{reversed},</if>
+            <if test="sourced != null">sourced = #{sourced},</if>
+            <if test="workMode != null">work_mode = #{workMode},</if>
+            <if test="alarmEnable != null">alarm_enable = #{alarmEnable},</if>
+            <if test="alarmType != null">alarm_type = #{alarmType},</if>
+            <if test="highLimit != null">high_limit = #{highLimit},</if>
+            <if test="lowLimit != null">low_limit = #{lowLimit},</if>
+            <if test="closeState != null">close_state = #{closeState},</if>
+            <if test="alarmPriority != null">alarm_priority = #{alarmPriority},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="energyStatics != null">energy_statics = #{energyStatics},</if>
+            <if test="staticsTime != null">statics_time = #{staticsTime},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="energyCode != null">energy_code = #{energyCode},</if>
+            <if test="syncState != null">sync_state = #{syncState},</if>
+            <if test="faultState != null">fault_state = #{faultState},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        <where>
+            <if test="guid != null">and guid = #{guid}</if>
+            <if test="treeId != null">and tree_id = #{treeId}</if>
+        </where>
+    </update>
+
+    <!--修改点位-重置-->
+    <update id="updatePointRest" parameterType="Point">
+        update athena_bes_point SET
+            sys_name = #{sysName},
+            node_type = #{nodeType},equipment_id = #{equipmentId},nick_name = #{nickName},vpoint_type = #{vpointType},enabled = #{enabled},init_val = #{initVal},valid_input_type = #{validInputType},
+            accuracy = #{accuracy},channel_index = #{channelIndex},engineer_unit = #{engineerUnit},sinnal_type = #{sinnalType},min_val = #{minVal},
+            max_val = #{maxVal},reversed = #{reversed},sourced = #{sourced},work_mode = #{workMode},alarm_enable = #{alarmEnable},alarm_type = #{alarmType},
+            high_limit = #{highLimit},low_limit = #{lowLimit},close_state = #{closeState},alarm_priority = #{alarmPriority},description = #{description},
+            energy_statics = #{energyStatics},statics_time = #{staticsTime},create_time = #{createTime},energy_code = #{energyCode},
+            sync_state = #{syncState},fault_state = #{faultState},update_time = #{updateTime}
+        where  tree_id = #{treeId}
+
+    </update>
+
+    <!--修改同步状态-->
+    <update id="updatePointSyncState" parameterType="Point">
+        update athena_bes_point
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="syncState != null">sync_state = #{syncState},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        <where>
+            tree_id = #{treeId}
+        </where>
+    </update>
+
+    <!--删除点位-->
+    <delete id="deletePointByGuid" parameterType="Long">
+        delete from athena_bes_point where guid = #{guid}
+    </delete>
+
+    <!--删除点位-->
+    <delete id="deletePointByGuids" parameterType="String">
+        delete from athena_bes_point where guid in
+        <foreach item="guid" collection="array" open="(" separator="," close=")">
+            #{guid}
+        </foreach>
+    </delete>
+
+    <!--添加树节点-->
+    <insert id="insertDeviceTreee" parameterType="deviceTree" useGeneratedKeys="true" keyProperty="deviceTreeId">
+        insert into athena_bes_device_tree
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="deviceNodeId != null">device_node_id,</if>
+            <if test="sysName != null">sys_name,</if>
+            <if test="deviceType != null">device_type,</if>
+            <if test="deviceTreeFatherId != null">device_tree_father_id,</if>
+            <if test="park != null">park,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="deviceNodeId != null">#{deviceNodeId},</if>
+            <if test="sysName != null">#{sysName},</if>
+            <if test="deviceType != null">#{deviceType},</if>
+            <if test="deviceTreeFatherId != null">#{deviceTreeFatherId},</if>
+            <if test="park != null">#{park},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+        </trim>
+    </insert>
+
+    <!--添加楼控虚点、总线、线路-->
+    <insert id="insertBuildNode" parameterType="buildNode" useGeneratedKeys="true" keyProperty="id">
+        insert into athena_bes_build_node
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="treeId != null">tree_id,</if>
+            <if test="nodeType != null">node_type,</if>
+            <if test="portNum != null">port_num,</if>
+            <if test="sysName != null">sys_name,</if>
+            <if test="nickName != null">nick_name,</if>
+            <if test="createTime != null">create_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="treeId != null">#{treeId},</if>
+            <if test="nodeType != null">#{nodeType},</if>
+            <if test="portNum != null">#{portNum},</if>
+            <if test="sysName != null">#{sysName},</if>
+            <if test="nickName != null">#{nickName},</if>
+            <if test="createTime != null">#{createTime},</if>
+        </trim>
+    </insert>
+
+    <!--修改楼控虚点、总线、线路-->
+    <update id="updateBuildNode" parameterType="buildNode">
+        update athena_bes_build_node
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="portNum != null">port_num = #{portNum},</if>
+            <if test="nickName != null">nick_name = #{nickName},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where sys_name = #{sysName}
+    </update>
+
+
+    <!--修改树节点-->
+    <update id="updateDeviceTreee" parameterType="deviceTree">
+        update athena_bes_device_tree
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="sysName != null">sys_name = #{sysName},</if>
+            <if test="deviceNodeId != null">device_node_id = #{deviceNodeId},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="park != null">park = #{park},</if>
+        </trim>
+        where device_tree_id = #{deviceTreeId}
+    </update>
+
+    <!--重置树节点-->
+    <update id="updateDeviceTreeeRest" parameterType="deviceTree">
+        update athena_bes_device_tree set sys_name = #{sysName},device_node_id = #{deviceNodeId}
+        where device_tree_id = #{deviceTreeId}
+    </update>
+
+
+
+    <update id="updateBuildNodeByLighting" parameterType="deviceTree">
+        UPDATE athena_bes_build_node SET nick_name=#{nickName},port_num=#{portNum},update_time=now() where  tree_id=#{treeId}
+    </update>
+
+    <!--系统名称查重-->
+    <select id="selectDeviceTreeeCheckName" parameterType="deviceTree" resultMap="deviceTreeResult">
+        <include refid="selectTreeVo"/>
+         <where>
+            sys_name = #{sysName}
+             <if test="deviceTreeId != null  and deviceTreeId != ''">
+                and device_tree_id != #{deviceTreeId}
+             </if>
+         </where>
+    </select>
+
+
+    <!--根据树节点查询树节点-->
+    <select id="selectDeviceTreeeByDeviceTreee" parameterType="deviceTree" resultMap="deviceTreeResult">
+        select device_tree_id, device_node_id, sys_name, device_type,park,
+        device_tree_father_id,create_time,update_time,device_tree_status,
+        (select device_node_fun_name from athena_bes_device_node where device_node_code = #{deviceNodeId})
+        device_node_fun_name,
+        (select device_node_fun_type from athena_bes_device_node where device_node_code = #{deviceNodeId})
+        device_node_fun_type
+        from athena_bes_device_tree
+        <where>
+            <if test="deviceTreeFatherId != null  and deviceTreeFatherId != ''">and device_tree_father_id =
+                #{deviceTreeFatherId}
+            </if>
+            <if test="deviceTreeId != null  and deviceTreeId != ''">and device_tree_id =
+                #{deviceTreeId}
+            </if>
+            <if test="sysName != null  and sysName != ''">and sys_name = #{sysName}</if>
+            <if test="deviceNodeId != null  and deviceNodeId != ''">and device_node_id = #{deviceNodeId}</if>
+            <if test="deviceType != null  and deviceType != ''">and device_type = #{deviceType}</if>
+        </where>
+        ORDER BY device_tree_id DESC LIMIT 1
+    </select>
+
+    <!--根据树节点查询按钮-->
+    <select id="selectDeviceTreeeButton" parameterType="deviceTree" resultMap="deviceTreeResult">
+        SELECT device_node_fun_name,device_node_fun_type FROM athena_bes_device_node
+        <where>
+            <if test="deviceNodeId != null  and deviceNodeId != ''">and device_node_code = #{deviceNodeId}</if>
+        </where>
+    </select>
+
+    <!--根据树节点查询树节点-->
+    <select id="selectDeviceTreeeByFatherId" resultType="java.util.Map">
+        SELECT device_type  deviceType,sys_name sysName,park,
+        (SELECT COUNT(1) from athena_bes_device_tree WHERE device_tree_father_id = #{fatherId} AND device_node_id = #{nodeId}) num
+        FROM athena_bes_device_tree WHERE device_tree_id = #{fatherId}
+    </select>
+
+    <!--查询虚点类型-->
+    <select id="listVpoint" resultType="java.util.Map">
+        SELECT dict_sort id,dict_label value FROM sys_dict_data WHERE dict_type = 'vpoint_type'
+    </select>
+
+    <!--删除树点位节点-->
+    <delete id="deleteDeviceTreee">
+        delete from athena_bes_device_tree where device_tree_id = #{treeId}
+    </delete>
+
+    <!--根据树Id删除点-->
+    <delete id="deletePointByTreeId">
+        delete from athena_bes_point where tree_id = #{treeId}
+    </delete>
+
+    <!--根据树Id删除点-->
+    <delete id="deleteBuildNodeByTreeId">
+        delete from athena_bes_build_node where tree_id = #{treeId}
+    </delete>
+
+    <!--查询点位表最大设备ID-->
+    <select id="selectPointMaxId" resultType="java.util.Map">
+        SELECT IFNULL( MAX( equipment_id ), 0 ) maxEquId  FROM athena_bes_point  WHERE controller_id = #{controllerId}
+    </select>
+
+    <sql id="selectNodeConfigSetVo">
+        SELECT id,sys_name,init_val,description,create_time FROM bes_node_config_setting
+    </sql>
+
+    <!--查询点值配置-->
+    <select id="selectNodeConfigSet" parameterType="NodeConfigSet" resultMap="NodeConfigSetResult">
+        <include refid="selectNodeConfigSetVo"/>
+        where sys_name = #{sysName}
+    </select>
+
+    <!--查询所有点值配置-->
+    <select id="selectNodeConfigSetList" parameterType="NodeConfigSet" resultMap="NodeConfigSetResult">
+        <include refid="selectNodeConfigSetVo"/>
+    </select>
+
+    <!--查重点值配置-->
+    <select id="selectNodeConfigSetCheck" parameterType="NodeConfigSet" resultMap="NodeConfigSetResult">
+        <include refid="selectNodeConfigSetVo"/>
+        where sys_name = #{sysName} AND init_val = #{initVal}
+    </select>
+    <select id="selectBuildNodeByDeviceTreeId" resultMap="BuildNodeResult">
+        select * from athena_bes_build_node
+        where tree_id = #{deviceTreeId}
+    </select>
+
+    <!--新增点值配置-->
+    <insert id="insertNodeConfigSet" parameterType="NodeConfigSet" useGeneratedKeys="true" keyProperty="id">
+        insert into bes_node_config_setting
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="sysName != null">sys_name,</if>
+            <if test="initVal != null">init_val,</if>
+            <if test="description != null">description,</if>
+            <if test="createTime != null">create_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="sysName != null">#{sysName},</if>
+            <if test="initVal != null">#{initVal},</if>
+            <if test="description != null">#{description},</if>
+            <if test="createTime != null">#{createTime},</if>
+        </trim>
+    </insert>
+
+    <!--新增点值配置-->
+    <update id="updateNodeConfigSet" parameterType="NodeConfigSet">
+        update bes_node_config_setting
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="initVal != null">init_val = #{initVal},</if>
+            <if test="description != null">description = #{description},</if>
+        </trim>
+        where id = #{id}
+    </update>
+    <update id="updateFaultState">
+        update athena_bes_point
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="value != null">fault_state = #{value},</if>
+        </trim>
+        <where>
+            <if test="treeId != null"> tree_id = #{treeId}</if>
+        </where>
+    </update>
+
+
+    <!--删除点值配置-->
+    <delete id="deletePointSettingByName" parameterType="NodeConfigSet">
+        delete from bes_node_config_setting where sys_name = #{sysName}
+    </delete>
+
+    <!--新增模块错误日志-->
+    <insert id="addModuleErrorLog" parameterType="ModuleErrorLog" useGeneratedKeys="true" keyProperty="id">
+        insert into athena_bes_module_err_log
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="deviceTreeId != null">device_tree_id,</if>
+            <if test="moduleId != null">mudule_id,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="errCode != null">err_code,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="deviceTreeId != null">#{deviceTreeId},</if>
+            <if test="moduleId != null">#{moduleId},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="errCode != null">#{errCode},</if>
+        </trim>
+    </insert>
+
+    <!--新增调试点位操作日志-->
+    <insert id="addDebugLog" parameterType="PointDebugLog" useGeneratedKeys="true" keyProperty="id">
+        insert into athena_bes_point_debug_log
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="deviceTreeId != null">device_tree_id,</if>
+            <if test="sysName != null">sys_name,</if>
+            <if test="createName != null">create_name,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="operatValue != null">operat_value,</if>
+            <if test="debugState != null">debug_state,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="deviceTreeId != null">#{deviceTreeId},</if>
+            <if test="sysName != null">#{sysName},</if>
+            <if test="createName != null">#{createName},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="operatValue != null">#{operatValue},</if>
+            <if test="debugState != null">#{debugState},</if>
+        </trim>
+    </insert>
+
+
+
+</mapper>

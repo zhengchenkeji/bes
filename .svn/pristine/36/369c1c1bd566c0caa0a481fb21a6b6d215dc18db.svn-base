@@ -1,0 +1,231 @@
+package com.zc.iot.domain;
+
+import com.ruoyi.common.annotation.Excel;
+import com.ruoyi.common.core.domain.BaseEntity;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
+
+/**
+ * 功能定义对象 athena_iot_function
+ * 
+ * @author Athena-YangChao
+ * @date 2021-10-27
+ */
+public class IotFunction extends BaseEntity
+{
+    private static final long serialVersionUID = 1L;
+
+    /** $column.columnComment */
+    private Long id;
+
+    /** 所属品类 */
+    private Long categoryId;
+
+    /** 品类名称 */
+    @Excel(name = "所属品类")
+    private String categoryName;
+
+    /** 功能类型 */
+    @Excel(name = "功能类型")
+    private Long functionType;
+
+    /** 功能名称 */
+    @Excel(name = "功能名称")
+    private String name;
+
+    /** 标识符 */
+    @Excel(name = "标识符")
+    private String identifier;
+
+    /** 数据类型 */
+    @Excel(name = "数据类型")
+    private Long dataType;
+
+    /** 单位 */
+    @Excel(name = "单位")
+    private String unit;
+
+    /** 取值范围（上限） */
+    @Excel(name = "取值范围", readConverterExp = "上=限")
+    private String valueRangeUpper;
+
+    /** 取值范围（下限） */
+    @Excel(name = "取值范围", readConverterExp = "下=限")
+    private String valueRangeFloor;
+
+    /** 读写类型 */
+    @Excel(name = "读写类型")
+    private Integer readWriteType;
+
+    /** 协议解析-起始位 */
+    private Long analysisStart;
+
+    /** 协议解析-终止位 */
+    private Long analysisEnd;
+
+    /** 协议解析处理类型 */
+    private String analysisType;
+
+    /** 协议解析--是否解析 */
+    private String analysisOpen;
+
+    /** 实时值 **/
+    private Number realValue;
+
+    public void setId(Long id)
+    {
+        this.id = id;
+    }
+
+    public Long getId()
+    {
+        return id;
+    }
+    public void setCategoryId(Long categoryId)
+    {
+        this.categoryId = categoryId;
+    }
+
+    public Long getCategoryId()
+    {
+        return categoryId;
+    }
+    public void setFunctionType(Long functionType)
+    {
+        this.functionType = functionType;
+    }
+
+    public Long getFunctionType()
+    {
+        return functionType;
+    }
+    public void setName(String name)
+    {
+        this.name = name;
+    }
+
+    public String getName()
+    {
+        return name;
+    }
+    public void setIdentifier(String identifier)
+    {
+        this.identifier = identifier;
+    }
+
+    public String getIdentifier()
+    {
+        return identifier;
+    }
+    public void setDataType(Long dataType)
+    {
+        this.dataType = dataType;
+    }
+
+    public Long getDataType()
+    {
+        return dataType;
+    }
+    public void setUnit(String unit)
+    {
+        this.unit = unit;
+    }
+
+    public String getUnit()
+    {
+        return unit;
+    }
+    public void setValueRangeUpper(String valueRangeUpper)
+    {
+        this.valueRangeUpper = valueRangeUpper;
+    }
+
+    public String getValueRangeUpper()
+    {
+        return valueRangeUpper;
+    }
+    public void setValueRangeFloor(String valueRangeFloor)
+    {
+        this.valueRangeFloor = valueRangeFloor;
+    }
+
+    public String getValueRangeFloor()
+    {
+        return valueRangeFloor;
+    }
+    public void setReadWriteType(Integer readWriteType)
+    {
+        this.readWriteType = readWriteType;
+    }
+
+    public Integer getReadWriteType()
+    {
+        return readWriteType;
+    }
+
+    public String getCategoryName() {
+        return categoryName;
+    }
+
+    public void setCategoryName(String categoryName) {
+        this.categoryName = categoryName;
+    }
+
+    public Number getRealValue() {
+        return realValue;
+    }
+
+    public void setRealValue(Number realValue) {
+        this.realValue = realValue;
+    }
+
+    public Long getAnalysisStart() {
+        return analysisStart;
+    }
+
+    public void setAnalysisStart(Long analysisStart) {
+        this.analysisStart = analysisStart;
+    }
+
+    public Long getAnalysisEnd() {
+        return analysisEnd;
+    }
+
+    public void setAnalysisEnd(Long analysisEnd) {
+        this.analysisEnd = analysisEnd;
+    }
+
+    public String getAnalysisType() {
+        return analysisType;
+    }
+
+    public void setAnalysisType(String analysisType) {
+        this.analysisType = analysisType;
+    }
+
+    public String getAnalysisOpen() {
+        return analysisOpen;
+    }
+
+    public void setAnalysisOpen(String analysisOpen) {
+        this.analysisOpen = analysisOpen;
+    }
+
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this,ToStringStyle.MULTI_LINE_STYLE)
+            .append("id", getId())
+            .append("categoryId", getCategoryId())
+            .append("functionType", getFunctionType())
+            .append("name", getName())
+            .append("identifier", getIdentifier())
+            .append("dataType", getDataType())
+            .append("unit", getUnit())
+            .append("valueRangeUpper", getValueRangeUpper())
+            .append("valueRangeFloor", getValueRangeFloor())
+            .append("readWriteType", getReadWriteType())
+            .append("createTime", getCreateTime())
+            .append("updateTime", getUpdateTime())
+            .toString();
+    }
+}

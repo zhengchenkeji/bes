@@ -1,0 +1,457 @@
+package com.zc.relay.handler;
+
+import com.ruoyi.common.core.redis.RedisCache;
+import com.zc.common.constant.RedisKeyConstants;
+import com.zc.iot.domain.*;
+import com.zc.iot.service.IIotDeviceService;
+import com.zc.iot.service.IIotFunctionService;
+import com.zc.iot.service.IIotFunctionValueService;
+import com.zc.iot.service.IIotProductService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * 外部调用接口
+ * @author Athena-xiepufeng
+ */
+@Service
+public class TradeGetDataHandleImpl implements TradeGetDataHandle
+{
+    private static final Logger log = LoggerFactory.getLogger(TradeGetDataHandleImpl.class);
+
+    @Resource
+    private RedisCache redisCache;
+
+    @Resource
+    private IIotFunctionService iIotFunctionService;
+
+    @Resource
+    private IIotFunctionValueService iIotFunctionValueService;
+
+    @Resource
+    private IIotProductService iIotProductService;
+
+    @Resource
+    private IIotDeviceService iIotDeviceService;
+    /**
+     * 获取全部品类数据
+     *
+     * @return 品类集合
+     */
+    @Override
+    public List<IotCategory> getCategoryData()
+    {
+
+        Map<String, IotCategory> iotCategoryMap = redisCache.getCacheMapValue(RedisKeyConstants.IOT_CATEGORY);
+
+        if (iotCategoryMap == null)
+        {
+            log.error("获取全部品类数据：{输出条件：(iotCategoryMap == null)；说明：从缓存中无法获取到品类信息}");
+            return null;
+        }
+
+        return new ArrayList<>(iotCategoryMap.values());
+    }
+
+    /**
+     * 根据id获取品类数据
+     *
+     * @param id 品类id
+     * @return 品类
+     */
+    @Override
+    public IotCategory getCategoryData(Long id)
+    {
+        if (id == null)
+        {
+            log.error("根据id获取品类数据：{输出条件：(id == null)；说明：调用该方法传入的id 是 null}");
+            return null;
+        }
+
+        return redisCache.getCacheMapValue(RedisKeyConstants.IOT_CATEGORY, id);
+    }
+
+    /**
+     * 获取全部功能数据
+     *
+     * @return 功能集合
+     */
+    @Override
+    public List<IotFunction> getFunctionData()
+    {
+        Map<String, IotFunction> iotFunctionMap = redisCache.getCacheMapValue(RedisKeyConstants.IOT_FUNCTION);
+
+        if (iotFunctionMap == null)
+        {
+            log.error("获取全部功能数据：{输出条件：(iotFunctionMap == null)；说明：从缓存中无法获取到功能信息}");
+            return null;
+        }
+
+        return new ArrayList<>(iotFunctionMap.values());
+    }
+
+    /**
+     * 根据id获取功能数据
+     *
+     * @param id 功能id
+     * @return 功能
+     */
+    @Override
+    public IotFunction getFunctionData(Long id)
+    {
+        if (id == null)
+        {
+            log.error("根据id获取功能数据：{输出条件：(id == null)；说明：调用该方法传入的id 是 null}");
+            return null;
+        }
+
+        return redisCache.getCacheMapValue(RedisKeyConstants.IOT_FUNCTION, id);
+    }
+
+    /**
+     * 根据品类id获取功能数据
+     *
+     * @param categoryId 品类id
+     * @return 功能集合
+     */
+    @Override
+    public List<IotFunction> getFunctionDataByCategoryId(Long categoryId)
+    {
+        if (categoryId == null)
+        {
+            log.error("根据品类id获取功能数据：{输出条件：(categoryId == null)；说明：调用该方法传入的 categoryId 是 null}");
+            return null;
+        }
+
+        IotFunction iotFunction = new IotFunction();
+        iotFunction.setCategoryId(categoryId);
+
+        return iIotFunctionService.selectIotFunctionList(iotFunction);
+    }
+
+    /**
+     * 根据设备id获取功能数据
+     *
+     * @param deviceId 设备id
+     * @return 功能集合
+     */
+    @Override
+    public List<IotFunction> getFunctionDataByDeviceId(Long deviceId)
+    {
+        if(deviceId == null)
+        {
+            log.error("根据设备id获取功能数据：{输出条件：(deviceId == null)；说明：调用该方法传入的id 是 null}");
+            return null;
+        }
+
+        IotDevice iotDevice = redisCache.getCacheMapValue(RedisKeyConstants.IOT_DEVICE, deviceId);
+
+        if (iotDevice == null)
+        {
+            log.error("根据设备id获取功能数据：{输出条件：(iotDevice == null)；" +
+                    "说明：根据设备id无法从缓存中获取到设备信息；deviceId：" + deviceId + "}");
+            return null;
+        }
+
+        Long productKey = iotDevice.getProductKey();
+
+        IotProduct iotProduct  = redisCache.getCacheMapValue(RedisKeyConstants.IOT_PRODUCT, productKey);
+
+        if (iotProduct == null)
+        {
+            log.error("根据设备id获取功能数据：{输出条件：(iotProduct == null)；" +
+                    "说明：根据产品id无法从缓存中获取到产品信息；productKey：" + productKey + "}");
+            return null;
+        }
+
+        return getFunctionDataByCategoryId(iotProduct.getCategoryId());
+    }
+
+    /**
+     * 获取全部功能值数据
+     *
+     * @return 功能值集合
+     */
+    @Override
+    public List<IotFunctionValue> getFunctionValueData()
+    {
+        Map<String, IotFunctionValue> iotFunctionValueMap = redisCache.getCacheMapValue(RedisKeyConstants.IOT_FUNCTION_VALUE);
+
+        if (iotFunctionValueMap == null)
+        {
+            log.error("获取全部功能值数据：{输出条件：(iotFunctionValueMap == null)；" +
+                    "说明：无法从缓存中获取功能值数据}");
+            return null;
+        }
+
+        return new ArrayList<>(iotFunctionValueMap.values());
+    }
+
+    /**
+     * 根据id获取功能值数据
+     *
+     * @param id 功能值id
+     * @return 功能值
+     */
+    @Override
+    public IotFunctionValue getFunctionValueData(Long id)
+    {
+        if (id == null)
+        {
+            log.error("根据id获取功能值数据：{输出条件：(id == null)；" +
+                    "说明：调用该方法传入的参数是null}");
+            return null;
+        }
+
+        return redisCache.getCacheMapValue(RedisKeyConstants.IOT_FUNCTION_VALUE, id);
+    }
+
+    /**
+     * 根据功能id 获取功能值
+     *
+     * @param functionId 功能id
+     * @return 功能值集合
+     */
+    @Override
+    public List<IotFunctionValue> getFunctionValueDataByFunctionId(Long functionId)
+    {
+        if (functionId == null)
+        {
+            log.error("根据功能id获取功能值：{输出条件：(functionId == null)；" +
+                    "说明：调用该方法传入的参数是null}");
+            return null;
+        }
+
+        IotFunctionValue iotFunctionValue = new IotFunctionValue();
+        iotFunctionValue.setFunctionKey(functionId);
+
+        return iIotFunctionValueService.selectIotFunctionValueList(iotFunctionValue);
+    }
+
+    /**
+     * 获取全部产品数据
+     *
+     * @return 产品集合
+     */
+    @Override
+    public List<IotProduct> getProductData()
+    {
+        Map<String, IotProduct> iotProductMap = redisCache.getCacheMapValue(RedisKeyConstants.IOT_PRODUCT);
+
+        if (iotProductMap == null)
+        {
+            log.error("获取全部产品数据：{输出条件：(iotProductMap == null)；" +
+                    "说明：从缓存中无法获取到产品信息}");
+            return null;
+        }
+
+        return new ArrayList<>(iotProductMap.values());
+    }
+
+    /**
+     * 根据id获取产品数据
+     *
+     * @param id 产品id
+     * @return 产品
+     */
+    @Override
+    public IotProduct getProductData(Long id)
+    {
+        if (id == null)
+        {
+            log.error("根据id获取产品数据：{输出条件：(id == null)；" +
+                    "说明：调用该方法传入的参数是null}");
+            return null;
+        }
+
+        return redisCache.getCacheMapValue(RedisKeyConstants.IOT_PRODUCT, id);
+    }
+
+    /**
+     * 根据品类id获取产品
+     *
+     * @param categoryId 品类id
+     * @return 产品集合
+     */
+    @Override
+    public List<IotProduct> getProductDataByCategoryId(Long categoryId)
+    {
+        if (categoryId == null)
+        {
+            log.error("根据品类id获取产品：{输出条件：(categoryId == null)；" +
+                    "说明：调用该方法传入的参数是null}");
+            return null;
+        }
+
+        IotProduct iotProduct = new IotProduct();
+
+        iotProduct.setCategoryId(categoryId);
+
+        return iIotProductService.selectIotProductList(iotProduct);
+    }
+
+    /**
+     * 获取全部设备数据
+     *
+     * @return 设备集合
+     */
+    @Override
+    public List<IotDevice> getDeviceData()
+    {
+        Map<String, IotDevice> iotDeviceMap = redisCache.getCacheMapValue(RedisKeyConstants.IOT_DEVICE);
+
+        if (iotDeviceMap == null)
+        {
+            log.error("获取全部设备数据：{输出条件：(iotDeviceMap == null)；" +
+                    "说明：从缓存中无法获取到设备信息}");
+            return null;
+        }
+        return new ArrayList<>(iotDeviceMap.values());
+    }
+
+    /**
+     * 根据id获取设备数据
+     * @param id 设备id
+     * @return 设备
+     */
+    @Override
+    public IotDevice getDeviceData(Long id)
+    {
+        if (id == null)
+        {
+            log.error("根据id获取设备数据：{输出条件：(id == null)；" +
+                    "说明：调用该方法传入的参数是null}");
+            return null;
+        }
+
+        return redisCache.getCacheMapValue(RedisKeyConstants.IOT_DEVICE, id);
+    }
+
+    /**
+     * 根据产品id获取设备数据
+     *
+     * @param productId 产品id
+     * @return 设备集合
+     */
+    @Override
+    public List<IotDevice> getDeviceDataByProductId(Long productId)
+    {
+        if (productId == null)
+        {
+            log.error("根据产品id获取设备数据：{输出条件：(productId == null)；" +
+                    "说明：调用该方法传入的参数是null}");
+            return null;
+        }
+
+        IotDevice iotDevice = new IotDevice();
+
+        iotDevice.setProductKey(productId);
+
+        return iIotDeviceService.selectIotDeviceList(iotDevice);
+    }
+
+    /**
+     * 根据分组id获取设备数据
+     *
+     * @param groupId 分组id
+     * @return 设备集合
+     */
+    @Override
+    public List<IotDevice> getDeviceDataByGroupId(Long groupId)
+    {
+        if (groupId == null)
+        {
+            log.error("根据分组id获取设备数据：{输出条件：(groupId == null)；" +
+                    "说明：调用该方法传入的参数是null}");
+            return null;
+        }
+
+        IotDevice iotDevice = new IotDevice();
+
+        iotDevice.setGroupKey(groupId);
+
+        return iIotDeviceService.selectIotDeviceList(iotDevice);
+    }
+
+    /**
+     * 获取全部分组数据
+     *
+     * @return 分组集合
+     */
+    @Override
+    public List<IotGroup> getGroupData()
+    {
+        Map<String, IotGroup> iotGroupMap = redisCache.getCacheMapValue(RedisKeyConstants.IOT_GROUP);
+
+        if (iotGroupMap == null)
+        {
+            log.error("获取全部分组数据：{输出条件：(iotGroupMap == null)；" +
+                    "说明：从缓存中无法获取到分组数据l}");
+            return null;
+        }
+        return new ArrayList<>(iotGroupMap.values());
+    }
+
+    /**
+     * 根据id获取分组数据
+     *
+     * @param id 分组id
+     * @return 分组
+     */
+    @Override
+    public IotGroup getGroupData(Long id)
+    {
+        if (id == null)
+        {
+            log.error("根据id获取分组数据：{输出条件：(id == null)；" +
+                    "说明：调用该方法传入的参数是null}");
+            return null;
+        }
+
+        return redisCache.getCacheMapValue(RedisKeyConstants.IOT_GROUP, id);
+    }
+
+    /**
+     * 根据设备id获取设备功能值
+     * @param deviceId 设备id
+     * @return 设备功能值集合 key 功能id value 设备功能值
+     */
+    @Override
+    public Map<String, Number> getDeviceFunctionValue(Long deviceId)
+    {
+        if (deviceId == null)
+        {
+            log.error("根据设备id获取设备功能值：{输出条件：(deviceId == null)；" +
+                    "说明：调用该方法传入的参数是null}");
+            return null;
+        }
+
+        return redisCache.getCacheMapValue(RedisKeyConstants.getDeviceFunctionValueKey(deviceId));
+    }
+
+    /**
+     * 根据设备id和功能id获取设备功能值
+     * @param deviceId 设备id
+     * @param functionId 功能id
+     * @return 设备功能值
+     */
+    @Override
+    public Number getDeviceFunctionValue(Long deviceId, Long functionId)
+    {
+        if (deviceId == null || functionId == null)
+        {
+            log.error("根据设备id和功能id获取设备功能值：{输出条件：(deviceId == null || functionId == null)；" +
+                    "说明：调用该方法传入的参数是 null}; deviceId:" + deviceId + "; functionId: " + functionId + "");
+            return null;
+        }
+
+        return redisCache.getCacheMapValue(RedisKeyConstants.getDeviceFunctionValueKey(deviceId), functionId);
+    }
+
+}

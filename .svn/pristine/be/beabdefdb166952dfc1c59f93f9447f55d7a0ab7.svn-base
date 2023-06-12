@@ -1,0 +1,61 @@
+package com.ruoyi.efounder.JEnterprise.domain.electricPowerTranscription.vo;
+
+
+import com.ruoyi.common.core.domain.BaseEntity;
+
+import java.util.List;
+
+public class ParamVO extends BaseEntity {
+
+    /**电能参数code***/
+    private List<String> paramsId;
+    /**开始时间***/
+    private String startTime;
+    /**结束时间***/
+    private String endTime;
+    /**电表树id***/
+    private Long meter;
+
+    /**电表树id集合  批量导出时使用***/
+    private List<Long> meterIds;
+
+    public List<Long> getMeterIds() {
+        return meterIds;
+    }
+
+    public void setMeterIds(List<Long> meterIds) {
+        this.meterIds = meterIds;
+    }
+
+    public List<String> getParamsId() {
+        return paramsId;
+    }
+
+    public void setParamsId(List<String> paramsId) {
+        this.paramsId = paramsId;
+    }
+
+    public String getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(String startTime) {
+        this.startTime = startTime;
+    }
+
+    public String getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(String endTime) {
+        this.endTime = endTime;
+    }
+
+    public Long getMeter() {
+        return meter;
+    }
+
+    public void setMeter(Long meter) {
+        this.meter = meter;
+    }
+}

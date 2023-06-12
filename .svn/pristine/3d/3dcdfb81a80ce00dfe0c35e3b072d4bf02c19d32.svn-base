@@ -1,0 +1,40 @@
+package com.zc.iot.controller;
+
+import com.ruoyi.common.core.controller.BaseController;
+import com.ruoyi.common.core.page.TableDataInfo;
+import com.zc.iot.domain.IotFunctionAnalysis;
+import com.zc.iot.service.IIotFunctionAnalysisService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+
+/**
+ * 功能定义_协议解析处理类型 Controller
+ * 
+ * @author Athena-YangChao
+ * @date 2021-12-07
+ */
+@RestController
+@RequestMapping("/iot/analysis")
+public class IotFunctionAnalysisController extends BaseController
+{
+    @Autowired
+    private IIotFunctionAnalysisService iotFunctionAnalysisService;
+
+    /**
+     * 查询功能定义_协议解析处理类型 列表
+     */
+    @PreAuthorize("@ss.hasPermi('iot:analysis:list')")
+    @GetMapping("/list")
+    public TableDataInfo list(IotFunctionAnalysis iotFunctionAnalysis)
+    {
+        List<IotFunctionAnalysis> list = iotFunctionAnalysisService.selectIotFunctionAnalysisList(iotFunctionAnalysis);
+        return getDataTable(list);
+    }
+
+
+}

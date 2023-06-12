@@ -1,0 +1,187 @@
+package com.ruoyi.efounder.JEnterprise.controller.safetyWarning;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
+
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
+import org.springframework.core.env.Environment;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+import com.ruoyi.common.annotation.Log;
+import com.ruoyi.common.core.controller.BaseController;
+import com.ruoyi.common.core.domain.AjaxResult;
+import com.ruoyi.common.enums.BusinessType;
+import com.ruoyi.efounder.JEnterprise.domain.safetyWarning.AlarmTactics;
+import com.ruoyi.efounder.JEnterprise.service.safetyWarning.AlarmTacticsService;
+import com.ruoyi.common.utils.poi.ExcelUtil;
+import com.ruoyi.common.core.page.TableDataInfo;
+
+/**
+ * 告警策略Controller
+ *
+ * @author sunshangeng
+ * @date 2022-09-16
+ */
+@RestController
+@RequestMapping("/safetyWarning/alarmTactics")
+public class AlarmTacticsController extends BaseController
+{
+    @Resource
+    private AlarmTacticsService AlarmTacticsService;
+
+
+    @Resource
+    private com.ruoyi.common.utils.sms.server.EmailServer emailServer;
+
+    @Resource
+    private com.ruoyi.common.utils.sms.server.AlTokenServer alTokenServer;
+
+
+    @Resource
+    private Environment environment;
+
+
+    /**
+     * 查询告警策略列表
+     */
+    @PreAuthorize("@ss.hasPermi('safetyWarning:alarmTactics:list')")
+    @GetMapping("/list")
+    public TableDataInfo list(AlarmTactics alarmTactics)
+    {
+
+//        String to = "sqs0709@qq.com"; // 这是个假邮箱，写成你自己的邮箱地址就可以
+//        String title = "文本邮件发送测试11222";
+//        String content = "文本邮件发送测试";
+//        emailServer.sendMessage(to, title, content);
+//        smsUtil.sendMessage();
+
+//        alTokenServer.getAlibabaToken();
+        startPage();
+        List<AlarmTactics> list = AlarmTacticsService.selectAlarmTacticsList(alarmTactics);
+        return getDataTable(list);
+    }
+
+    /**
+     * 导出告警策略列表
+     */
+    @PreAuthorize("@ss.hasPermi('safetyWarning:alarmTactics:export')")
+    @Log(title = "告警策略", businessType = BusinessType.EXPORT)
+    @PostMapping("/export")
+    public void export(HttpServletResponse response, AlarmTactics alarmTactics)
+    {
+        List<AlarmTactics> list = AlarmTacticsService.selectAlarmTacticsList(alarmTactics);
+        ExcelUtil<AlarmTactics> util = new ExcelUtil<>(AlarmTactics.class);
+        util.exportExcel(response, list, "告警策略数据");
+    }
+    /**
+     * 获取告警策略详细信息
+     */
+    @PreAuthorize("@ss.hasPermi('safetyWarning:alarmTactics:query')")
+    @GetMapping(value = "/{id}")
+    public AjaxResult getInfo(@PathVariable("id") Long id)
+    {
+        return AjaxResult.success(AlarmTacticsService.selectAlarmTacticsById(id));
+    }
+    /**
+     * 新增告警策略
+     */
+    @PreAuthorize("@ss.hasPermi('safetyWarning:alarmTactics:add')")
+    @Log(title = "告警策略", businessType = BusinessType.INSERT)
+    @PostMapping
+    public AjaxResult add( @Valid @RequestBody AlarmTactics alarmTactics)
+    {
+        return AlarmTacticsService.insertAlarmTactics(alarmTactics);
+    }
+
+    /**
+     * 修改告警策略
+     */
+    @PreAuthorize("@ss.hasPermi('safetyWarning:alarmTactics:edit')")
+    @Log(title = "告警策略", businessType = BusinessType.UPDATE)
+    @PutMapping
+    public AjaxResult edit( @Valid @RequestBody AlarmTactics alarmTactics)
+    {
+        return AlarmTacticsService.updateAlarmTactics(alarmTactics);
+    }
+
+    /**
+     * 删除告警策略
+     */
+    @PreAuthorize("@ss.hasPermi('safetyWarning:alarmTactics:remove')")
+    @Log(title = "告警策略", businessType = BusinessType.DELETE)
+	@DeleteMapping("/{ids}")
+    public AjaxResult remove(@PathVariable Long[] ids)
+    {
+        return AlarmTacticsService.deleteAlarmTacticsByIds(ids);
+    }
+    /**
+     * 查询告警策略字典
+     */
+    @PreAuthorize("@ss.hasPermi('safetyWarning:alarmTactics:list')")
+    @GetMapping("/getAlarmTacticsDicData")
+    public AjaxResult getAlarmTacticsDicData()
+    {
+        return AjaxResult.success(AlarmTacticsService.selectAlarmTacticsDicData());
+    }
+
+
+    /**
+     * 获取支路，分户 分项，电表 树结构
+     *sunshangeng
+     */
+    @GetMapping("/treeSelect")
+    public AjaxResult treeSelect()
+    {
+        return  AlarmTacticsService.selectTree(null);
+//        return AjaxResult.success(AlarmTacticsService.selectAlarmTacticsDicData());
+    }
+    /**
+     * 获取alibabatoken
+     *  sunshangeng
+     */
+    @GetMapping("/getToken")
+    public AjaxResult getToken()
+    {
+        String alibabaToken = alTokenServer.getAlibabaToken();
+        if(StringUtils.isNotBlank(alibabaToken)){
+            return AjaxResult.success("获取成功",alibabaToken);
+        }else{
+            return AjaxResult.error("获取失败");
+        }
+    }
+
+
+    /**
+     * 查询报警配置根据告警类型
+     *
+     * @param alarmTypeId 报警类型id
+     * @return {@code AjaxResult }
+     * @Author qindehua
+     * @Date 2022/11/22
+     **/
+    @PreAuthorize("@ss.hasPermi('alarmRealtime:data:list')")
+    @GetMapping("/byAlarmTypeId")
+    public AjaxResult byAlarmTypeId(@RequestParam("alarmTypeId") Long alarmTypeId) {
+        return AjaxResult.success(AlarmTacticsService.selectAlarmTacticsByAlarmTypeId(alarmTypeId));
+    }
+    /**
+     * @description:获取当前语音播报环境
+     * @author: sunshangeng
+     * @date: 2022/11/29 19:07
+     * @return:
+     **/
+    @GetMapping("/getAudioEnvironment")
+    public AjaxResult getAudioEnvironment() {
+        Map<String ,String > result=new HashMap<>();
+        result.put("audioType",environment.getProperty("audio.type"));
+        result.put("baidutoken",environment.getProperty("audio.baidutoken"));
+        return AjaxResult.success(result);
+    }
+
+
+
+}

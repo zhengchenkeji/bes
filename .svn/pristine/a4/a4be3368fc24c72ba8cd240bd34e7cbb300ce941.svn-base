@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zc.efounder.JEnterprise.mapper.sceneLink.SceneActuatorMapper">
+
+    <resultMap type="SceneActuator" id="SceneActuatorResult">
+        <result property="id"    column="id"    />
+        <result property="sceneId"    column="scene_id"    />
+        <result property="movementMode"    column="movement_mode"    />
+        <result property="executeType"    column="execute_type"    />
+        <result property="noticeTemplate"    column="notice_template"    />
+        <result property="noticeConfig"    column="notice_config"    />
+        <result property="treeId"    column="tree_id"    />
+        <result property="userIds"    column="user_ids"    />
+        <result property="executeAttribute"    column="execute_attribute"    />
+        <result property="executeValue"    column="execute_value"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectSceneActuatorVo">
+        select id, scene_id, movement_mode, execute_type, notice_template,userIds, notice_config from athena_bes_scene_actuator
+    </sql>
+
+    <select id="selectSceneActuatorList" parameterType="SceneActuator" resultMap="SceneActuatorResult">
+        <include refid="selectSceneActuatorVo"/>
+        <where>
+            <if test="sceneId != null "> and scene_id = #{sceneId}</if>
+            <if test="movementMode != null "> and movement_mode = #{movementMode}</if>
+            <if test="executeType != null  and executeType != ''"> and execute_type = #{executeType}</if>
+            <if test="noticeTemplate != null  and noticeTemplate != ''"> and notice_template = #{noticeTemplate}</if>
+            <if test="noticeConfig != null  and noticeConfig != ''"> and notice_config = #{noticeConfig}</if>
+            <if test="treeId != null  and treeId != ''"> and tree_id = #{treeId}</if>
+            <if test="executeAttribute != null  and executeAttribute != ''"> and execute_attribute = #{executeAttribute}</if>
+            <if test="executeValue != null  and executeValue != ''"> and execute_value = #{executeValue}</if>
+        </where>
+    </select>
+
+    <select id="selectSceneActuatorById" parameterType="Long" resultMap="SceneActuatorResult">
+        <include refid="selectSceneActuatorVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertSceneActuator" parameterType="SceneActuator" >
+        insert into athena_bes_scene_actuator
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="sceneId != null">scene_id,</if>
+            <if test="movementMode != null">movement_mode,</if>
+            <if test="executeType != null">execute_type,</if>
+            <if test="noticeTemplate != null">notice_template,</if>
+            <if test="noticeConfig != null">notice_config,</if>
+            <if test="treeId != null">tree_id,</if>
+            <if test="userIds != null">user_ids,</if>
+            <if test="executeAttribute != null">execute_attribute,</if>
+            <if test="executeValue != null">execute_value,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="sceneId != null">#{sceneId},</if>
+            <if test="movementMode != null">#{movementMode},</if>
+            <if test="executeType != null">#{executeType},</if>
+            <if test="noticeTemplate != null">#{noticeTemplate},</if>
+            <if test="noticeConfig != null">#{noticeConfig},</if>
+            <if test="treeId != null">#{treeId},</if>
+            <if test="userIds != null">#{userIds},</if>
+            <if test="executeAttribute != null">#{executeAttribute},</if>
+            <if test="executeValue != null">#{executeValue},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+        </trim>
+    </insert>
+
+    <update id="updateSceneActuator" parameterType="SceneActuator">
+        update athena_bes_scene_actuator
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="sceneId != null">scene_id = #{sceneId},</if>
+            <if test="movementMode != null">movement_mode = #{movementMode},</if>
+            <if test="executeType != null">execute_type = #{executeType},</if>
+            <if test="noticeTemplate != null">notice_template = #{noticeTemplate},</if>
+            <if test="noticeConfig != null">notice_config = #{noticeConfig},</if>
+            <if test="treeId != null">tree_id = #{treeId},</if>
+            <if test="userIds != null">user_ids = #{userIds},</if>
+            <if test="executeAttribute != null">execute_attribute = #{executeAttribute},</if>
+            <if test="executeValue != null">execute_value = #{executeValue},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteSceneActuatorById" parameterType="Long">
+        delete from athena_bes_scene_actuator where id = #{id}
+    </delete>
+
+    <delete id="deleteSceneActuatorByIds" parameterType="String">
+        delete from athena_bes_scene_actuator where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

@@ -1,0 +1,61 @@
+package com.zc.iot.mapper;
+
+import java.util.List;
+import com.zc.iot.domain.IotFunctionAnalysis;
+
+/**
+ * 功能定义_协议解析处理类型 Mapper接口
+ * 
+ * @author Athena-YangChao
+ * @date 2021-12-07
+ */
+public interface IotFunctionAnalysisMapper 
+{
+    /**
+     * 查询功能定义_协议解析处理类型 
+     * 
+     * @param analysisType 功能定义_协议解析处理类型 主键
+     * @return 功能定义_协议解析处理类型 
+     */
+    public IotFunctionAnalysis selectIotFunctionAnalysisByAnalysisType(String analysisType);
+
+    /**
+     * 查询功能定义_协议解析处理类型 列表
+     * 
+     * @param iotFunctionAnalysis 功能定义_协议解析处理类型 
+     * @return 功能定义_协议解析处理类型 集合
+     */
+    public List<IotFunctionAnalysis> selectIotFunctionAnalysisList(IotFunctionAnalysis iotFunctionAnalysis);
+
+    /**
+     * 新增功能定义_协议解析处理类型 
+     * 
+     * @param iotFunctionAnalysis 功能定义_协议解析处理类型 
+     * @return 结果
+     */
+    public int insertIotFunctionAnalysis(IotFunctionAnalysis iotFunctionAnalysis);
+
+    /**
+     * 修改功能定义_协议解析处理类型 
+     * 
+     * @param iotFunctionAnalysis 功能定义_协议解析处理类型 
+     * @return 结果
+     */
+    public int updateIotFunctionAnalysis(IotFunctionAnalysis iotFunctionAnalysis);
+
+    /**
+     * 删除功能定义_协议解析处理类型 
+     * 
+     * @param analysisType 功能定义_协议解析处理类型 主键
+     * @return 结果
+     */
+    public int deleteIotFunctionAnalysisByAnalysisType(String analysisType);
+
+    /**
+     * 批量删除功能定义_协议解析处理类型 
+     * 
+     * @param analysisTypes 需要删除的数据主键集合
+     * @return 结果
+     */
+    public int deleteIotFunctionAnalysisByAnalysisTypes(String[] analysisTypes);
+}

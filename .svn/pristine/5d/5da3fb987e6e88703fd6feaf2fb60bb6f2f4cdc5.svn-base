@@ -1,0 +1,156 @@
+package com.zc.efounder.JEnterprise.controller.moduleType;
+
+import com.ruoyi.common.annotation.Log;
+import com.ruoyi.common.core.controller.BaseController;
+import com.ruoyi.common.core.domain.AjaxResult;
+import com.ruoyi.common.core.page.TableDataInfo;
+import com.ruoyi.common.enums.BusinessType;
+import com.ruoyi.common.utils.poi.ExcelUtil;
+import com.zc.efounder.JEnterprise.mapper.modulePoint.ModulePointMapper;
+import com.zc.efounder.JEnterprise.domain.moduleType.ModuleType;
+import com.zc.efounder.JEnterprise.service.moduleType.ModuleTypeService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import javax.servlet.http.HttpServletResponse;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * 模块类型定义Controller
+ *
+ * @author gaojikun
+ * @date 2022-09-06
+ */
+@RestController
+@RequestMapping("/basicData/moduleType")
+public class ModuleTypeController extends BaseController
+{
+    @Autowired
+    private ModuleTypeService moduleTypeService;
+    @Autowired
+    private ModulePointMapper modulePointMapper;
+
+
+    /**
+    * @Author:gaojikun
+    * @Date:2023-01-13 15:23
+    * @Param:moduleType
+    * @Description:查询模块类型定义列表
+    * @Return:TableDataInfo
+    */
+    @PreAuthorize("@ss.hasPermi('basicData:moduleType:list')")
+    @GetMapping("/list")
+    public TableDataInfo list(ModuleType moduleType)
+    {
+        startPage();
+        List<ModuleType> list = moduleTypeService.selectModuleTypeList(moduleType);
+        return getDataTable(list);
+    }
+
+    /**
+     * @Author:gaojikun
+     * @Date:2023-01-13 15:23
+     * @Param:moduleType
+     * @Description:导出模块类型定义列表
+     * @Return:
+     */
+    @PreAuthorize("@ss.hasPermi('basicData:moduleType:export')")
+    @Log(title = "模块类型定义", businessType = BusinessType.EXPORT)
+    @PostMapping("/export")
+    public void export(HttpServletResponse response, ModuleType moduleType)
+    {
+        List<ModuleType> list = moduleTypeService.selectModuleTypeList(moduleType);
+        ExcelUtil<ModuleType> util = new ExcelUtil<>(ModuleType.class);
+        util.exportExcel(response, list, "模块类型定义数据");
+    }
+
+    /**
+     * @Author:gaojikun
+     * @Date:2023-01-13 15:23
+     * @Param:id
+     * @Description:获取模块类型定义详细信息
+     * @Return:AjaxResult
+     */
+    @PreAuthorize("@ss.hasPermi('basicData:moduleType:query')")
+    @GetMapping(value = "/{id}")
+    public AjaxResult getInfo(@PathVariable("id") Long id)
+    {
+        return AjaxResult.success(moduleTypeService.selectModuleTypeById(id));
+    }
+
+    /**
+     * @Author:gaojikun
+     * @Date:2023-01-13 15:23
+     * @Param:moduleType
+     * @Description:新增模块类型定义
+     * @Return:AjaxResult
+     */
+    @PreAuthorize("@ss.hasPermi('basicData:moduleType:add')")
+    @Log(title = "模块类型定义", businessType = BusinessType.INSERT)
+    @PostMapping
+    public AjaxResult add(@RequestBody ModuleType moduleType)
+    {
+        return moduleTypeService.insertModuleType(moduleType);
+    }
+
+    /**
+     * @Author:gaojikun
+     * @Date:2023-01-13 15:23
+     * @Param:moduleType
+     * @Description:修改模块类型定义
+     * @Return:AjaxResult
+     */
+    @PreAuthorize("@ss.hasPermi('basicData:moduleType:edit')")
+    @Log(title = "模块类型定义", businessType = BusinessType.UPDATE)
+    @PutMapping
+    public AjaxResult edit(@RequestBody ModuleType moduleType)
+    {
+        return moduleTypeService.updateModuleType(moduleType);
+    }
+
+    /**
+     * @Author:gaojikun
+     * @Date:2023-01-13 15:23
+     * @Param:ids
+     * @Description:删除模块类型定义
+     * @Return:AjaxResult
+     */
+    @PreAuthorize("@ss.hasPermi('basicData:moduleType:remove')")
+    @Log(title = "模块类型定义", businessType = BusinessType.DELETE)
+    @DeleteMapping("/{ids}")
+    public AjaxResult remove(@PathVariable Long[] ids)
+    {
+        return moduleTypeService.deleteModuleTypeByIds(ids);
+    }
+
+
+    /**
+     * @Author:gaojikun
+     * @Date:2023-01-13 15:23
+     * @Param:
+     * @Description:查询所有点类型
+     * @Return:AjaxResult
+     */
+    @GetMapping("/listPoint")
+    public AjaxResult listPoint()
+    {
+        List<Map<String,Object>> tree = modulePointMapper.selectAllModulePointList();
+        return AjaxResult.success(tree);
+    }
+
+    /**
+     * @Author:gaojikun
+     * @Date:2023-01-13 15:23
+     * @Param:
+     * @Description:查询所有模块类型
+     * @Return:List<ModuleType>
+     */
+    @GetMapping("/listModuleType")
+    public List<ModuleType> listModuleType()
+    {
+        List<ModuleType> list = moduleTypeService.selectModuleTypeList(null);
+        return list;
+    }
+}

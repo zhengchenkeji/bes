@@ -1,0 +1,1118 @@
+<template>
+  <div class="white-body-view">
+    <!-- 展示界面 -->
+    <div class="fromHeader">
+
+      <el-form :inline="true" ref="treeNodeMsg" :rules="rules" :model="treeNodeMsg" label-width="120px">
+        <el-row>
+          <el-col :span="12">
+            <el-form-item label="系统名称">
+              <el-input v-model="treeNodeMsg.sysName" disabled style="width: 202px"></el-input>
+            </el-form-item>
+            <el-form-item label="ip地址" prop="ip">
+              <ip-address-input @changes="changesIp" ref="ip" :value="treeNodeMsg.ip" style="width: 202px"/>
+            </el-form-item>
+            <el-form-item label="默认网关" prop="gateWay">
+              <ip-address-input @changes="changesGateWay" :value="treeNodeMsg.gateWay" ref="gateWay"
+                                v-model="treeNodeMsg.gateWay" style="width: 202px"/>
+            </el-form-item>
+            <el-form-item label="描述" prop="description">
+              <el-input v-model="treeNodeMsg.description"
+                        maxlength="12"
+                        show-word-limit style="width: 202px"></el-input>
+            </el-form-item>
+            <el-form-item label="归属区域" prop="zone">
+              <el-input v-model="treeNodeMsg.zone"
+                        maxlength="12"
+                        show-word-limit style="width: 202px"></el-input>
+            </el-form-item>
+            <el-form-item label="主机ip" prop="serverIp">
+              <ip-address-input @changes="changesServerIp" :value="treeNodeMsg.serverIp" ref="serverIp"
+                                v-model="treeNodeMsg.serverIp" style="width: 202px"/>
+            </el-form-item>
+            <el-form-item label="主机端口" prop="serverPort">
+              <el-input type="number"  min="0" v-model="treeNodeMsg.serverPort" style="width: 202px"></el-input>
+            </el-form-item>
+            <el-form-item label="是否同步" prop="synchState">
+              <el-switch disabled v-model="treeNodeMsg.synchState" :active-value="1" :inactive-value="0"
+                         active-color="#13ce66" inactive-color="#ff4949" style="width: 202px">
+              </el-switch>
+            </el-form-item>
+            <el-form-item label="是否在线" prop="onlineState">
+              <el-switch disabled v-model="treeNodeMsg.onlineState" :active-value="1" :inactive-value="0"
+                         active-color="#13ce66" inactive-color="#ff4949" style="width: 202px">
+              </el-switch>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="系统别名" prop="alias">
+              <el-input v-model="treeNodeMsg.alias"
+                        maxlength="24"
+                        show-word-limit style="width: 202px"></el-input>
+            </el-form-item>
+            <el-form-item label="是否启用" prop="active">
+              <el-switch v-model="treeNodeMsg.active" :active-value="1" :inactive-value="0" active-color="#13ce66"
+                         inactive-color="#ff4949" style="width: 202px">
+              </el-switch>
+            </el-form-item>
+            <el-form-item label="子网掩码" prop="mask">
+              <ip-address-input @changes="changesMask" :value="treeNodeMsg.mask" ref="mask" v-model="treeNodeMsg.mask"
+                                style="width: 202px"/>
+            </el-form-item>
+            <el-form-item label="安装位置" prop="location">
+              <el-input v-model="treeNodeMsg.location"
+                        maxlength="12"
+                        show-word-limit style="width: 202px"></el-input>
+
+            </el-form-item>
+            <el-form-item label="保存周期" prop="savePeriod">
+              <el-select v-model="treeNodeMsg.savePeriod" filterable placeholder="请选择" style="width: 202px">
+                <el-option v-for="item in savePeriodOptions" :key="item.value" :label="item.label" :value="item.value">
+                </el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item v-show="deviceNodeCode == deviceTreeSettings.collector" label="采集周期" prop="collectPeriod">
+              <el-select v-model="treeNodeMsg.collectPeriod" style="width: 202px" filterable placeholder="请选择">
+                <el-option v-for="item in collectOruploadOptions" :key="item.value" :label="item.label"
+                           :value="item.value">
+                </el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item v-show="deviceNodeCode == deviceTreeSettings.collector" label="上传周期" prop="uploadPeriod">
+              <el-select v-model="treeNodeMsg.uploadPeriod" style="width: 202px" filterable placeholder="请选择">
+                <el-option v-for="item in collectOruploadOptions" :key="item.value" :label="item.label"
+                           :value="item.value">
+                </el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item label="控制器时间" prop="controllerTime">
+              <el-input v-model="controllerTime" readonly style="width: 202px"></el-input>
+            </el-form-item>
+
+          </el-col>
+        </el-row>
+      </el-form>
+
+      <div style="text-align: center">
+        <el-button
+          v-hasPermi="['deviceTree:controller:setTimeDDC']"
+          v-show="!(deviceNodeCode == deviceTreeSettings.collector)" type="primary" @click="jumpIpPageDDC()">
+          跳转
+        </el-button>
+        <el-button
+          v-hasPermi="['deviceTree:controller:setTimeDDC']"
+          type="primary" @click="setTimeDDC()">设置时间</el-button>
+        <el-button
+          v-hasPermi="['deviceTree:controller:getTimeDDC']"
+          type="primary" @click="getTimeDDC()">获取时间</el-button>
+        <el-button
+          v-hasPermi="['deviceTree:controller:restartDDC']"
+          type="primary" @click="restartDDC()">重启</el-button>
+        <el-button
+          v-hasPermi="['deviceTree:controller:resetDDC']"
+          type="primary" @click="resetDDC()">重置</el-button>
+        <el-button
+          v-hasPermi="['deviceTree:controller:sync']"
+          type="primary" @click="synDDC()">同步数据</el-button>
+        <el-button
+          v-hasPermi="['deviceTree:controller:contrast']"
+          type="primary" @click="getDDCInfoParam()">数据对比</el-button>
+        <!--        <el-button type="primary" @click="operDDCController()">远程升级</el-button>-->
+        <!--        <el-button style="margin-top: 10px" type="primary" @click="ddcImpReport()">下发程序</el-button>-->
+        <el-button
+          v-hasPermi="['deviceTree:controller:edit']"
+          style="margin-top: 10px" type="primary" @click="saveForm()" :disabled="saveBoolean">保存</el-button>
+      </div>
+    </div>
+    <!-- 数据对比 -->
+    <el-dialog title="数据对比" :visible.sync="parmasVisible" width="800px" @close="clearParmas()" append-to-body>
+      <el-row>
+        <el-col :span="11" style="background-color: #ebf6fb;text-align: center">
+          <el-button style="margin-bottom: 15px;margin-top: 10px">上位机数据</el-button>
+          <el-form :inline="true" :model="upperFormData" label-width="90px">
+            <el-form-item label="系统名称" prop="sysName">
+              <el-input maxlength="24" v-model.trim="upperFormData.sysName" readonly></el-input>
+            </el-form-item>
+            <el-form-item label="别名" prop="alias">
+              <el-input v-model="upperFormData.alias" readonly></el-input>
+            </el-form-item>
+            <el-form-item label="安装位置" prop="location">
+              <el-input v-model="upperFormData.location" readonly></el-input>
+            </el-form-item>
+            <el-form-item label="归属区域" prop="zone">
+              <el-input v-model="upperFormData.zone" readonly></el-input>
+            </el-form-item>
+            <el-form-item label="是否启用" prop="active">
+              <el-input v-model="upperFormData.active" readonly></el-input>
+            </el-form-item>
+            <el-form-item label="描述" prop="description">
+              <el-input v-model="upperFormData.description" readonly></el-input>
+            </el-form-item>
+            <el-form-item v-show="deviceNodeCode == deviceTreeSettings.collector" label="保存周期" prop="savePeriod">
+              <el-input v-model="upperFormData.savePeriod" readonly></el-input>
+            </el-form-item>
+            <el-form-item v-show="deviceNodeCode == deviceTreeSettings.collector" label="采集周期" prop="collectPeriod">
+              <el-input v-model="upperFormData.collectPeriod" readonly></el-input>
+            </el-form-item>
+            <el-form-item v-show="deviceNodeCode == deviceTreeSettings.collector" label="上传周期" prop="uploadPeriod">
+              <el-input v-model="upperFormData.uploadPeriod" readonly></el-input>
+            </el-form-item>
+          </el-form>
+        </el-col>
+        <el-col :span="2" style="height: 1px"></el-col>
+        <el-col :span="11" style="background-color: #ebf6fb;text-align: center">
+          <el-button style="margin-bottom: 15px;margin-top: 10px">下位机数据</el-button>
+          <el-form :inline="true" :model="underFormData" label-width="90px">
+            <el-form-item label="系统名称" prop="sysName" :class="{inputRed:styleDate.sysName}">
+              <el-input maxlength="24" v-model.trim="underFormData.sysName" readonly></el-input>
+            </el-form-item>
+            <el-form-item label="别名" prop="alias" :class="{inputRed:styleDate.alias}">
+              <el-input v-model="underFormData.alias" readonly></el-input>
+            </el-form-item>
+            <el-form-item label="安装位置" prop="location" :class="{inputRed:styleDate.location}">
+              <el-input v-model="underFormData.location" readonly></el-input>
+            </el-form-item>
+            <el-form-item label="归属区域" prop="zone" :class="{inputRed:styleDate.zone}">
+              <el-input v-model="underFormData.zone" readonly></el-input>
+            </el-form-item>
+            <el-form-item label="是否启用" prop="active" :class="{inputRed:styleDate.active}">
+              <el-input v-model="underFormData.active" readonly></el-input>
+            </el-form-item>
+            <el-form-item label="描述" prop="description" :class="{inputRed:styleDate.description}">
+              <el-input v-model="underFormData.description" readonly></el-input>
+            </el-form-item>
+            <el-form-item v-show="deviceNodeCode == deviceTreeSettings.collector"
+                          :class="{inputRed:styleDate.savePeriod}" label="保存周期" prop="savePeriod">
+              <el-input v-model="underFormData.savePeriod" readonly></el-input>
+            </el-form-item>
+            <el-form-item v-show="deviceNodeCode == deviceTreeSettings.collector"
+                          :class="{inputRed:styleDate.collectPeriod}" label="采集周期" prop="collectPeriod">
+              <el-input v-model="underFormData.collectPeriod" readonly></el-input>
+            </el-form-item>
+            <el-form-item v-show="deviceNodeCode == deviceTreeSettings.collector"
+                          :class="{inputRed:styleDate.uploadPeriod}" label="上传周期" prop="uploadPeriod">
+              <el-input v-model="underFormData.uploadPeriod" readonly></el-input>
+            </el-form-item>
+          </el-form>
+        </el-col>
+      </el-row>
+    </el-dialog>
+    <!-- 新增DDC -->
+    <el-drawer size='35%' title="新增控制器" :visible.sync="visible" :before-close="handleClose" direction="rtl">
+      <div style="margin-left: 15px; margin-right: 15px">
+        <div style="margin-bottom: 15px;">
+          <!-- 选择下拉框和搜索 -->
+          <el-row :span="10" :xs="24">
+            <el-col>
+              <el-form :inline="true" :rules="rules" ref="form" :model="form" label-width="90px">
+                <el-form-item label="系统名称" prop="sysName">
+                  <el-input maxlength="24" show-word-limit
+                            v-model.trim="form.sysName" style="width: 202px">
+                  </el-input>
+                </el-form-item>
+                <el-form-item label="别名" prop="alias">
+                  <el-input maxlength="24" show-word-limit v-model="form.alias" style="width: 202px"></el-input>
+                </el-form-item>
+                <el-form-item label="ip" prop="ip">
+                  <ip-address-input @changes="changesIp" :value="form.ip" ref="ip" v-model="form.ip"
+                                    style="width: 202px"/>
+                </el-form-item>
+
+                <el-form-item label="是否启用" prop="active">
+                  <el-switch v-model="form.active" active-color="#13ce66" inactive-color="#ff4949" :active-value="1"
+                             :inactive-value="0" style="width: 202px">
+                  </el-switch>
+                </el-form-item>
+
+                <el-form-item label="默认网关" prop="gateWay">
+                  <ip-address-input @changes="changesGateWay" :value="form.gateWay" ref="gateWay" style="width: 202px"
+                                    v-model="form.gateWay"/>
+                </el-form-item>
+
+                <el-form-item label="子网掩码" prop="mask">
+                  <ip-address-input @changes="changesMask" :value="form.mask" ref="mask" v-model="form.mask"
+                                    style="width: 202px"/>
+                </el-form-item>
+
+                <el-form-item label="描述" prop="description">
+                  <el-input v-model="form.description"
+                            maxlength="12"
+                            show-word-limit style="width: 202px"></el-input>
+                </el-form-item>
+
+                <el-form-item label="安装位置" prop="location">
+                  <el-input v-model="form.location"
+                            maxlength="12"
+                            show-word-limit style="width: 202px"></el-input>
+                </el-form-item>
+
+                <el-form-item label="归属区域" prop="zone">
+                  <el-input v-model="form.zone"
+                            maxlength="12"
+                            show-word-limit style="width: 202px"></el-input>
+                </el-form-item>
+
+                <el-form-item label="保存周期" prop="savePeriod">
+                  <el-select v-model="form.savePeriod" style="width: 202px" filterable placeholder="请选择">
+                    <el-option v-for="item in savePeriodOptions" :key="item.value" :label="item.label"
+                               :value="item.value">
+                    </el-option>
+                  </el-select>
+                </el-form-item>
+
+                <el-form-item label="主机ip" prop="serverIp">
+                  <ip-address-input @changes="changesServerIp" :value="form.serverIp" ref="serverIp"
+                                    style="width: 202px"
+                                    v-model="form.serverIp"/>
+                </el-form-item>
+
+                <el-form-item v-show="deviceNodeCode == deviceTreeSettings.collector" label="采集周期" prop="collectPeriod">
+                  <el-select v-model="form.collectPeriod" style="width: 202px" filterable placeholder="请选择">
+                    <el-option v-for="item in collectOruploadOptions" :key="item.value" :label="item.label"
+                               :value="item.value">
+                    </el-option>
+                  </el-select>
+                </el-form-item>
+
+                <el-form-item label="主机端口" prop="serverPort">
+                  <el-input type="number" min="0" v-model="form.serverPort" style="width: 202px"></el-input>
+                </el-form-item>
+
+
+                <el-form-item v-show="deviceNodeCode == deviceTreeSettings.collector" label="上传周期" prop="uploadPeriod">
+                  <el-select v-model="form.uploadPeriod" style="width: 202px" filterable placeholder="请选择">
+                    <el-option v-for="item in collectOruploadOptions" :key="item.value" :label="item.label"
+                               :value="item.value">
+                    </el-option>
+                  </el-select>
+                </el-form-item>
+              </el-form>
+              <el-form :inline="true" label-width="80px" style="text-align: center">
+
+                <el-form-item>
+                  <el-button
+                    v-hasPermi="['deviceTree:controller:add']"
+                    type="primary" @click="submitForm">新增</el-button>
+                </el-form-item>
+              </el-form>
+            </el-col>
+          </el-row>
+        </div>
+      </div>
+    </el-drawer>
+
+  </div>
+</template>
+
+<script>
+import {mapState} from 'vuex'
+import ipAddressInput from '../../../../components/InputIP/ipAddressInput';
+import {
+  addController,
+  updateController,
+  setTimeDDC,
+  getTimeDDC,
+  restartDDC,
+  resetDDC,
+  synchronizeDDC,
+  remoteUpgradeDdc,
+  getDDCInfoParam
+} from '@/api/basicData/deviceManagement/deviceTree/deviceTree';
+import {deviceTreeSettings} from '../../../../api/basicData/deviceManagement/deviceTree/deviceTreeSettings'
+
+export default {
+  components: {ipAddressInput},
+  props: {
+    drawerDDC: {
+      type: Boolean,
+      default: false
+    },
+    treeNodeMsgs: {
+      type: Object,
+      default: {
+        type: null,//采集器类型  1：能耗采集器、2：DDC采集器、3：照明控制器
+        sysName: '',//系统名称
+        alias: '',//采集器别名
+        currentIp: '',//当前通讯ip
+        ip: '...',//ip地址
+        gateWay: '...',//默认网关
+        mask: '...',//子网掩码
+        serverIp: '...',//服务ip地址
+        serverPort: '',//服务端口
+        location: "",//安装位置
+        zone: '',//归属区域
+        synchState: 0,//同步状态 0：未同步、 1：已同步
+        errorState: 0,//异常状态 0：正常、1：异常
+        onlineState: 0,//在线状态0：不在线、 1：在线
+        active: 1,//使能状态  0：不使能、1：使能
+        description: '',//描述
+        collectPeriod: '',//采集周期： 分钟（只有能耗采集器有）
+        uploadPeriod: null,//上传周期：分钟（只有能耗采集器有）
+        savePeriod: 0,//保存周期：小时（只有能耗采集器有）
+      }
+    },
+    deviceNodeCode: {
+      type: String
+    }
+  },
+
+  data() {
+
+    // 只能输入英文、数字、下划线!
+    var checkinput = (rule, value, callback) => {
+      if (!value) {
+        return callback()
+      }
+      if (value) {
+        var reg = /^[\u4E00-\u9FA5A-Za-z0-9_]+$/;
+        if (!reg.test(value)) {
+          callback(new Error('只能输入英文、数字、下划线!'))
+        } else {
+          callback()
+        }
+      }
+    }
+    //不允许输入,/!特殊符号
+    var checkText = (rule, value, callback) => {
+      if (!value) {
+        return callback()
+      }
+      if (value) {
+        var reg = /[,/!]/;
+        if (reg.test(value)) {
+          callback(new Error('不允许输入,/!特殊符号'))
+        } else {
+          callback()
+        }
+      }
+    }
+    //不允许输入汉字
+    var checkChinese = (rule, value, callback) => {
+      if (!value) {
+        return callback()
+      }
+      if (value) {
+        var reg = /[\u4e00-\u9fa5]/;
+        if (reg.test(value)) {
+          callback(new Error('不允许输入汉字'))
+        } else {
+          callback()
+        }
+      }
+    }
+    return {
+      //判断下位机  数据是否相等 不相等边框则为红色
+      styleDate: {
+        sysName: false,//系统名称
+        alias: false,//别名
+        location: false,//安装位置
+        zone: false,//归属区域
+        active: false,//是否启用
+        description: false,//描述
+        collectPeriod: false,//采集周期
+        uploadPeriod: false,//上传周期
+        savePeriod: false,//保存周期
+      },
+      //控制器时间
+      controllerTime: null,
+      //新增修改标识 true  为修改 false 为新增
+      addOrUpdate: true,
+      //数据对比 显示框
+      parmasVisible: false,
+      //下位机数据
+      underFormData: {},
+      //上位机数据
+      upperFormData: {},
+      //文件上传 路径
+      action: '',
+      //文件上传
+      fileList: [],
+      //数值未修改 保存按钮禁用
+      saveBoolean: true,
+      //是否 监听
+      watchBoolean: false,
+      //文件提交弹框
+      fileVisible: false,
+      deviceTreeSettings: deviceTreeSettings,
+      visible: false,
+      // 表单校验
+      rules: {
+        sysName: [
+          {required: true, message: "系统名称不能为空", trigger: "blur"},
+          {pattern: /^[a-zA-Z]/, message: "首位只能输入英文字母",},
+          {validator: checkChinese},
+          {validator: checkinput},
+        ],
+        alias: [
+          {required: true, message: "别名不能为空", trigger: "blur"},
+          {validator: checkText},
+        ],
+        ip: [
+          {required: true,message: "ip格式不正确", trigger: "blur", pattern: /((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})(\.((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})){3}/}
+        ],
+        gateWay: [
+          {required: true,message: "ip格式不正确", trigger: "blur", pattern: /((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})(\.((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})){3}/}
+        ],
+        mask: [
+          {required: true,message: "ip格式不正确", trigger: "blur", pattern: /((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})(\.((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})){3}/}
+        ],
+        serverIp: [
+          {required: true,message: "ip格式不正确", trigger: "blur", pattern: /((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})(\.((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})){3}/}
+        ],
+        serverPort: [
+          {required: true, message: "服务端口不能为空", trigger: "blur"},
+          {required: true, message: "只能为数字且长度小于等于5", trigger: "blur", pattern: /^\d{1,5}$/}
+        ],
+
+        location: [
+          {required: true, message: "安装位置不能为空", trigger: "blur"},
+          {validator: checkText},
+        ],
+
+        zone: [
+          {required: true, message: "归属区域不能为空", trigger: "blur"},
+          {validator: checkText},
+        ],
+
+        description: [
+          {required: true, message: "描述不能为空", trigger: "blur"},
+          {validator: checkText},
+
+        ],
+
+      },
+      treeNodeMsg: this.treeNodeMsgs,
+      form: {},//新增/修改表单
+      ips: null,
+      collectOruploadOptions: [],//上传或者采集周期(分钟)
+      savePeriodOptions: [],//保存周期的数据
+    }
+  },
+  computed: {
+    ...mapState({
+      //更新控制器状态
+      deviceTreeControllerStstus: state => state.websocket.deviceTreeControllerStstus,
+      /****************************************************DDC********************************************************/
+      //新增一个控制器 DDC
+      controllerAddDDC: state => state.websocket.controllerAddDDC,
+      //设置一个DDC
+      controllerParamSetDDC: state => state.websocket.controllerParamSetDDC,
+      //数据对比DDC
+      controllerParamGetDDC: state => state.websocket.controllerParamGetDDC,
+
+      //获取控制器的时间 DDC
+      controllerTimeGetDDC: state => state.websocket.controllerTimeGetDDC,
+
+      //重置控制器，恢复出厂设置，并重启 DDC
+      controllerResetDDC: state => state.websocket.controllerResetDDC,
+
+      /****************************************************LDC********************************************************/
+      //新增一个控制器 LDC
+      controllerAddLDC: state => state.websocket.controllerAddLDC,
+      //设置一个LDC
+      controllerParamSetLDC: state => state.websocket.controllerParamSetLDC,
+      //获取控制器的所有配置参数LDC
+      controllerParamGetLDC: state => state.websocket.controllerParamGetLDC,
+
+      //获取控制器的时间 LDC
+      controllerTimeGetLDC: state => state.websocket.controllerTimeGetLDC,
+
+      //重置控制器，恢复出厂设置，并重启 LDC
+      controllerResetLDC: state => state.websocket.controllerResetLDC,
+
+      /****************************************************EDC********************************************************/
+      //新增一个控制器 EDC
+      controllerAdd: state => state.websocket.controllerAdd,
+      //获取控制器的所有配置参数 EDC
+      controllerParamGet: state => state.websocket.controllerParamGet,
+      //设置一个控制器 EDC
+      controllerParamSet: state => state.websocket.controllerParamSet,
+
+      // 获取控制器的时间 EDC
+      controllerTimeGet: state => state.websocket.controllerTimeGet,
+
+      // 重置控制器，恢复出厂设置，并重启 EDC
+      controllerReset: state => state.websocket.controllerReset,
+    }),
+    watchList: function () {
+      const obj = {}
+      Object.keys(this.treeNodeMsg).forEach(key => {
+        obj[key] = this.treeNodeMsg[key]
+      })
+      return obj
+    },
+  },
+
+  watch: {
+    /*****更新控制器状态****/
+    deviceTreeControllerStstus(res) {
+      var ip = res.ip;
+      var state = res.state;
+
+      if (ip !== this.treeNodeMsg.ip) {
+        return;
+      }
+
+      if (state === 0) {
+        this.treeNodeMsg.onlineState = 0
+
+      } else if (state === 1) {
+        this.treeNodeMsg.onlineState = 1
+      }
+
+    },
+    /**************************DDC******************************/
+    //新增一个DDC
+    controllerAddDDC(res) {
+      this.controllerStateSet(res);
+      //更改缓存
+      this.$store.commit("CONTROLLER_ADD_DDC", 0)
+    },
+    //设置一个DDC
+    controllerParamSetDDC(res) {
+      this.controllerStateSet(res);
+      //更改缓存
+      this.$store.commit("CONTROLLER_PARAM_SET_DDC", 0)
+    },
+    //数据对比DDC
+    controllerParamGetDDC(res) {
+      this.getData(res);
+      //更改缓存
+      this.$store.commit("CONTROLLER_PARAM_GET_DDC", null)
+    },
+
+    //获取控制器的时间 DDC
+    controllerTimeGetDDC(res) {
+      this.getTime(res)
+    },
+
+    //重置控制器，恢复出厂设置，并重启 DDC
+    controllerResetDDC(res) {
+      this.controllerStateSet(res);
+      //更改缓存
+      this.$store.commit("CONTROLLER_RESET_DDC", 0)
+    },
+    /**************************LDC******************************/
+    //新增一个控制器 LDC
+    controllerAddLDC(res) {
+      this.controllerStateSet(res);
+      //更改缓存
+      this.$store.commit("CONTROLLER_ADD_LDC", 0)
+    },
+    //设置一个LDC
+    controllerParamSetLDC(res) {
+      this.controllerStateSet(res);
+      //更改缓存
+      this.$store.commit("CONTROLLER_PARAM_SET_LDC", 0)
+    },
+    //获取控制器的所有配置参数LDC
+    controllerParamGetLDC(res) {
+      this.getData(res);
+      //更改缓存
+      this.$store.commit("CONTROLLER_PARAM_GET_LDC", null)
+    },
+
+    //获取控制器的时间 LDC
+    controllerTimeGetLDC(res) {
+      this.getTime(res)
+    },
+
+    //重置控制器，恢复出厂设置，并重启 LDC
+    controllerResetLDC(res) {
+      this.controllerStateSet(res);
+      //更改缓存
+      this.$store.commit("CONTROLLER_RESET_LDC", 0)
+    },
+    /**************************EDC******************************/
+    //新增一个控制器 EDC
+    controllerAdd(res) {
+      this.controllerStateSet(res);
+      //更改缓存
+      this.$store.commit("CONTROLLER_ADD", 0)
+    },
+    //数据对比EDC
+    controllerParamGet(res) {
+      this.getData(res);
+      //更改缓存
+      this.$store.commit("CONTROLLER_PARAM_GET", null)
+    },
+    //设置一个控制器 EDC
+    controllerParamSet(res) {
+      this.controllerStateSet(res);
+      //更改缓存
+      this.$store.commit("CONTROLLER_PARAM_SET", 0)
+    },
+
+    //获取控制器的时间 EDC
+    controllerTimeGet(res) {
+      this.getTime(res)
+    },
+
+    //重置控制器，恢复出厂设置，并重启 EDC
+    controllerReset(res) {
+      this.controllerStateSet(res);
+      //更改缓存
+      this.$store.commit("CONTROLLER_RESET", 0)
+    },
+
+    //2.判断是否为人为修改数据   还是点击节点更换的数据
+    //4.数据确定之后  再次发生变化 即为人为修改数据 保存按钮生效
+    watchList: {
+      deep: true,
+
+      handler: function (newVal, oldVal) {
+        if (this.watchBoolean) {
+          if (newVal.alias !== oldVal.alias || newVal.ip !== oldVal.ip ||
+            newVal.zone !== oldVal.zone || newVal.gateWay !== oldVal.gateWay ||
+            newVal.mask !== oldVal.mask || newVal.active !== oldVal.active ||
+            newVal.description !== oldVal.description || newVal.savePeriod !== oldVal.savePeriod ||
+            newVal.location !== oldVal.location || newVal.collectPeriod !== oldVal.collectPeriod ||
+            newVal.uploadPeriod !== oldVal.uploadPeriod || newVal.serverPort !== oldVal.serverPort ||
+            newVal.serverIp !== oldVal.serverIp
+          ) {
+            this.saveBoolean = false
+          }
+        }
+      }
+    },
+    //监听  1.先走该方法  刷新数据
+    deep: true,
+    treeNodeMsgs(value) {
+      //未赋值时  过滤掉 值的改变
+      this.watchBoolean = false
+      this.treeNodeMsg = this.treeNodeMsgs;
+      this.$nextTick(function () {
+        //赋值后 监听值的改变
+        this.watchBoolean = true
+        this.saveBoolean = true
+      })
+    },
+
+    deviceNodeCode(value) {
+      this.generateSavePeriodOptions();
+    },
+
+  },
+
+  created() {
+    //生成保存周期的数据
+    this.generateSavePeriodOptions();
+  },
+  mounted() {
+  },
+  methods: {
+
+    /************************获取下位机数据**************************/
+    getData(res) {
+      if (null == res) {
+        return;
+      }
+      //赋值给下位机表单
+      this.underFormData = res
+
+
+      //格式化数据
+      if (this.underFormData.active == 1) {
+        this.underFormData.active = "是"
+      } else {
+        this.underFormData.active = "否"
+      }
+
+      this.underFormData.sysName = res.name
+      if (this.deviceNodeCode == deviceTreeSettings.collector) {//能耗
+        this.underFormData.savePeriod = res.hisDataSavePeriod + "小时"  //保存周期
+        this.underFormData.uploadPeriod = res.upDataSamplePeriod + "分钟"//上传周期
+        this.underFormData.collectPeriod = res.samplePeriod + "分钟"//采集周期
+
+        this.upperFormData.collectPeriod == this.underFormData.collectPeriod ? this.styleDate.collectPeriod = false : this.styleDate.collectPeriod = true;//采集周期
+        this.upperFormData.uploadPeriod == this.underFormData.uploadPeriod ? this.styleDate.uploadPeriod = false : this.styleDate.uploadPeriod = true;//上传周期
+        this.upperFormData.savePeriod == this.underFormData.savePeriod ? this.styleDate.savePeriod = false : this.styleDate.savePeriod = true;//保存周期
+      }
+
+      this.upperFormData.sysName == this.underFormData.sysName ? this.styleDate.sysName = false : this.styleDate.sysName = true;//系统名称
+      this.upperFormData.alias == this.underFormData.alias ? this.styleDate.alias = false : this.styleDate.alias = true;//别名
+      this.upperFormData.location == this.underFormData.location ? this.styleDate.location = false : this.styleDate.location = true;//安装位置
+      this.upperFormData.zone == this.underFormData.zone ? this.styleDate.zone = false : this.styleDate.zone = true;//归属区域
+      this.upperFormData.active == this.underFormData.active ? this.styleDate.active = false : this.styleDate.active = true;//是否启用
+      this.upperFormData.description == this.underFormData.description ? this.styleDate.description = false : this.styleDate.description = true;//描述
+
+    },
+    /************************获取控制器时间**************************/
+    getTime(res) {
+      if (!res) {
+        return;
+      }
+
+      var year = res.year;
+      var month = res.month;
+      var day = res.day;
+      var hour = res.hour + '';
+      var minute = res.minute + '';
+      var second = res.second + '';
+
+      if (hour.length === 1) {
+        hour = '0' + hour;
+      }
+
+      if (minute.length === 1) {
+        minute = '0' + minute;
+      }
+
+      if (second.length === 1) {
+        second = '0' + second;
+      }
+
+      var time = '20' + year + '-' + month + '-' + day + ' ' + hour + ':' + minute + ':' + second;
+
+      this.controllerTime = time;
+    },
+    /************************清除数据**************************/
+    clearParmas() {
+      this.underFormData = {}
+      this.styleDate = {
+        sysName: false,//系统名称
+        alias: false,//别名
+        location: false,//安装位置
+        zone: false,//归属区域
+        active: false,//是否启用
+        description: false,//描述
+        collectPeriod: false,//采集周期
+        uploadPeriod: false,//上传周期
+        savePeriod: false,//保存周期
+      }
+    },
+    /************************同步状态**************************/
+    controllerStateSet(state) {
+      if (typeof state !== 'boolean') {
+        return;
+      }
+      if (state) {
+        this.treeNodeMsg.synchState = 1
+      } else {
+        this.treeNodeMsg.synchState = 0
+      }
+    },
+    // 表单重置
+    reset() {
+      this.form = {
+        sysName: '',//系统名称
+        alias: '',//采集器别名
+        currentIp: '',//当前通讯ip
+        ip: '....',//ip地址
+        gateWay: '....',//默认网关
+        mask: '....',//子网掩码
+        serverIp: '....',//服务ip地址
+        serverPort: '',//服务端口
+        location: "",//安装位置
+        zone: '',//归属区域
+        synchState: 0,//同步状态 0：未同步、 1：已同步
+        errorState: 0,//异常状态 0：正常、1：异常
+        onlineState: 0,//在线状态0：不在线、 1：在线
+        active: 1,//使能状态  0：不使能、1：使能
+        description: '',//描述
+        collectPeriod: '',//采集周期： 分钟（只有能耗采集器有）
+        uploadPeriod: null,//上传周期：分钟（只有能耗采集器有）
+        savePeriod: this.savePeriodOptions[0].value,//保存周期：小时（只有能耗采集器有）
+      };
+      // this.resetForm("form");
+    },
+    //生成保存周期/上传周期/采集周期的数据
+    generateSavePeriodOptions() {
+      this.savePeriodOptions.length = 0;
+      this.collectOruploadOptions.length = 0;
+      if (this.deviceNodeCode == deviceTreeSettings.collector) {//能耗
+        for (let i = 1; i <= 124; i++) {
+          let savePeriodOptionsMsg = {};
+          let collectOruploadOptionsMsg = {};
+          savePeriodOptionsMsg.label = i + '小时';
+          savePeriodOptionsMsg.value = i
+          collectOruploadOptionsMsg.label = i + '分钟';
+          collectOruploadOptionsMsg.value = i
+          this.savePeriodOptions.push(savePeriodOptionsMsg);
+          this.collectOruploadOptions.push(collectOruploadOptionsMsg);
+        }
+      } else {
+        let time = 1;
+        for (let i = 1; i <= 200; i++) {
+          if (time == 5) {
+            let savePeriodOptionsMsg = {};
+            savePeriodOptionsMsg.label = i + '分钟';
+            savePeriodOptionsMsg.value = i
+            this.savePeriodOptions.push(savePeriodOptionsMsg);
+            time = 1;
+          } else {
+            time++
+          }
+        }
+      }
+    },
+
+    //提交按钮
+    submitForm() {
+
+      this.saveBoolean = true
+      let that = this;
+      this.$refs["form"].validate(valid => {
+        if (valid) {
+          if (that.form.active == true) {
+            that.form.active = 1
+          } else {
+            that.form.active = 0
+          }
+          that.form.type = that.deviceNodeCode;
+          /** qindehua 修正添加控制器时 父节点id不正确*/
+          that.form.deviceTreeFatherId = that.treeNodeMsgs.treeId;
+          that.form.deviceNodeId = that.deviceNodeCode;
+          addController(that.form).then(response => {
+            if (response.code == 200) {//新增成功
+              that.$modal.msgSuccess(response.msg);
+              //新增成功时 标识为true
+              this.addOrUpdate = true
+              //清空表单
+              that.reset()
+              //关闭抽屉
+              that.visible = false;
+              that.$emit('addTreeNode', response.data);
+
+            } else {//新增失败
+              this.$modal.msgSuccess(response.msg);
+            }
+
+          });
+        }
+      });
+    },
+
+    /** 保存按钮*/
+    saveForm() {
+
+      this.$refs["treeNodeMsg"].validate(valid => {
+        if (valid) {
+          if (this.treeNodeMsg.active == true) {
+            this.treeNodeMsg.active = 1
+          } else {
+            this.treeNodeMsg.active = 0
+          }
+          this.$modal.confirm("确定进行修改吗！").then(() => {
+            updateController(this.treeNodeMsg).then(response => {
+              this.saveBoolean = true
+              this.$modal.msgSuccess(response.msg);
+              if (response.data != null && response.data != undefined && response.data != "") {
+                this.treeNodeMsg.synchState = response.data.synchState
+                this.treeNodeMsg.onlineState = response.data.onlineState
+              }
+              this.$emit("updateTreeNode", this.treeNodeMsg)
+            });
+          })
+        }
+      })
+    },
+
+    /** 根据IP进行页面跳转*/
+    jumpIpPageDDC() {
+      window.open("http://" + this.form.ip);
+    },
+    /** 设置时间*/
+    setTimeDDC() {
+      if (!this.saveBoolean) {
+        this.$modal.confirm("数据已修改，请先保存！")
+      } else {
+        setTimeDDC(
+          {
+            deviceTreeId: this.treeNodeMsg.deviceTreeId,
+            type: this.treeNodeMsg.type
+          }).then(response => {
+          this.$modal.msgSuccess(response.msg);
+        })
+      }
+    },
+    /** 获取时间*/
+    getTimeDDC() {
+      if (!this.saveBoolean) {
+        this.$modal.confirm("数据已修改，请先保存！")
+      } else {
+        getTimeDDC({
+          deviceTreeId: this.treeNodeMsg.deviceTreeId,
+          type: this.treeNodeMsg.type,
+        }).then(response => {
+          this.$modal.msgSuccess(response.msg);
+        })
+      }
+
+    },
+    /** 重启*/
+    restartDDC() {
+      if (!this.saveBoolean) {
+        this.$modal.confirm("数据已修改，请先保存！")
+      } else {
+        this.$modal.confirm("确定要进行重启吗？").then(() => {
+          restartDDC({
+            deviceTreeId: this.treeNodeMsg.deviceTreeId,
+            type: this.treeNodeMsg.type,
+          }).then(response => {
+            this.$modal.msgSuccess(response.msg);
+          })
+        })
+      }
+    },
+    /** 重置*/
+    resetDDC() {
+      if (!this.saveBoolean) {
+        this.$modal.confirm("数据已修改，请先保存！")
+      } else {
+        this.$modal.confirm("确定要进行重置吗？").then(() => {
+          resetDDC({
+            deviceTreeId: this.treeNodeMsg.deviceTreeId,
+            type: this.treeNodeMsg.type,
+          }).then(response => {
+            this.$modal.msgSuccess(response.msg);
+          })
+        })
+      }
+    },
+    /** 同步数据*/
+    synDDC() {
+      if (!this.saveBoolean) {
+        this.$modal.confirm("数据已修改，请先保存！")
+      } else {
+        this.$confirm('是否只同步当前控制器?', '选择同步方式', {
+          distinguishCancelAndClose: true,
+          confirmButtonText: '批量同步',
+          cancelButtonText: '同步当前控制器',
+          type: 'warning'
+        }).then(() => {   //批量同步  true 为批量同步
+          synchronizeDDC({
+            deviceTreeId: this.treeNodeMsg.deviceTreeId,
+            type: this.treeNodeMsg.type,
+            synchronize: true,
+          }).then(response => {
+            this.$modal.msgSuccess(response.msg);
+          })
+
+        }).catch((action) => {  // 同步当前   false 为同步当前
+          if (action === 'cancel') {  //判断   关闭弹框 不触发请求
+            synchronizeDDC({
+              deviceTreeId: this.treeNodeMsg.deviceTreeId,
+              type: this.treeNodeMsg.type,
+              synchronize: false,
+            }).then(response => {
+              this.$modal.msgSuccess(response.msg);
+            })
+          }
+        });
+      }
+    },
+    /** 数据对比*/
+    getDDCInfoParam() {
+      //解除双向绑定
+      this.upperFormData = JSON.parse(JSON.stringify(this.treeNodeMsg))
+
+      //格式化数据
+      if (this.upperFormData.active == 1) {
+        this.upperFormData.active = "是"
+      } else {
+        this.upperFormData.active = "否"
+      }
+      if (this.deviceNodeCode == deviceTreeSettings.collector) { //能耗
+        this.upperFormData.savePeriod = this.upperFormData.savePeriod + "小时"  //保存周期
+        this.upperFormData.uploadPeriod = this.upperFormData.uploadPeriod + "分钟"//上传周期
+        this.upperFormData.collectPeriod = this.upperFormData.collectPeriod + "分钟"//采集周期
+      }
+
+      this.parmasVisible = true;
+      getDDCInfoParam({
+        deviceTreeId: this.treeNodeMsg.deviceTreeId,
+        type: this.treeNodeMsg.type,
+      }).then(response => {
+        this.$modal.msgSuccess(response.msg);
+      })
+    },
+    /** 远程升级*/
+    operDDCController() {
+      if (!this.saveBoolean) {
+        this.$modal.confirm("数据已修改，请先保存！")
+      } else {
+        remoteUpgradeDdc({
+          deviceTreeId: this.treeNodeMsg.deviceTreeId,
+          type: this.treeNodeMsg.type,
+        }).then(response => {
+          this.$modal.msgSuccess(response.msg);
+        })
+      }
+    },
+    /** 下发程序*/
+    // ddcImpReport() {
+    //   this.fileVisible = true;
+    // },
+    /** 下发程序 提交操作*/
+    // submitReport() {
+    //   this.fileVisible = false;
+    //
+    // },
+    /** 下发程序 关闭操作*/
+    // closeReport() {
+    //   this.fileVisible = false;
+    // },
+    /** 关闭弹框*/
+    handleClose(done) {
+      const that = this;
+      this.$confirm('确认关闭？')
+        .then(_ => {
+          done();
+          //重新加载当前选中的树节点
+          //清空表单
+          that.reset()
+          that.$emit('ReloadNode');
+          //关闭弹框时  将标识改为true
+          that.addOrUpdate = true;
+        })
+        .catch(_ => {
+        });
+    },
+    changesIp(val) {
+      if (this.addOrUpdate) {
+        this.treeNodeMsg.ip = (val[0].value + '.' + val[1].value + '.' + val[2].value + '.' + val[3].value);
+      } else {
+        this.form.ip = (val[0].value + '.' + val[1].value + '.' + val[2].value + '.' + val[3].value);
+      }
+    },
+    changesGateWay(val) {
+      if (this.addOrUpdate) {
+        this.treeNodeMsg.gateWay = (val[0].value + '.' + val[1].value + '.' + val[2].value + '.' + val[3].value);
+      } else {
+        this.form.gateWay = (val[0].value + '.' + val[1].value + '.' + val[2].value + '.' + val[3].value);
+      }
+    },
+    changesMask(val) {
+      if (this.addOrUpdate) {
+        this.treeNodeMsg.mask = (val[0].value + '.' + val[1].value + '.' + val[2].value + '.' + val[3].value);
+      } else {
+        this.form.mask = (val[0].value + '.' + val[1].value + '.' + val[2].value + '.' + val[3].value);
+      }
+    },
+    changesServerIp(val) {
+      if (this.addOrUpdate) {
+        this.treeNodeMsg.serverIp = (val[0].value + '.' + val[1].value + '.' + val[2].value + '.' + val[3].value);
+      } else {
+        this.form.serverIp = (val[0].value + '.' + val[1].value + '.' + val[2].value + '.' + val[3].value);
+      }
+    },
+
+  }
+}
+</script>
+<style lang="scss" scoped>
+.white-body-view {
+  width: 100%;
+  min-width: 320px;
+}
+
+.fromHeader .el-select .el-input {
+  border-color: #409EFF;
+  width: 400px;
+}
+
+.inputRed ::v-deep .el-input__inner {
+  border: red 1px solid;
+}
+</style>

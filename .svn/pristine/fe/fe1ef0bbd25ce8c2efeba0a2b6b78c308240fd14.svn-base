@@ -1,0 +1,315 @@
+package com.zc.relay.handler;
+
+import com.ruoyi.common.core.redis.RedisCache;
+import com.ruoyi.common.utils.StringUtils;
+import com.zc.common.constant.RedisKeyConstants;
+import com.zc.iot.domain.IotCategory;
+import com.zc.iot.domain.IotDevice;
+import com.zc.iot.domain.IotProduct;
+import com.zc.relay.dto.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+import java.util.*;
+
+import static com.zc.constant.IotConstants.NodeType.GATEWAY_DEVICE;
+
+/**
+ * 上行指令
+ * 约定了数据解析到物模型的接口
+ * @author Athena-xiepufeng
+ */
+@Service
+public class UplinkInstructHandleImpl implements UplinkInstructHandle
+{
+    private static final Logger log = LoggerFactory.getLogger(UplinkInstructHandleImpl.class);
+
+    @Resource
+    private RedisCache redisCache;
+
+    @Resource
+    private ThreadPoolTaskExecutor threadPoolTaskExecutor;
+
+    private static final List<DeviceDataAcceptor> downInstructHandles = new ArrayList<>();
+
+    // 加载所有DeviceDataAcceptor接口实现
+    static
+    {
+        ServiceLoader<DeviceDataAcceptor> load = ServiceLoader.load(DeviceDataAcceptor.class);
+
+        if (!load.iterator().hasNext())
+        {
+            log.warn("DeviceDataAcceptor 没有实现类");
+        }
+
+        for (DeviceDataAcceptor item : load)
+        {
+            downInstructHandles.add(item);
+        }
+    }
+
+
+    /**
+     * 设备状态变化通知
+     * @param uplinkDeviceStateData 设备状态数据
+     */
+    @Override
+    public void uplinkDeviceState(UplinkDeviceStateData uplinkDeviceStateData)
+    {
+
+        if (uplinkDeviceStateData == null)
+        {
+            log.error("设备状态变化通知：{输出条件：(uplinkDeviceStateData == null)}");
+            return;
+        }
+
+        // 设备编号
+        String deviceCode = uplinkDeviceStateData.getDeviceCode();
+
+        // 在线状态
+        Integer state = uplinkDeviceStateData.getState();
+
+        if (deviceCode == null || state == null)
+        {
+            log.error("设备状态变化通知：{输出条件：(deviceCode == null || state == null) }");
+            return;
+        }
+
+        // 分配新线程执行
+        threadPoolTaskExecutor.execute(() ->
+        {
+
+            // 根据设备编号从缓存中获取设备主键信息
+            Long id = redisCache.getCacheMapValue(RedisKeyConstants.IOT_DEVICE_CODE_ID, deviceCode);
+
+            if (id == null)
+            {
+                log.error("设备状态变化通知：{无法根据设备编号从“设备编号id映射”缓存中获取设备id；" +
+                        "缓存的常量名称：IOT_DEVICE_CODE_ID；输出条件：(id == null)；设备编号deviceCode：" + deviceCode + "}");
+                return;
+            }
+
+            List<IotDevice> iotDevices = new ArrayList<>();
+
+            // 根据主键从缓存中获取设备信息
+            IotDevice iotDevice = redisCache.getCacheMapValue(RedisKeyConstants.IOT_DEVICE, id);
+
+            if (iotDevice == null)
+            {
+                log.error("设备状态变化通知：{根据设备id冲缓存中获取设备信息；缓存中没有此数据；" +
+                        "输出条件：(iotDevice == null) ；缓存常量名称：IOT_DEVICE; 设备id："+ id +"}");
+                return;
+            }
+
+            iotDevices.add(iotDevice);
+
+            // 设置在线状态
+            iotDevice.setOnlineState(state);
+
+            // 判断是否是网关设备
+            Long productKey = iotDevice.getProductKey();
+
+            IotProduct iotProduct = redisCache.getCacheMapValue(RedisKeyConstants.IOT_PRODUCT, productKey);
+
+            if (iotProduct == null)
+            {
+                log.error("设备状态变化通知：{根据产品主键从缓存中无法获取产品信息；" +
+                        "输出条件：(iotProduct == null) ；缓存常量名称：IOT_PRODUCT; 产品主键："+ productKey +"}");
+                return;
+            }
+
+            /*判断是否是网关子设备*/
+            if (!GATEWAY_DEVICE.equals(iotProduct.getNodeType()))
+            {
+                return;
+            }
+
+            // 获取所有的子设备
+            Set<Long> subsetDeviceIds  = redisCache.getCacheSet(RedisKeyConstants.getDeviceParentChildrenKey(iotDevice.getGatewayDevice()));
+
+            if (subsetDeviceIds == null || subsetDeviceIds.isEmpty())
+            {
+                log.warn("设备状态变化通知：{当前设备没有子设备；" +
+                        "输出条件：(subsetDeviceIds == null || subsetDeviceIds.isEmpty())}；网关设备：" + iotDevice.getGatewayDevice() + "");
+                return;
+            }
+
+            subsetDeviceIds.forEach(subsetDeviceId ->
+            {
+                IotDevice iotDevice1 = redisCache.getCacheMapValue(RedisKeyConstants.IOT_DEVICE, subsetDeviceId);
+                // 设置子设备在线状态
+                iotDevice1.setOnlineState(state);
+
+                iotDevices.add(iotDevice1);
+            });
+
+            downInstructHandles.forEach(deviceDataAcceptor ->
+            {
+                threadPoolTaskExecutor.execute(() ->
+                {
+                    iotDevices.forEach(device ->
+                    {
+                        deviceDataAcceptor.deviceStateChange(device.getId(), device.getOnlineState());
+                    });
+
+                });
+            });
+
+        });
+
+    }
+
+    /**
+     * 设备信息上报
+     * @param uplinkDeviceData 上报数据设备实时数据
+     */
+    @Override
+    public void uplinkDeviceMsg(UplinkDeviceData uplinkDeviceData)
+    {
+        if (uplinkDeviceData == null)
+        {
+            log.error("设备信息上报：{输出条件：(uplinkDeviceData == null)}");
+            return;
+        }
+
+        String deviceCode = uplinkDeviceData.getDeviceCode();
+        Map<String, Number> uplinkFunctionDataMap = uplinkDeviceData.getUplinkFunctionData();
+
+        if (StringUtils.isEmpty(deviceCode) || uplinkFunctionDataMap == null || uplinkFunctionDataMap.isEmpty())
+        {
+            log.error("设备信息上报：{输出条件：" +
+                    "(StringUtils.isEmpty(deviceCode) || uplinkFunctionDataMap == null || uplinkFunctionDataMap.isEmpty())}");
+            return;
+        }
+
+        threadPoolTaskExecutor.execute(() ->
+        {
+            // 根据设备编号从缓存中获取设备id
+            Long deviceId = redisCache.getCacheMapValue(RedisKeyConstants.IOT_DEVICE_CODE_ID, deviceCode);
+
+            if (deviceId == null)
+            {
+                log.error("设备信息上报：{输出条件：(deviceId == null); " +
+                        "根据设备编号没能从缓存中获取到设备id；缓存常量：IOT_DEVICE_CODE_ID; 设备编号：" + deviceCode + "}");
+                return;
+            }
+
+            // 根据设备id从缓存中获取设备详细信息
+            IotDevice iotDevice = redisCache.getCacheMapValue(RedisKeyConstants.IOT_DEVICE, deviceId);
+
+            if (iotDevice == null)
+            {
+                log.error("设备信息上报：{输出条件：(iotDevice == null); " +
+                        "根据设备id从缓存中无法获取设备详细信息；缓存常量：IOT_DEVICE; 设备id：" + deviceId + "}");
+                return;
+            }
+
+            IotProduct iotProduct = redisCache.getCacheMapValue(RedisKeyConstants.IOT_PRODUCT, iotDevice.getProductKey());
+
+            if (iotProduct == null)
+            {
+                log.error("设备信息上报：{输出条件：(iotProduct == null); " +
+                        "根据产品id从缓存中无法获取产品信息；缓存常量：IOT_PRODUCT; 产品id：" + iotDevice.getProductKey() + "}");
+                return;
+            }
+
+            IotCategory iotCategory = redisCache.getCacheMapValue(RedisKeyConstants.IOT_CATEGORY, iotProduct.getCategoryId());
+
+            if (iotCategory == null)
+            {
+                log.error("设备信息上报：{输出条件：(iotCategory == null); " +
+                        "根据品类id从缓存中无法获取品类信息；缓存常量：IOT_CATEGORY； 品类id："+ iotProduct.getCategoryId() +"}");
+                return;
+            }
+
+            // 存储变化了的数据
+            DeviceFunctionValue deviceFunctionValue = new DeviceFunctionValue();
+            Map<Long, Number> functionValue = new HashMap<>();
+
+            deviceFunctionValue.setDeviceId(deviceId);
+            deviceFunctionValue.setFunctionValue(functionValue);
+
+            // 遍历所有上传的功能数据
+            uplinkFunctionDataMap.forEach((functionIdentifier, realValue) ->
+            {
+                if (StringUtils.isEmpty(functionIdentifier) || realValue == null)
+                {
+                    log.error("设备信息上报：{输出条件：(StringUtils.isEmpty(functionIdentifier) || realValue == null); " +
+                            "上报数据没有功能标识或者实时数据}");
+                    return;
+                }
+
+                Long functionId = redisCache.getCacheMapValue(RedisKeyConstants.getCategoryFunctionIdentifierKey(iotCategory.getId()), functionIdentifier);
+
+                if (functionId == null)
+                {
+                    log.error("设备信息上报：{输出条件：(functionId == null); " +
+                            "无法根据功能标识从缓存中获取功能id; 功能标识：" + functionIdentifier + "}");
+                    return;
+                }
+
+                // 根据设备id和功能id获取缓存中的实时数据
+                Number value = redisCache.getCacheMapValue(RedisKeyConstants.getDeviceFunctionValueKey(deviceId), functionId);
+
+                // 如果实时数据和缓存中的实时数据相同，则直接返回
+                if (realValue.equals(value))
+                {
+                    return;
+                }
+
+                // 添加到实时数据定义功能值集合中
+                functionValue.put(functionId, realValue);
+
+            });
+
+            downInstructHandles.forEach(deviceDataAcceptor ->
+            {
+                threadPoolTaskExecutor.execute(() ->
+                {
+                    deviceDataAcceptor.dataReceive(deviceFunctionValue);
+                });
+            });
+
+        });
+
+    }
+
+    /**
+     * 上报操作状态
+     * @param uplinkOperationStateData 操作响应数据
+     */
+    @Override
+    public void uplinkOperationState(UplinkOperationStateData uplinkOperationStateData)
+    {
+        if (uplinkOperationStateData == null)
+        {
+            log.error("上报操作状态：{输出条件：(uplinkOperationStateData == null)}");
+            return;
+        }
+
+        // TODO 如果是网关子设备，这里设备编号是网关设备编号还是网关子设备？
+
+        // 设备编号
+        // String deviceCode = uplinkOperationStateData.getDeviceCode();
+
+        // 操作状态 1 成功 0 失败
+        Integer state = uplinkOperationStateData.getState();
+        // 消息标识
+        String identify = uplinkOperationStateData.getIdentify();
+
+        // 功能标识
+        // String functionIdentify = uplinkOperationStateData.getFunctionIdentify();
+
+
+        downInstructHandles.forEach(deviceDataAcceptor ->
+        {
+            threadPoolTaskExecutor.execute(() ->
+            {
+                deviceDataAcceptor.controlResponse(identify, state);
+            });
+        });
+    }
+}

@@ -1,0 +1,60 @@
+package com.ruoyi.efounder.JEnterprise.service.safetyWarning.impl;
+
+import org.springframework.stereotype.Service;
+import com.ruoyi.efounder.JEnterprise.mapper.safetyWarning.AlarmTacticsAlarmNotifierLinkMapper;
+import com.ruoyi.efounder.JEnterprise.domain.safetyWarning.AlarmTacticsAlarmNotifierLink;
+import com.ruoyi.efounder.JEnterprise.service.safetyWarning.AlarmTacticsAlarmNotifierLinkService;
+
+import javax.annotation.Resource;
+
+/**
+ * 告警策略告警接收组关联Service业务层处理
+ *
+ * @author sunshangeng
+ * @date 2022-09-20
+ */
+@Service
+public class AlarmTacticsAlarmNotifierLinkServiceImpl implements AlarmTacticsAlarmNotifierLinkService
+{
+    @Resource
+    private AlarmTacticsAlarmNotifierLinkMapper alarmTacticsAlarmNotifierLinkMapper;
+
+    /**
+     * 新增告警策略告警接收组关联
+     *
+     * @param alarmTacticsAlarmNotifierLink 告警策略告警接收组关联
+     * @return 结果
+     */
+    @Override
+    public int insertAlarmTacticsAlarmNotifierLink(AlarmTacticsAlarmNotifierLink alarmTacticsAlarmNotifierLink)
+    {
+        return alarmTacticsAlarmNotifierLinkMapper.insertAlarmTacticsAlarmNotifierLink(alarmTacticsAlarmNotifierLink);
+    }
+
+
+    /**
+     * 批量删除告警策略告警接收组关联
+     *
+     * @param ids 需要删除的告警策略告警接收组关联主键
+     * @return 结果
+     */
+    @Override
+    public int deleteAlarmTacticsAlarmNotifierLinkByIds(Long[] ids)
+    {
+        return alarmTacticsAlarmNotifierLinkMapper.deleteAlarmTacticsAlarmNotifierLinkByIds(ids);
+    }
+
+    /**
+     * 删除告警策略告警接收组关联信息
+     *
+     * @param id 告警策略告警接收组关联主键
+     * @return 结果
+     */
+    @Override
+    public int deleteAlarmTacticsAlarmNotifierLinkById(Long id)
+    {
+        return alarmTacticsAlarmNotifierLinkMapper.deleteAlarmTacticsAlarmNotifierLinkById(id);
+    }
+
+
+}

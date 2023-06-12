@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zc.efounder.JEnterprise.mapper.energyInfo.ManualentryenergyMapper">
+
+    <resultMap type="Manualentryenergy" id="ManualentryenergyResult">
+        <result property="id"    column="id"    />
+        <result property="controllerTreeid"    column="controller_treeid"    />
+        <result property="pointTreeid"    column="point_treeid"    />
+        <result property="energyCjsj"    column="energy_cjsj"    />
+        <result property="energyType"    column="energy_type"    />
+        <result property="createTime"    column="create_time"    />
+    </resultMap>
+
+    <sql id="selectAthenaBesManualentryenergyVo">
+        select id, controller_treeid, point_treeid, energy_cjsj, energy_type, createtime from athena_bes_manualentryenergy
+    </sql>
+    <insert id="insertManualentryenergy" parameterType="Manualentryenergy" useGeneratedKeys="true" keyProperty="id">
+        insert into athena_bes_manualentryenergy
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="controllerTreeid != null">controller_treeid,</if>
+            <if test="pointTreeid != null">point_treeid,</if>
+            <if test="energyCjsj != null">energy_cjsj,</if>
+            <if test="energyType != null">energy_type,</if>
+            <if test="createTime != null">create_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="controllerTreeid != null">#{controllerTreeid},</if>
+            <if test="pointTreeid != null">#{pointTreeid},</if>
+            <if test="energyCjsj != null">#{energyCjsj},</if>
+            <if test="energyType != null">#{energyType},</if>
+            <if test="createTime != null">#{createTime},</if>
+         </trim>
+    </insert>
+
+    <delete id="deleteManualentryenergyByIds" parameterType="String">
+        delete from athena_bes_manualentryenergy where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+    <select id="getElectricParamsbyCollCode" resultType="com.zc.efounder.JEnterprise.domain.besCommon.DicDataEntity">
+        select `name`, code from
+        athena_bes_electric_coll_rlgl  t1 INNER JOIN athena_bes_electric_params t2  on t1.electric_id=t2.id
+        where t1.coll_code=#{collCode}
+    </select>
+    <select id="selectManualEntryEnergyList"
+            resultType="com.zc.efounder.JEnterprise.domain.energyInfo.ManualEntryEnergy">
+        SELECT * from athena_bes_manualentryenergy
+
+        <where>
+            <if test="pointTreeid != null  and pointTreeid != ''"> and point_treeid =  #{pointTreeid}</if>
+            <if test="energyType != null "> and energy_type = #{energyType}</if>
+            <if test="energyCjsj !=null and datetype==0" >
+
+                and LEFT(energy_cjsj,4) =  LEFT(#{energyCjsj},4)
+             </if>
+
+            <if test="energyCjsj !=null and datetype==1" >
+
+                and LEFT(energy_cjsj,7) =  LEFT(#{energyCjsj},7)
+            </if>
+            <if test="energyCjsj !=null and datetype==2" >
+                and DATEDIFF(#{energyCjsj},energy_cjsj)=0
+            </if>
+
+
+<!--            <if test="name != null  and name != ''"> and name like concat('%', #{name}, '%')</if>-->
+<!--            <if test="offsetAddress != null  and offsetAddress != ''"> and offset_address = #{offsetAddress}</if>-->
+        </where>
+    </select>
+</mapper>

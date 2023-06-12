@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruoyi.efounder.JEnterprise.mapper.scheduling.SceneModelMapper">
+
+    <resultMap id="SchedulingModelMap" type="SceneModelControl">
+        <result property="id" column="id"/>
+        <result property="sceneId" column="scene_id"/>
+        <result property="name" column="name"/>
+        <result property="synchState" column="synch_state"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <resultMap id="SchedulingModelPointMap" type="SceneModelPointControl">
+        <result property="id" column="id"/>
+        <result property="sceneModelId" column="scene_model_id"/>
+        <result property="sysName" column="sys_name"/>
+        <result property="alias" column="alias"/>
+        <result property="pointId" column="point_id"/>
+        <result property="pointValue" column="point_value"/>
+        <result property="pointUnit" column="point_unit"/>
+        <result property="pointControllerId" column="point_controller_id"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <sql id="selectModelPointVo">
+        select id, scene_model_id, point_id, point_value, point_unit, point_controller_id, create_by, create_time, update_by, update_time,sys_name,alias from athena_bes_scene_model_point_control
+    </sql>
+
+    <sql id="selectModelVo">
+        SELECT id,scene_id,name,synch_state,create_by,create_time,update_by,update_time from athena_bes_scene_model_control
+    </sql>
+
+    <!--获取场景模式列表-->
+    <select id="getSceneModelList" parameterType="SceneModelControl" resultMap="SchedulingModelMap">
+        <include refid="selectModelVo"/>
+        <where>
+            <if test="sceneId  != null">
+                and scene_id  = #{sceneId}
+            </if>
+            <if test="name != null and name != ''">
+                and name = #{name}
+            </if>
+        </where>
+    </select>
+
+    <select id="getsceneModelCheck" parameterType="SceneModelControl" resultMap="SchedulingModelMap">
+        select * from athena_bes_scene_model_control
+        <where>
+            <if test="id != null and id !=''">
+                and id != #{id}
+            </if>
+            <if test="name != null and name !=''">
+                and name = #{name}
+            </if>
+        </where>
+    </select>
+
+    <!--获取场景模式信息-->
+    <select id="getSceneModel" parameterType="SceneModelControl" resultMap="SchedulingModelMap">
+        SELECT id,scene_id,name,synch_state from athena_bes_scene_model_control where id = #{id}
+    </select>
+
+    <!--添加场景模式-->
+    <insert id="addSceneModel" parameterType="SchedulingArea" useGeneratedKeys="true" keyProperty="id">
+        insert into athena_bes_scene_model_control
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="name != null and name != ''">name,</if>
+            <if test="sceneId != null and sceneId != ''">scene_id,</if>
+            <if test="synchState != null">synch_state,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="name != null and name != ''">#{name},</if>
+            <if test="sceneId != null and sceneId != ''">#{sceneId},</if>
+            <if test="synchState != null">#{synchState},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+        </trim>
+    </insert>
+
+    <!--修改场景模式-->
+    <update id="updateSceneModel" parameterType="schedulingArea">
+        update athena_bes_scene_model_control
+        <set>
+            <if test="name != null and name != ''">name = #{name},</if>
+            <if test="sceneId != null and sceneId != ''">scene_id = #{sceneId},</if>
+            <if test="synchState != null">synch_state = #{synchState},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </set>
+        <where>
+            id = #{id}
+        </where>
+    </update>
+
+    <!--修改场景模式点位-->
+    <update id="updateSceneModelPoint" parameterType="Point">
+        update athena_bes_scene_model_point_control
+        <set>
+            <if test="sysName != null and sysName != ''">sys_name = #{sysName},</if>
+            <if test="nickName != null and nickName != ''">alias = #{nickName},</if>
+            <if test="engineerUnit != null and engineerUnit != ''">point_unit = #{engineerUnit},</if>
+        </set>
+        <where>
+            point_id = #{treeId}
+        </where>
+    </update>
+
+    <!--删除场景模式-->
+    <delete id="deleteSceneModel" parameterType="long">
+        delete from athena_bes_scene_model_control where id = #{id}
+    </delete>
+
+    <!--获取场景模式点位列表-->
+    <select id="getSceneModelPoint" parameterType="SceneModelPointControl" resultMap="SchedulingModelPointMap">
+        <include refid="selectModelPointVo"/> where scene_model_id  = #{sceneModelId}
+    </select>
+
+    <!--场景模式数据对比-->
+    <select id="getSceneModelContrast" parameterType="SceneModelPointControl" resultType="java.util.Map">
+        SELECT t2.id sceneId,t2.name sceneName,t2.alias sceneAlias,t2.active sceneActive,t1.id modelId,
+	    t1.name modelName FROM athena_bes_scene_model_control t1
+	    LEFT JOIN athena_bes_scene_control t2 ON t1.scene_id = t2.id
+        WHERE t1.id = #{sceneModelId}
+    </select>
+
+    <!--添加场景模式点位-->
+    <insert id="addSceneModelPoint" parameterType="SceneModelPointControl" useGeneratedKeys="true" keyProperty="id">
+        insert into athena_bes_scene_model_point_control
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="sceneModelId != null and sceneModelId != ''">scene_model_id,</if>
+            <if test="pointId != null and pointId != ''">point_id,</if>
+            <if test="sysName != null and sysName != ''">sys_name,</if>
+            <if test="alias != null and alias != ''">alias,</if>
+            <if test="pointValue != null">point_value,</if>
+            <if test="pointUnit != null">point_unit,</if>
+            <if test="pointControllerId != null">point_controller_id,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="sceneModelId != null and sceneModelId != ''">#{sceneModelId},</if>
+            <if test="pointId != null and pointId != ''">#{pointId},</if>
+            <if test="sysName != null and sysName != ''">#{sysName},</if>
+            <if test="alias != null and alias != ''">#{alias},</if>
+            <if test="pointValue != null">#{pointValue},</if>
+            <if test="pointUnit != null">#{pointUnit},</if>
+            <if test="pointControllerId != null">#{pointControllerId},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+        </trim>
+    </insert>
+
+    <!--删除场景模式点位-->
+    <delete id="delSceneModelPoint" parameterType="Integer">
+        delete from athena_bes_scene_model_point_control where scene_model_id = #{id}
+    </delete>
+
+    <!--根据模式查询场景下所有模式-->
+    <select id="selectAllModelByModel" parameterType="Long" resultType="map">
+        SELECT id FROM athena_bes_scene_model_control WHERE scene_id = (
+            SELECT scene_id FROM athena_bes_scene_model_control WHERE id = #{id}
+        )
+    </select>
+
+
+</mapper>

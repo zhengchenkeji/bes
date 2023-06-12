@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.energyAnalysis.survey.mapper.SurveyMapper">
+
+    <select id="getAllPark" resultType="java.util.Map">
+        select code,name from athena_bes_park
+    </select>
+
+    <select id="queryEnergyData" parameterType="String" resultType="Map">
+        SELECT *,t1.thisTimeData-t2.lastTimeData diff
+        FROM
+        (SELECT Round(IFNULL(SUM(F_DATA),0),2) thisTimeData
+            FROM `athena_bes_branch_data`
+            WHERE
+            F_TYPE = #{dataType} and F_ZLBH = #{branchId}
+            and F_CJSJ &gt;= #{thisTimeStart} and F_CJSJ &lt;= #{thisTimeEnd}
+        ) t1,
+        (SELECT Round(IFNULL(SUM(F_DATA),0),2) lastTimeData
+            FROM `athena_bes_branch_data`
+            WHERE F_TYPE = #{dataType} and F_ZLBH = #{branchId}
+            and F_CJSJ &gt;= #{lastTimeStart} and F_CJSJ &lt;= #{lastTimeEnd}
+        ) t2
+    </select>
+
+    <select id="queryTrendData" parameterType="String" resultType="Map">
+        SELECT F_CJSJ ,ROUND(F_DATA,2) F_DATA FROM `athena_bes_branch_data`
+        where F_TYPE = #{trendType} and F_ZLBH = #{branchId} and F_CJSJ like concat('%',#{dateTime},'%')
+    </select>
+
+    <select id="queryRankData" parameterType="String" resultType="Map">
+        SELECT t1.branchId ,t1.branchName,IFNULL( ROUND( SUM( t4.F_DATA ), 2 ), 0 ) dataValue
+        FROM
+	        ( SELECT branch_name branchName, branch_id branchId FROM `athena_bes_branch_config` WHERE parent_id = #{branchId} ) t1
+        LEFT JOIN
+            (SELECT t2.F_ZLBH,t2.F_DATA
+            FROM athena_bes_branch_data t2
+            LEFT JOIN athena_bes_branch_config t3
+            ON t2.F_ZLBH = t3.branch_id
+            WHERE
+                t2.f_type = #{rankType}
+                AND t3.parent_id = #{branchId}
+                AND t2.F_CJSJ LIKE concat(#{dateTime},'%')
+            ) t4 ON t1.branchId = t4.F_ZLBH
+        GROUP BY
+            t1.branchId
+        ORDER BY
+        dataValue DESC
+    </select>
+</mapper>

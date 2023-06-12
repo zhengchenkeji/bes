@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zc.efounder.JEnterprise.mapper.deviceTree.ControllerMapper">
+
+    <resultMap type="Controller" id="ControllerResult">
+        <result property="id"    column="id"    />
+
+        <result property="sysName"    column="sys_name"    />
+        <result property="deviceNodeId"    column="device_node_id"    />
+        <result property="deviceTreeFatherId"    column="device_tree_father_id"    />
+        <result property="deviceTreeId"    column="device_tree_id"    />
+        <result property="type"    column="type"    />
+        <result property="alias"    column="alias"    />
+        <result property="currentIp"    column="current_ip"    />
+        <result property="ip"    column="ip"    />
+        <result property="gateWay"    column="gate_way"    />
+        <result property="mask"    column="mask"    />
+        <result property="serverIp"    column="server_ip"    />
+        <result property="serverPort"    column="server_port"    />
+        <result property="location"    column="location"    />
+        <result property="zone"    column="zone"    />
+        <result property="synchState"    column="synch_state"    />
+        <result property="errorState"    column="error_state"    />
+        <result property="onlineState"    column="online_state"    />
+        <result property="active"    column="active"    />
+        <result property="description"    column="description"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="collectPeriod"    column="collect_period"    />
+        <result property="uploadPeriod"    column="upload_period"    />
+        <result property="savePeriod"    column="save_period"    />
+    </resultMap>
+
+    <sql id="selectControllerVo">
+        select id, device_tree_id, type, alias, current_ip, ip, gate_way, mask, server_ip, server_port, location, zone, synch_state, error_state, online_state, active, description, create_time, update_time, collect_period, upload_period, save_period from athena_bes_controller
+    </sql>
+
+    <select id="selectControllerByTreeId" resultMap="ControllerResult">
+        <include refid="selectControllerVo"/>
+        where device_tree_id = (SELECT device_tree_father_id FROM athena_bes_device_tree WHERE device_tree_id =
+            (SELECT device_tree_father_id FROM athena_bes_device_tree WHERE device_tree_id = #{treeId})
+        )
+    </select>
+
+    <select id="selectControllerByTreeIdVpoint" resultMap="ControllerResult">
+        <include refid="selectControllerVo"/>
+        where device_tree_id = (
+        SELECT device_tree_father_id FROM athena_bes_device_tree WHERE device_tree_id = #{treeId}
+        )
+    </select>
+
+    <select id="selectControllerByModulePointTreeId" resultMap="ControllerResult">
+        <include refid="selectControllerVo"/>
+        where device_tree_id = (SELECT device_tree_father_id FROM athena_bes_device_tree WHERE device_tree_id =
+            ( SELECT device_tree_father_id FROM athena_bes_device_tree WHERE device_tree_id =
+                ( SELECT device_tree_father_id FROM athena_bes_device_tree WHERE device_tree_id =
+                    (SELECT device_tree_father_id FROM athena_bes_device_tree WHERE device_tree_id = #{treeId})
+                )
+            )
+        )
+    </select>
+
+    <select id="selectControllerByModule" parameterType="String" resultMap="ControllerResult">
+        <include refid="selectControllerVo"/> WHERE device_tree_id =
+         (SELECT device_tree_father_id FROM athena_bes_device_tree WHERE device_tree_id =
+            (SELECT device_tree_father_id FROM athena_bes_device_tree WHERE device_tree_id =
+                (SELECT device_tree_father_id FROM athena_bes_device_tree WHERE sys_name = #{sysName})
+            )
+         )
+    </select>
+
+    <select id="selectControllerByModuleId" resultMap="ControllerResult">
+        <include refid="selectControllerVo"/> WHERE device_tree_id =
+        (SELECT device_tree_father_id FROM athena_bes_device_tree WHERE device_tree_id =
+        (SELECT device_tree_father_id FROM athena_bes_device_tree WHERE device_tree_id =
+        (SELECT device_tree_father_id FROM athena_bes_device_tree WHERE device_tree_id = #{treeId})
+        )
+        )
+    </select>
+
+
+    <sql id="selectControllerAndTreeVo">
+        select a.id, a.device_tree_id, a.type, a.alias, a.current_ip, a.ip, a.gate_way, a.mask, a.server_ip, a.server_port, a.location,
+        a.zone, a.synch_state, a.error_state, a.online_state, a.active, a.description, a.create_time, a.update_time, a.collect_period,
+        a.upload_period, a.save_period,b.sys_name,b.device_node_id,b.device_tree_father_id,c.device_node_fun_name,c.device_node_fun_type
+        from athena_bes_controller a,athena_bes_device_tree b,
+        athena_bes_device_node c
+    </sql>
+
+    <select id="selectControllerList" parameterType="Controller" resultMap="ControllerResult">
+        <include refid="selectControllerAndTreeVo"/>
+        <where>
+            <if test="deviceTreeId != null "> and a.device_tree_id = #{deviceTreeId}</if>
+            <if test="type != null "> and a.type = #{type}</if>
+            <if test="alias != null  and alias != ''"> and a.alias = #{alias}</if>
+            <if test="currentIp != null  and currentIp != ''"> and a.current_ip = #{currentIp}</if>
+            <if test="ip != null  and ip != ''"> and a.ip = #{ip}</if>
+            <if test="gateWay != null  and gateWay != ''"> and a.gate_way = #{gateWay}</if>
+            <if test="mask != null  and mask != ''"> and a.mask = #{mask}</if>
+            <if test="serverIp != null  and serverIp != ''"> and a.server_ip = #{serverIp}</if>
+            <if test="serverPort != null  and serverPort != ''"> and a.server_port = #{serverPort}</if>
+            <if test="location != null  and location != ''"> and a.location = #{location}</if>
+            <if test="zone != null  and zone != ''"> and a.zone = #{zone}</if>
+            <if test="synchState != null "> and a.synch_state = #{synchState}</if>
+            <if test="errorState != null "> and a.error_state = #{errorState}</if>
+            <if test="onlineState != null "> and a.online_state = #{onlineState}</if>
+            <if test="active != null "> and a.active = #{active}</if>
+            <if test="description != null  and description != ''"> and a.description = #{description}</if>
+            <if test="collectPeriod != null "> and a.collect_period = #{collectPeriod}</if>
+            <if test="uploadPeriod != null "> and a.upload_period = #{uploadPeriod}</if>
+            <if test="savePeriod != null "> and a.save_period = #{savePeriod}</if>
+             and a.device_tree_id = b.device_tree_id
+            and b.device_node_id = c.device_node_code
+        </where>
+    </select>
+
+    <select id="selectControllerById" parameterType="Long" resultMap="ControllerResult">
+        <include refid="selectControllerAndTreeVo"/>
+        where a.id = #{id} and a.device_tree_id = b.device_tree_id
+        and b.device_node_id = c.device_node_code
+    </select>
+
+    <select id="getControllerbytreeid" resultType="com.zc.efounder.JEnterprise.domain.deviceTree.Controller">
+        <include refid="selectControllerVo"/>
+        where device_tree_id =#{treeid}
+    </select>
+
+    <insert id="insertController" parameterType="Controller" useGeneratedKeys="true" keyProperty="id">
+        insert into athena_bes_controller
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">id,</if>
+            <if test="deviceTreeId != null">device_tree_id,</if>
+            <if test="type != null">type,</if>
+            <if test="alias != null">alias,</if>
+            <if test="currentIp != null and currentIp != ''">current_ip,</if>
+            <if test="ip != null and ip != ''">ip,</if>
+            <if test="gateWay != null">gate_way,</if>
+            <if test="mask != null">mask,</if>
+            <if test="serverIp != null">server_ip,</if>
+            <if test="serverPort != null">server_port,</if>
+            <if test="location != null">location,</if>
+            <if test="zone != null">zone,</if>
+            <if test="synchState != null">synch_state,</if>
+            <if test="errorState != null">error_state,</if>
+            <if test="onlineState != null">online_state,</if>
+            <if test="active != null">active,</if>
+            <if test="description != null">description,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="collectPeriod != null">collect_period,</if>
+            <if test="uploadPeriod != null">upload_period,</if>
+            <if test="savePeriod != null">save_period,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">#{id},</if>
+            <if test="deviceTreeId != null">#{deviceTreeId},</if>
+            <if test="type != null">#{type},</if>
+            <if test="alias != null">#{alias},</if>
+            <if test="currentIp != null and currentIp != ''">#{currentIp},</if>
+            <if test="ip != null and ip != ''">#{ip},</if>
+            <if test="gateWay != null">#{gateWay},</if>
+            <if test="mask != null">#{mask},</if>
+            <if test="serverIp != null">#{serverIp},</if>
+            <if test="serverPort != null">#{serverPort},</if>
+            <if test="location != null">#{location},</if>
+            <if test="zone != null">#{zone},</if>
+            <if test="synchState != null">#{synchState},</if>
+            <if test="errorState != null">#{errorState},</if>
+            <if test="onlineState != null">#{onlineState},</if>
+            <if test="active != null">#{active},</if>
+            <if test="description != null">#{description},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="collectPeriod != null">#{collectPeriod},</if>
+            <if test="uploadPeriod != null">#{uploadPeriod},</if>
+            <if test="savePeriod != null">#{savePeriod},</if>
+         </trim>
+    </insert>
+
+    <update id="updateController" parameterType="Controller">
+        update athena_bes_controller
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="deviceTreeId != null">device_tree_id = #{deviceTreeId},</if>
+            <if test="type != null">type = #{type},</if>
+            <if test="alias != null">alias = #{alias},</if>
+            <if test="currentIp != null and currentIp != ''">current_ip = #{currentIp},</if>
+            <if test="ip != null and ip != ''">ip = #{ip},</if>
+            <if test="gateWay != null">gate_way = #{gateWay},</if>
+            <if test="mask != null">mask = #{mask},</if>
+            <if test="serverIp != null">server_ip = #{serverIp},</if>
+            <if test="serverPort != null">server_port = #{serverPort},</if>
+            <if test="location != null">location = #{location},</if>
+            <if test="zone != null">zone = #{zone},</if>
+            <if test="synchState != null">synch_state = #{synchState},</if>
+            <if test="errorState != null">error_state = #{errorState},</if>
+            <if test="onlineState != null">online_state = #{onlineState},</if>
+            <if test="active != null">active = #{active},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="collectPeriod != null">collect_period = #{collectPeriod},</if>
+            <if test="uploadPeriod != null">upload_period = #{uploadPeriod},</if>
+            <if test="savePeriod != null">save_period = #{savePeriod},</if>
+        </trim>
+        where id = #{id}
+    </update>
+    <update id="updateSynchState" parameterType="controller">
+        UPDATE athena_bes_controller SET synch_state=#{synchState},online_state=#{onlineState}
+        WHERE id=#{id}
+    </update>
+    <update id="updateSynchStateModule" parameterType="list">
+        UPDATE athena_bes_module SET synch_state=0,online_state=0
+        WHERE device_tree_id IN
+        <foreach collection="deviceTreeIds" separator="," close=")" open="(" item="item">
+            #{item}
+        </foreach>
+    </update>
+    <update id="updateSynchStatePoint" parameterType="list">
+        UPDATE athena_bes_point SET sync_state=0
+        WHERE tree_id IN
+        <foreach collection="deviceTreeIds" separator="," close=")" open="(" item="item">
+            #{item}
+        </foreach>
+    </update>
+
+    <update id="updateSynchStateMeter" parameterType="list">
+        UPDATE athena_bes_electric_meter SET synch_state=0,online_state=0
+        WHERE device_tree_id IN
+        <foreach collection="deviceTreeIds" separator="," close=")" open="(" item="item">
+            #{item}
+        </foreach>
+    </update>
+
+    <delete id="deleteControllerById">
+        delete from athena_bes_controller where id = #{id}
+    </delete>
+
+    <delete id="deleteControllerByIds" parameterType="String">
+        delete from athena_bes_controller where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <select id="selectOnLine" resultType="String">
+        select id from athena_bes_controller where online_state != ''
+    </select>
+
+    <update id="updateOffLine" parameterType="String">
+        UPDATE athena_bes_controller SET online_state= '0' where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+    <select id="selectControllerInfoByDeviceTreeId" parameterType="String" resultMap="ControllerResult">
+        <include refid="selectControllerAndTreeVo"/>
+        <where>
+            a.device_tree_id = #{deviceTreeId}
+            and a.device_tree_id = b.device_tree_id
+            and b.device_node_id = c.device_node_code
+        </where>
+    </select>
+    <select id="selectControllerByIp" parameterType="String" resultMap="ControllerResult">
+        <include refid="selectControllerAndTreeVo"/>
+        <where>
+            a.ip = #{ip}
+            and a.device_tree_id = b.device_tree_id
+            and b.device_node_id = c.device_node_code
+        </where>
+    </select>
+</mapper>

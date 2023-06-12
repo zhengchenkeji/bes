@@ -1,0 +1,127 @@
+package com.zc.efounder.JEnterprise.service.sceneLink.impl;
+
+import com.ruoyi.common.core.domain.AjaxResult;
+import com.ruoyi.common.core.redis.RedisCache;
+import com.ruoyi.common.core.result.ResultMap;
+import com.ruoyi.common.exception.ServiceException;
+import com.ruoyi.common.exception.job.TaskException;
+import com.ruoyi.common.utils.StringUtils;
+import com.zc.common.constant.RedisKeyConstants;
+import com.zc.efounder.JEnterprise.commhandler.SceneLinkHandler;
+import com.zc.efounder.JEnterprise.domain.sceneLink.Scene;
+import com.zc.efounder.JEnterprise.domain.sceneLink.SceneActuator;
+import com.zc.efounder.JEnterprise.domain.sceneLink.SceneTrigger;
+import com.zc.efounder.JEnterprise.mapper.sceneLink.SceneActuatorMapper;
+import com.zc.efounder.JEnterprise.mapper.sceneLink.SceneMapper;
+import com.zc.efounder.JEnterprise.mapper.sceneLink.SceneTriggerMapper;
+import com.zc.efounder.JEnterprise.service.sceneLink.SceneLinkService;
+import org.quartz.SchedulerException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * description:
+ * author: sunshangeng
+ * date:2023/2/28 11:30
+ */
+@Service
+public class SceneLinkServiceImpl implements SceneLinkService {
+
+    @Resource
+    private SceneMapper sceneMapper;
+
+
+    @Resource
+    private SceneTriggerMapper sceneTriggerMapper;
+
+
+    @Resource
+    private SceneActuatorMapper sceneActuatorMapper;
+
+    @Resource
+    private RedisCache redisCache;
+
+    /***
+     * @description:新增场景联动
+     * @author: sunshangeng
+     * @date: 2023/3/2 10:31
+     * @param: [scene]
+     * @return: com.ruoyi.common.core.domain.AjaxResult
+     **/
+    @Override
+    @Transactional
+    public AjaxResult insertScene(Scene scene) throws TaskException, SchedulerException {
+        if (StringUtils.isBlank(scene.getName())// 场景名称
+                || scene.getTriggerList().size() == 0 ///触发器
+                || scene.getActuatorList().size() == 0 //执行器
+        ) {
+            return AjaxResult.error("传入的信息不完整！");
+        }
+        /**新增场景联动*/
+        scene.setCreateTime(new Date());
+        Boolean insertScene = sceneMapper.insertScene(scene);
+        if (!insertScene) {
+            return AjaxResult.error("创建场景时失败！");
+        }
+        /**新增触发器*/
+        for (SceneTrigger trigger : scene.getTriggerList()) {
+            trigger.setSceneId(scene.getId());
+            trigger.setSceneStatus(scene.getSceneStatus().intValue());
+            Boolean saveTrigger = sceneTriggerMapper.insertSceneTrigger(trigger);
+            if (!saveTrigger) {
+                throw new ServiceException("创建触发器时出错！");
+            }
+        }
+        /**新增执行器*/
+        for (SceneActuator actuator : scene.getActuatorList()) {
+            actuator.setSceneId(scene.getId());
+            Boolean saveActuator = sceneActuatorMapper.insertSceneActuator(actuator);
+            if (!saveActuator) {
+                throw new ServiceException("创建执行器时出错！");
+            }
+        }
+        /**将触发器数据存入缓存*/
+
+        for (SceneTrigger trigger : scene.getTriggerList()) {
+            /**判断是否需要启动定时任务*/
+            if (trigger.getTriggerModeCode().equals("2")) {
+                ResultMap resultMap = SceneLinkHandler.createJob(trigger.getCronExpression(), scene.getName());
+                if (!resultMap.get("code").toString().equals("0")) {
+                    /*失败*/
+                    throw new ServiceException(resultMap.get("msg").toString());
+                }
+                trigger.setJobid(Long.parseLong(resultMap.get("msg").toString()));
+                trigger.setUpdateTime(new Date());
+                sceneTriggerMapper.updateSceneTrigger(trigger);
+            }
+            redisCache.setCacheMapValue(RedisKeyConstants.BES_SceneLink_Trigger, trigger.getId(), trigger);
+        }
+        return AjaxResult.success("成功");
+    }
+
+    @Override
+    public AjaxResult getInfo(Long id) {
+        /**获取场景*/
+        Scene scene = sceneMapper.selectSceneById(id);
+        if(scene==null){
+            return AjaxResult.error("未查询到场景数据！");
+        }
+        /**获取触发器*/
+        SceneTrigger trigger = new SceneTrigger();
+        trigger.setSceneId(scene.getId());
+        List<SceneTrigger> triggerList = sceneTriggerMapper.selectSceneTriggerList(trigger);
+        scene.setTriggerList(triggerList);
+        /**获取执行器*/
+        SceneActuator actuator = new SceneActuator();
+        actuator.setSceneId(scene.getId());
+        List<SceneActuator> actuatorList = sceneActuatorMapper.selectSceneActuatorList(actuator);
+        scene.setActuatorList(actuatorList);
+        return AjaxResult.success(scene);
+    }
+}

@@ -1,0 +1,146 @@
+package com.ruoyi.systemSetting.electricityPriceSetting.domain;
+
+import java.math.BigDecimal;
+import java.util.Date;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
+import com.ruoyi.common.annotation.Excel;
+import com.ruoyi.common.core.domain.BaseEntity;
+
+/**
+ * 电价设置对象 athena_bes_electricity_price_setting
+ * 
+ * @author ruoyi
+ * @date 2022-11-29
+ */
+public class ElectricityPriceSetting extends BaseEntity
+{
+    private static final long serialVersionUID = 1L;
+
+    private Long id;
+
+    /** 电价规则 */
+    private Long ruleId;
+
+    /** 开始时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone="GMT+8")
+    @Excel(name = "开始时间", width = 30, dateFormat = "HH:mm:ss")
+    private Date startTime;
+
+    private String startTimeStr;
+
+    /** 结束时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone="GMT+8")
+    @Excel(name = "结束时间", width = 30, dateFormat = "HH:mm:ss")
+    private Date endTime;
+
+    private String endTimeStr;
+
+    /** 单价 */
+    @Excel(name = "单价")
+    private BigDecimal price;
+
+    /** 创建人 */
+    @Excel(name = "创建人")
+    private String createBy;
+
+    /** 修改人 */
+    @Excel(name = "修改人")
+    private String upadteBy;
+
+    public void setId(Long id) 
+    {
+        this.id = id;
+    }
+
+    public Long getId() 
+    {
+        return id;
+    }
+
+    public Long getRuleId() {
+        return ruleId;
+    }
+
+    public void setRuleId(Long ruleId) {
+        this.ruleId = ruleId;
+    }
+
+    public void setStartTime(Date startTime)
+    {
+        this.startTime = startTime;
+    }
+
+    public Date getStartTime() 
+    {
+        return startTime;
+    }
+    public void setEndTime(Date endTime) 
+    {
+        this.endTime = endTime;
+    }
+
+    public Date getEndTime() 
+    {
+        return endTime;
+    }
+    public void setPrice(BigDecimal price) 
+    {
+        this.price = price;
+    }
+
+    public BigDecimal getPrice() 
+    {
+        return price;
+    }
+    public void setUpadteBy(String upadteBy) 
+    {
+        this.upadteBy = upadteBy;
+    }
+
+    public String getUpadteBy() 
+    {
+        return upadteBy;
+    }
+
+    public String getStartTimeStr() {
+        return startTimeStr;
+    }
+
+    public void setStartTimeStr(String startTimeStr) {
+        this.startTimeStr = startTimeStr;
+    }
+
+    public String getEndTimeStr() {
+        return endTimeStr;
+    }
+
+    public void setEndTimeStr(String endTimeStr) {
+        this.endTimeStr = endTimeStr;
+    }
+
+    @Override
+    public String getCreateBy() {
+        return createBy;
+    }
+
+    @Override
+    public void setCreateBy(String createBy) {
+        this.createBy = createBy;
+    }
+
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this,ToStringStyle.MULTI_LINE_STYLE)
+            .append("id", getId())
+            .append("startTime", getStartTime())
+            .append("endTime", getEndTime())
+            .append("price", getPrice())
+            .append("createBy", getCreateBy())
+            .append("createTime", getCreateTime())
+            .append("upadteBy", getUpadteBy())
+            .append("updateTime", getUpdateTime())
+            .toString();
+    }
+}

@@ -1,0 +1,10 @@
+package com.zc.relay.handler;
+
+/**
+ * 在线状态业务处理接口
+ * @author Athena-xiepufeng
+ */
+public interface UplinkDeviceStateHandle
+{
+    void handle();
+}

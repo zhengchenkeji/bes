@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.deviceManagement.moduleType.mapper.ModuleTypeMapper">
+
+    <resultMap type="ModuleType" id="ModuleTypeResult">
+        <result property="id" column="id"/>
+        <result property="moduleCode" column="module_code"/>
+        <result property="typeCode" column="type_code"/>
+        <result property="pointSet" column="point_set"/>
+        <result property="description" column="description"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <sql id="selectModuleTypeVo">
+        select id, module_code, type_code, point_set, description, create_time, update_time from athena_bes_module_type
+    </sql>
+
+    <!--查询模块类型定义列表-->
+    <select id="selectModuleTypeList" parameterType="ModuleType" resultMap="ModuleTypeResult">
+        <include refid="selectModuleTypeVo"/>
+        <where>
+            <if test="moduleCode != null  and moduleCode != ''">and module_code like concat('%', #{moduleCode}, '%')
+            </if>
+            <if test="typeCode != null ">and type_code like concat('%', #{typeCode}, '%')</if>
+            <if test="pointSet != null  and pointSet != ''">and point_set = #{pointSet}</if>
+            <if test="description != null  and description != ''">and description like concat('%', #{description},
+                '%')
+            </if>
+        </where>
+    </select>
+
+    <!--查询模块类型定义-->
+    <select id="selectModuleTypeByCode" parameterType="ModuleType" resultMap="ModuleTypeResult">
+        <include refid="selectModuleTypeVo"/>
+        <where>
+            (type_code = #{typeCode} OR module_code = #{moduleCode} )
+            <if test="id != null  and id != ''">and id != #{id}</if>
+        </where>
+    </select>
+
+    <!--查询所有类型定义-->
+    <select id="selectModuleTypeListByPoint" parameterType="ModuleType" resultMap="ModuleTypeResult">
+        <include refid="selectModuleTypeVo"/>
+        <where>
+            <if test="pointSet != null  and pointSet != ''">and point_set like concat('%', #{pointSet}, '%')</if>
+        </where>
+    </select>
+
+    <!--获取模块类型定义详细信息-->
+    <select id="selectModuleTypeById" parameterType="Long" resultMap="ModuleTypeResult">
+        <include refid="selectModuleTypeVo"/>
+        where id = #{id}
+    </select>
+
+    <!--新增模块类型定义-->
+    <insert id="insertModuleType" parameterType="ModuleType" useGeneratedKeys="true" keyProperty="id">
+        insert into athena_bes_module_type
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">id,</if>
+            <if test="moduleCode != null and moduleCode != ''">module_code,</if>
+            <if test="typeCode != null">type_code,</if>
+            <if test="pointSet != null and pointSet != ''">point_set,</if>
+            <if test="description != null">description,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">#{id},</if>
+            <if test="moduleCode != null and moduleCode != ''">#{moduleCode},</if>
+            <if test="typeCode != null">#{typeCode},</if>
+            <if test="pointSet != null and pointSet != ''">#{pointSet},</if>
+            <if test="description != null">#{description},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+        </trim>
+    </insert>
+
+    <!--修改模块类型定义-->
+    <update id="updateModuleType" parameterType="ModuleType">
+        update athena_bes_module_type
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="moduleCode != null and moduleCode != ''">module_code = #{moduleCode},</if>
+            <if test="typeCode != null">type_code = #{typeCode},</if>
+            <if test="pointSet != null and pointSet != ''">point_set = #{pointSet},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <!--删除模块类型定义-->
+    <delete id="deleteModuleTypeById" parameterType="Long">
+        delete from athena_bes_module_type where id = #{id}
+    </delete>
+
+    <!--删除模块类型定义-->
+    <delete id="deleteModuleTypeByIds" parameterType="String">
+        delete from athena_bes_module_type where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <select id="queryModuleTreeInfo" parameterType="Long" resultType="Map">
+        SELECT COUNT(1) num FROM athena_bes_module WHERE module_type_id in (
+            SELECT type_code FROM athena_bes_module_type WHERE id in
+            <foreach item="id" collection="array" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+        )
+    </select>
+
+    <select id="queryModuleTreeInfoById" parameterType="Long" resultType="Map">
+        SELECT COUNT(1) num FROM athena_bes_module WHERE module_type_id in (
+            SELECT type_code FROM athena_bes_module_type WHERE id  = #{id}
+        )
+    </select>
+
+</mapper>

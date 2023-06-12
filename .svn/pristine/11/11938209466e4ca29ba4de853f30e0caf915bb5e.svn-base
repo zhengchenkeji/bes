@@ -1,0 +1,870 @@
+package com.zc.efounder.JEnterprise.service.baseData.impl;
+
+import java.util.*;
+import java.util.stream.Collectors;
+
+import com.ruoyi.common.core.domain.AjaxResult;
+import com.ruoyi.common.core.redis.RedisCache;
+import com.ruoyi.common.utils.DateUtils;
+import com.ruoyi.common.utils.DictUtils;
+import com.ruoyi.common.utils.SecurityUtils;
+import com.ruoyi.common.utils.StringUtils;
+import com.zc.common.constant.EquipmentConstant;
+import com.zc.common.constant.RedisKeyConstants;
+import com.zc.common.core.model.DataReception;
+import com.zc.connect.util.StringUtil;
+import com.zc.efounder.JEnterprise.domain.baseData.*;
+import com.zc.efounder.JEnterprise.domain.energyCollection.ElectricParams;
+import com.zc.efounder.JEnterprise.mapper.baseData.EquipmentMapper;
+import com.zc.efounder.JEnterprise.mapper.baseData.ProductMapper;
+import com.zc.efounder.JEnterprise.service.baseData.ProductService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
+
+/**
+ * 产品定义Service业务层处理
+ *
+ * @author gaojikun
+ * @date 2023-03-07
+ */
+@Service
+public class ProductServiceImpl implements ProductService {
+    @Autowired
+    private ProductMapper productMapper;
+
+    @Autowired
+    private EquipmentMapper athenaBesEquipmentMapper;
+
+    @Resource
+    private RedisCache redisCache;
+
+    @PostConstruct
+    public void init() {
+
+        //添加数据到 redis 缓存
+        addProductCache();
+
+        addProductCacheItemData();
+
+        addProductCacheFunction();
+    }
+
+    /**
+     * 添加数据到 redis 缓存
+     */
+    public void addProductCache() {
+        // 获取全部产品定义列表数据
+        List<Product> products = productMapper.selectAthenaBesProductList(null);
+
+        // 清除 redis 缓存数据
+        redisCache.deleteObject(RedisKeyConstants.BES_BasicData_Product);
+
+        if (products == null || products.isEmpty()) {
+            return;
+        }
+
+        // 添加 redis 缓存数据
+        products.forEach(val -> {
+            redisCache.setCacheMapValue(RedisKeyConstants.BES_BasicData_Product, val.getId(), val);
+        });
+    }
+
+    public void addProductCacheItemData() {
+        // 获取全部产品数据项列表数据
+        List<ProductItemData> productItemDatas = productMapper.selectAthenaBesProductItemDataList(null);
+
+        // 清除 redis 缓存数据
+        redisCache.deleteObject(RedisKeyConstants.BES_BasicData_Product_ItemData);
+
+        if (productItemDatas == null || productItemDatas.isEmpty()) {
+            return;
+        }
+
+        // 添加 redis 缓存数据
+        productItemDatas.forEach(val -> {
+            redisCache.setCacheMapValue(RedisKeyConstants.BES_BasicData_Product_ItemData, val.getId(), val);
+        });
+    }
+
+    public void addProductCacheFunction() {
+        // 获取全部产品功能列表数据
+        List<ProductFunction> productFunctions = productMapper.selectAthenaBesProductFunctionList(null);
+
+        // 清除 redis 缓存数据
+        redisCache.deleteObject(RedisKeyConstants.BES_BasicData_Product_Function);
+
+        if (productFunctions == null || productFunctions.isEmpty()) {
+            return;
+        }
+
+        // 添加 redis 缓存数据
+        productFunctions.forEach(val -> {
+            redisCache.setCacheMapValue(RedisKeyConstants.BES_BasicData_Product_Function, val.getId(), val);
+        });
+    }
+
+    /**
+     * 查询产品定义
+     *
+     * @param id 产品定义主键
+     * @return AjaxResult
+     */
+    @Override
+    public AjaxResult selectAthenaBesProductById(Long id) {
+        if (id == null) {
+            return AjaxResult.error("参数错误");
+        }
+        Product product = redisCache.getCacheMapValue(RedisKeyConstants.BES_BasicData_Product, id);
+        return AjaxResult.success(product);
+    }
+
+    /**
+     * 查询产品数据项
+     *
+     * @param id 产品数据项主键
+     * @return AjaxResult
+     */
+    @Override
+    public AjaxResult selectAthenaBesProductItemDataById(Long id) {
+        if (id == null) {
+            return AjaxResult.error("参数错误");
+        }
+        ProductItemData productItemData = redisCache.getCacheMapValue(RedisKeyConstants.BES_BasicData_Product_ItemData, id);
+        return AjaxResult.success(productItemData);
+    }
+
+    /**
+     * 查询产品配置-功能定义
+     *
+     * @param id 产品配置-功能定义主键
+     * @return AjaxResult
+     */
+    @Override
+    public AjaxResult selectAthenaBesProductFunctionById(Long id) {
+        if (id == null) {
+            return AjaxResult.error("参数错误");
+        }
+        ProductFunction productFunction = redisCache.getCacheMapValue(RedisKeyConstants.BES_BasicData_Product_Function, id);
+        return AjaxResult.success(productFunction);
+    }
+
+    /**
+     * 查询产品定义列表
+     *
+     * @param product 产品定义
+     * @return List<Product>
+     */
+    @Override
+    public List<Product> selectAthenaBesProductList(Product product) {
+        List<Product> list = new ArrayList<>();
+        Collection<Object> values = redisCache.getCacheMapValue(RedisKeyConstants.BES_BasicData_Product).values();
+        for (Object j : values) {
+            Product p = (Product) j;
+            list.add(p);
+        }
+        //查询条件
+        if (list.size() > 0 && product != null) {
+            Iterator<Product> it = list.iterator();
+            while (it.hasNext()) {
+                Product p = it.next();
+                //产品名称
+                if (!StringUtils.isEmpty(product.getName())) {
+                    if (!p.getName().contains(product.getName()) && !p.getName().equals(product.getName())) {
+                        it.remove();
+                        continue;
+                    }
+                }
+                //产品编号
+                if (!StringUtils.isEmpty(product.getCode())) {
+                    if (!p.getCode().contains(product.getCode()) && !p.getCode().equals(product.getCode())) {
+                        it.remove();
+                        continue;
+                    }
+                }
+                //品类
+                if (product.getCategoryId() != null) {
+                    if (!p.getCategoryId().equals(product.getCategoryId())) {
+                        it.remove();
+                        continue;
+                    }
+                }
+                //启用状态
+                if (!StringUtils.isEmpty(product.getState())) {
+                    if (!p.getState().equals(product.getState())) {
+                        it.remove();
+                        continue;
+                    }
+                }
+                //通讯协议
+                if (!StringUtils.isEmpty(product.getCommunicationProtocol())) {
+                    if (StringUtils.isEmpty(p.getCommunicationProtocol())) {
+                        it.remove();
+                        continue;
+                    }
+                    if (!p.getCommunicationProtocol().equals(product.getCommunicationProtocol())) {
+                        it.remove();
+                    }
+                }
+            }
+        }
+
+        // 排序.reversed()
+        list = list.stream().sorted(Comparator.comparing(Product::getId))
+                .collect(Collectors.toList());
+        return list;
+    }
+
+    /**
+     * @Author:gaojikun
+     * @Date:2023-03-08 16:03
+     * @Description:查询所有产品
+     * @Return:AjaxResult
+     */
+    @Override
+    public AjaxResult selectAllProductList(Product product) {
+        List<Product> list = new ArrayList<>();
+        List<String> ids = new ArrayList<>();
+
+        Collection<Object> values = redisCache.getCacheMapValue(RedisKeyConstants.BES_BasicData_Product).values();
+        if (product == null || product.getIotType() == null) {
+            //查询非子设备产品
+            String ipValue = DictUtils.getDictValue(EquipmentConstant.Equipment_Type, EquipmentConstant.Equipment_Ip_Label);
+            String linkValue = DictUtils.getDictValue(EquipmentConstant.Equipment_Type, EquipmentConstant.Equipment_Link_Label);
+            ids.add(ipValue);
+            ids.add(linkValue);
+            for (Object j : values) {
+                Product p = (Product) j;
+                if (ids.contains(p.getIotType())) {
+                    list.add(p);
+                }
+            }
+        } else {
+            //查询子设备产品
+            String sonValue = DictUtils.getDictValue(EquipmentConstant.Equipment_Type, EquipmentConstant.Equipment_Son_Label);
+            ids.add(sonValue);
+            for (Object j : values) {
+                Product p = (Product) j;
+                if (ids.contains(p.getIotType())) {
+                    list.add(p);
+                }
+            }
+        }
+        // 排序.reversed()
+        list = list.stream().sorted(Comparator.comparing(Product::getId).reversed())
+                .collect(Collectors.toList());
+        return AjaxResult.success(list);
+    }
+
+    /**
+     * 查询产品数据项列表
+     *
+     * @param productItemData 产品数据项
+     * @return 产品数据项集合
+     */
+    @Override
+    public List<ProductItemData> selectAthenaBesProductItemDataList(ProductItemData productItemData) {
+        List<ProductItemData> list = new ArrayList<>();
+        Collection<Object> values = redisCache.getCacheMapValue(RedisKeyConstants.BES_BasicData_Product_ItemData).values();
+        for (Object j : values) {
+            ProductItemData p = (ProductItemData) j;
+            if (p.getProductId().equals(productItemData.getProductId())) {
+                Product product = redisCache.getCacheMapValue(RedisKeyConstants.BES_BasicData_Product, p.getProductId());
+                p.setProductCode(product.getCode());
+                list.add(p);
+            }
+        }
+        // 排序.reversed()
+        list = list.stream().sorted(Comparator.comparing(ProductItemData::getCreateTime))
+                .collect(Collectors.toList());
+        return list;
+    }
+
+    /**
+     * 查询产品配置-功能定义列表
+     *
+     * @param productFunction 产品配置-功能定义
+     * @return List<ProductFunction>
+     */
+    @Override
+    public List<ProductFunction> selectAthenaBesProductFunctionList(ProductFunction productFunction) {
+        List<ProductFunction> list = new ArrayList<>();
+        Collection<Object> values = redisCache.getCacheMapValue(RedisKeyConstants.BES_BasicData_Product_Function).values();
+        for (Object j : values) {
+            ProductFunction p = (ProductFunction) j;
+            if (p.getProductId().equals(productFunction.getProductId())) {
+                Product product = redisCache.getCacheMapValue(RedisKeyConstants.BES_BasicData_Product, p.getProductId());
+                p.setProductCode(product.getCode());
+                list.add(p);
+            }
+        }
+        // 排序.reversed()
+        list = list.stream().sorted(Comparator.comparing(ProductFunction::getCreateTime))
+                .collect(Collectors.toList());
+        return list;
+    }
+
+    /**
+     * 新增产品定义
+     *
+     * @param product 产品定义
+     * @return AjaxResult
+     */
+    @Override
+    public AjaxResult insertAthenaBesProduct(Product product) {
+        if (product.getCategoryId() == null ||
+                product.getCode() == null ||
+                StringUtils.isEmpty(product.getName()) ||
+                StringUtils.isEmpty(product.getState()) ||
+                product.getIotType() == null) {
+            return AjaxResult.error("参数错误");
+        }
+        if (EquipmentConstant.HTTP_VALUE.equals(product.getCommunicationProtocol()) || EquipmentConstant.TCP_VALUE.equals(product.getCommunicationProtocol())) {
+            //数据接入
+            if (StringUtils.isEmpty(product.getDataAccess())) {
+                return AjaxResult.error("参数错误");
+            }
+        }
+
+        //code查重
+        Collection<Object> values = redisCache.getCacheMapValue(RedisKeyConstants.BES_BasicData_Product).values();
+        for (Object j : values) {
+            Product e = (Product) j;
+            if (e.getCode().equals(product.getCode())) {
+                return AjaxResult.error("编号重复");
+            }
+            if (e.getName().equals(product.getName())) {
+                return AjaxResult.error("名称重复");
+            }
+        }
+
+        product.setCreateName(SecurityUtils.getUsername());
+        product.setCreateTime(DateUtils.getNowDate());
+        boolean isAdd = productMapper.insertAthenaBesProduct(product);
+
+        if (isAdd) {
+            //查询所有产品信息
+            List<Product> productsRedis = productMapper.selectAthenaBesProductList(product);
+            product = productsRedis.get(0);
+            //添加缓存
+            redisCache.setCacheMapValue(RedisKeyConstants.BES_BasicData_Product, product.getId(), product);
+            return AjaxResult.success("添加成功");
+        } else {
+            return AjaxResult.error("添加失败");
+        }
+    }
+
+    /**
+     * 新增产品配置-功能定义
+     *
+     * @param productFunction 产品配置-功能定义
+     * @return AjaxResult
+     */
+    @Override
+    public AjaxResult insertAthenaBesProductFunction(ProductFunction productFunction) {
+        if (productFunction.getFunctionNum() == null ||
+                StringUtils.isEmpty(productFunction.getName())
+        ) {
+            return AjaxResult.error("参数错误");
+        }
+
+        //code查重
+        Collection<Object> values = redisCache.getCacheMapValue(RedisKeyConstants.BES_BasicData_Product_Function).values();
+        for (Object j : values) {
+            ProductFunction e = (ProductFunction) j;
+            if (e.getFunctionNum().equals(productFunction.getFunctionNum()) && e.getProductId().equals(productFunction.getProductId())) {
+                return AjaxResult.error("编号重复");
+            }
+            if (e.getName().equals(productFunction.getName()) && e.getProductId().equals(productFunction.getProductId())) {
+                return AjaxResult.error("名称重复");
+            }
+        }
+
+        productFunction.setCreateName(SecurityUtils.getUsername());
+        productFunction.setCreateTime(DateUtils.getNowDate());
+        boolean isAdd = productMapper.insertAthenaBesProductFunction(productFunction);
+        if (isAdd) {
+            //查询所有产品信息
+            List<ProductFunction> productFunctionsRedis = productMapper.selectAthenaBesProductFunctionList(productFunction);
+            productFunction = productFunctionsRedis.get(0);
+            //添加缓存
+            redisCache.setCacheMapValue(RedisKeyConstants.BES_BasicData_Product_Function, productFunction.getId(), productFunction);
+            return AjaxResult.success("添加成功");
+        } else {
+            return AjaxResult.error("添加失败");
+        }
+    }
+
+    /**
+     * 新增产品数据项
+     *
+     * @param productItemData 产品数据项
+     * @return AjaxResult
+     */
+    @Override
+    public AjaxResult insertAthenaBesProductItemData(ProductItemData productItemData) {
+        if (productItemData.getProductId() == null ||
+                productItemData.getDataItemNum() == null ||
+                productItemData.getDataItemMark() == null ||
+                productItemData.getSortNum() == null ||
+                StringUtils.isEmpty(productItemData.getName()) ||
+                productItemData.getDataType() == null ||
+                StringUtils.isEmpty(productItemData.getFunctionCode()) ||
+                StringUtils.isEmpty(productItemData.getPreserveType())) {
+            return AjaxResult.error("参数错误");
+        }
+        if ("1".equals(productItemData.getPreserveType())) {
+            if (StringUtils.isEmpty(productItemData.getEnergyCode())) {
+                return AjaxResult.error("参数错误");
+            }
+        }
+
+        Collection<Object> values = redisCache.getCacheMapValue(RedisKeyConstants.BES_BasicData_Product_ItemData).values();
+        for (Object j : values) {
+            ProductItemData e = (ProductItemData) j;
+            if (e.getSortNum().equals(productItemData.getSortNum()) && e.getProductId().equals(productItemData.getProductId())
+                    && e.getFunctionCode().equals(productItemData.getFunctionCode())) {
+                return AjaxResult.error("排序重复");
+            }
+
+            if (e.getDataItemNum().equals(productItemData.getDataItemNum()) && e.getProductId().equals(productItemData.getProductId())) {
+                return AjaxResult.error("编号重复");
+            }
+            if (e.getDataItemMark().equals(productItemData.getDataItemMark()) && e.getProductId().equals(productItemData.getProductId())) {
+                return AjaxResult.error("标识重复");
+            }
+            if (e.getName().equals(productItemData.getName()) && e.getProductId().equals(productItemData.getProductId())) {
+                return AjaxResult.error("名称重复");
+            }
+        }
+
+        //与能耗参数编号查重
+        Collection<Object> valuesParam = redisCache.getCacheMapValue(RedisKeyConstants.BES_BasicData_EnergyCollection_ElectricParams).values();
+        for (Object el : valuesParam) {
+            ElectricParams electricParams = (ElectricParams) el;
+            if (electricParams.getCode().equals(productItemData.getDataItemNum())) {
+                return AjaxResult.error("编号与能耗参数编号重复");
+            }
+        }
+
+        productItemData.setCreateName(SecurityUtils.getUsername());
+        productItemData.setCreateTime(DateUtils.getNowDate());
+        boolean isAdd = productMapper.insertAthenaBesProductItemData(productItemData);
+        if (isAdd) {
+            //查询所有产品信息
+            List<ProductItemData> productItemDatasRedis = productMapper.selectAthenaBesProductItemDataList(productItemData);
+            productItemData = productItemDatasRedis.get(0);
+            //添加缓存
+            redisCache.setCacheMapValue(RedisKeyConstants.BES_BasicData_Product_ItemData, productItemData.getId(), productItemData);
+            return AjaxResult.success("添加成功");
+        } else {
+            return AjaxResult.error("添加失败");
+        }
+    }
+
+    /**
+     * 修改产品定义
+     *
+     * @param product 产品定义
+     * @return AjaxResult
+     */
+    @Override
+    public AjaxResult updateAthenaBesProduct(Product product) {
+        if (product.getId() == null ||
+                product.getCategoryId() == null ||
+                product.getCode() == null ||
+                StringUtils.isEmpty(product.getName()) ||
+                StringUtils.isEmpty(product.getState()) ||
+                product.getIotType() == null) {
+            return AjaxResult.error("参数错误");
+        }
+        if (EquipmentConstant.HTTP_VALUE.equals(product.getCommunicationProtocol()) || EquipmentConstant.TCP_VALUE.equals(product.getCommunicationProtocol())) {
+            //数据接入
+            if (StringUtils.isEmpty(product.getDataAccess())) {
+                return AjaxResult.error("参数错误");
+            }
+        }
+
+        //code查重
+        Collection<Object> values = redisCache.getCacheMapValue(RedisKeyConstants.BES_BasicData_Product).values();
+        for (Object j : values) {
+            Product e = (Product) j;
+            if (!e.getId().equals(product.getId())) {
+                if (e.getCode().equals(product.getCode())) {
+                    return AjaxResult.error("编号重复");
+                }
+                if (e.getName().equals(product.getName())) {
+                    return AjaxResult.error("名称重复");
+                }
+            }
+        }
+
+        product.setUpdateName(SecurityUtils.getUsername());
+        product.setUpdateTime(DateUtils.getNowDate());
+        boolean isUpdate = productMapper.updateAthenaBesProduct(product);
+        if (isUpdate) {
+            //查询所有产品信息
+            List<Product> productsRedis = productMapper.selectAthenaBesProductList(product);
+            product = productsRedis.get(0);
+            //添加缓存
+            redisCache.setCacheMapValue(RedisKeyConstants.BES_BasicData_Product, product.getId(), product);
+
+            //修改关联产品的设备
+            Collection<Object> eValues = redisCache.getCacheMapValue(RedisKeyConstants.BES_BasicData_Equipment).values();
+            for (Object j : eValues) {
+                Equipment equ = (Equipment) j;
+                if (equ.getProductId().equals(product.getId())) {
+                    //更新设备缓存
+                    List<Equipment> equipmentsRedis = athenaBesEquipmentMapper.selectAthenaBesEquipmentList(equ);
+                    equ = equipmentsRedis.get(0);
+                    redisCache.setCacheMapValue(RedisKeyConstants.BES_BasicData_Equipment, equ.getId(), equ);
+                }
+            }
+
+            return AjaxResult.success("修改成功");
+        } else {
+            return AjaxResult.error("修改失败");
+        }
+    }
+
+    /**
+     * 修改产品配置-功能定义
+     *
+     * @param productFunction 产品配置-功能定义
+     * @return AjaxResult
+     */
+    @Override
+    public AjaxResult updateAthenaBesProductFunction(ProductFunction productFunction) {
+        if (productFunction.getId() == null ||
+                productFunction.getFunctionNum() == null ||
+                StringUtils.isEmpty(productFunction.getName())
+        ) {
+            return AjaxResult.error("参数错误");
+        }
+
+        //code查重
+        Collection<Object> values = redisCache.getCacheMapValue(RedisKeyConstants.BES_BasicData_Product_Function).values();
+        for (Object j : values) {
+            ProductFunction e = (ProductFunction) j;
+            if (!e.getId().equals(productFunction.getId())) {
+                if (e.getFunctionNum().equals(productFunction.getFunctionNum()) && e.getProductId().equals(productFunction.getProductId())) {
+                    return AjaxResult.error("编号重复");
+                }
+                if (e.getName().equals(productFunction.getName()) && e.getProductId().equals(productFunction.getProductId())) {
+                    return AjaxResult.error("名称重复");
+                }
+            }
+        }
+
+        productFunction.setUpdateName(SecurityUtils.getUsername());
+        productFunction.setUpdateTime(DateUtils.getNowDate());
+        boolean isUpdate = productMapper.updateAthenaBesProductFunction(productFunction);
+        if (isUpdate) {
+            //查询所有产品信息
+            List<ProductFunction> productFunctionsRedis = productMapper.selectAthenaBesProductFunctionList(productFunction);
+            productFunction = productFunctionsRedis.get(0);
+            //添加缓存
+            redisCache.setCacheMapValue(RedisKeyConstants.BES_BasicData_Product_Function, productFunction.getId(), productFunction);
+            return AjaxResult.success("修改成功");
+        } else {
+            return AjaxResult.error("修改失败");
+        }
+    }
+
+    /**
+     * 修改产品配置-数据项
+     *
+     * @param productItemData 产品配置-数据项
+     * @return AjaxResult
+     */
+    @Override
+    public AjaxResult updateAthenaBesProductItemData(ProductItemData productItemData) {
+        if (productItemData.getId() == null ||
+                productItemData.getProductId() == null ||
+                productItemData.getDataItemNum() == null ||
+                productItemData.getDataItemMark() == null ||
+                productItemData.getSortNum() == null ||
+                StringUtils.isEmpty(productItemData.getName()) ||
+                productItemData.getDataType() == null ||
+                StringUtils.isEmpty(productItemData.getPreserveType())) {
+            return AjaxResult.error("参数错误");
+        }
+        if ("1".equals(productItemData.getPreserveType())) {
+            if (StringUtils.isEmpty(productItemData.getEnergyCode())) {
+                return AjaxResult.error("参数错误");
+            }
+        }
+        //code查重
+        Collection<Object> values = redisCache.getCacheMapValue(RedisKeyConstants.BES_BasicData_Product_ItemData).values();
+        for (Object j : values) {
+            ProductItemData e = (ProductItemData) j;
+            if (!e.getId().equals(productItemData.getId())) {
+                if (e.getSortNum().equals(productItemData.getSortNum()) && e.getProductId().equals(productItemData.getProductId())
+                        && e.getFunctionCode().equals(productItemData.getFunctionCode())) {
+                    return AjaxResult.error("排序重复");
+                }
+                if (e.getDataItemNum().equals(productItemData.getDataItemNum()) && e.getProductId().equals(productItemData.getProductId())) {
+                    return AjaxResult.error("编号重复");
+                }
+                if (e.getDataItemMark().equals(productItemData.getDataItemMark()) && e.getProductId().equals(productItemData.getProductId())) {
+                    return AjaxResult.error("标识重复");
+                }
+                if (e.getName().equals(productItemData.getName()) && e.getProductId().equals(productItemData.getProductId())) {
+                    return AjaxResult.error("名称重复");
+                }
+            }
+        }
+
+        //与能耗参数编号查重
+        Collection<Object> valuesParam = redisCache.getCacheMapValue(RedisKeyConstants.BES_BasicData_EnergyCollection_ElectricParams).values();
+        for (Object el : valuesParam) {
+            ElectricParams electricParams = (ElectricParams) el;
+            if (electricParams.getCode().equals(productItemData.getDataItemNum())) {
+                return AjaxResult.error("编号与能耗参数编号重复");
+            }
+        }
+
+        productItemData.setUpdateName(SecurityUtils.getUsername());
+        productItemData.setUpdateTime(DateUtils.getNowDate());
+        boolean isAdd = productMapper.updateAthenaBesProductItemData(productItemData);
+        if (isAdd) {
+            //查询所有产品信息
+            List<ProductItemData> productItemDatasRedis = productMapper.selectAthenaBesProductItemDataList(productItemData);
+            productItemData = productItemDatasRedis.get(0);
+            //添加缓存
+            redisCache.setCacheMapValue(RedisKeyConstants.BES_BasicData_Product_ItemData, productItemData.getId(), productItemData);
+            return AjaxResult.success("修改成功");
+        } else {
+            return AjaxResult.error("修改失败");
+        }
+    }
+
+    /**
+     * 批量删除产品定义
+     *
+     * @param ids 需要删除的产品定义主键
+     * @return AjaxResult
+     */
+    @Override
+    public AjaxResult deleteAthenaBesProductByIds(Long[] ids) {
+        if (ids == null || ids.length == 0) {
+            return AjaxResult.error("参数错误");
+        }
+        for (Long id : ids) {
+            //数据项+产品配置
+            Collection<Object> values = redisCache.getCacheMapValue(RedisKeyConstants.BES_BasicData_Product_ItemData).values();
+            for (Object o : values) {
+                ProductItemData p = (ProductItemData) o;
+                if (p.getProductId().equals(id)) {
+                    return AjaxResult.error("请先删除当前产品下的数据项");
+                }
+            }
+
+            Collection<Object> values1 = redisCache.getCacheMapValue(RedisKeyConstants.BES_BasicData_Product_Function).values();
+            for (Object o : values1) {
+                ProductFunction pf = (ProductFunction) o;
+                if (pf.getProductId().equals(id)) {
+                    return AjaxResult.error("请先删除当前产品下的功能");
+                }
+            }
+
+            Collection<Object> eValues = redisCache.getCacheMapValue(RedisKeyConstants.BES_BasicData_Equipment).values();
+            for (Object j : eValues) {
+                Equipment equ = (Equipment) j;
+                if (equ.getProductId().equals(id)) {
+                    return AjaxResult.error("请先删除当前产品关联的设备");
+                }
+            }
+
+            boolean isDelete = productMapper.deleteAthenaBesProductById(id);
+            if (isDelete) {
+                //删除缓存
+                redisCache.delCacheMapValue(RedisKeyConstants.BES_BasicData_Product, id);
+            } else {
+                return AjaxResult.error("删除失败");
+            }
+        }
+
+        return AjaxResult.success("删除成功");
+    }
+
+    /**
+     * 删除产品定义信息
+     *
+     * @param id 产品定义主键
+     * @return AjaxResult
+     */
+    @Override
+    public AjaxResult deleteAthenaBesProductById(Long id) {
+        if (id == null) {
+            return AjaxResult.error("参数错误");
+        }
+        boolean isDelete = productMapper.deleteAthenaBesProductById(id);
+        if (isDelete) {
+            //删除缓存
+            redisCache.delCacheMapValue(RedisKeyConstants.BES_BasicData_Product, id);
+            return AjaxResult.success("删除成功");
+        } else {
+            return AjaxResult.error("删除失败");
+        }
+    }
+
+    /**
+     * 批量删除产品配置-数据项
+     *
+     * @param ids 需要删除的产品配置-数据项主键
+     * @return AjaxResult
+     */
+    @Override
+    public AjaxResult deleteAthenaBesProductItemDataByIds(Long[] ids) {
+        if (ids == null || ids.length == 0) {
+            return AjaxResult.error("参数错误");
+        }
+        boolean isDelete = productMapper.deleteAthenaBesProductItemDataByIds(ids);
+        if (isDelete) {
+            for (Long id : ids) {
+                //删除缓存
+                redisCache.delCacheMapValue(RedisKeyConstants.BES_BasicData_Product_ItemData, id);
+            }
+            return AjaxResult.success("删除成功");
+        } else {
+            return AjaxResult.error("删除失败");
+        }
+    }
+
+    /**
+     * 删除产品配置-数据项信息
+     *
+     * @param id 产品配置-数据项主键
+     * @return AjaxResult
+     */
+    @Override
+    public AjaxResult deleteAthenaBesProductItemDataById(Long id) {
+        if (id == null) {
+            return AjaxResult.error("参数错误");
+        }
+        boolean isDelete = productMapper.deleteAthenaBesProductItemDataById(id);
+        if (isDelete) {
+            //删除缓存
+            redisCache.delCacheMapValue(RedisKeyConstants.BES_BasicData_Product_ItemData, id);
+            return AjaxResult.success("删除成功");
+        } else {
+            return AjaxResult.error("删除失败");
+        }
+    }
+
+    /**
+     * 批量删除产品配置-功能定义
+     *
+     * @param ids 需要删除的产品配置-功能定义主键
+     * @return AjaxResult
+     */
+    @Override
+    public AjaxResult deleteAthenaBesProductFunctionByIds(Long[] ids) {
+        if (ids == null || ids.length == 0) {
+            return AjaxResult.error("参数错误");
+        }
+        boolean isDelete = productMapper.deleteAthenaBesProductFunctionByIds(ids);
+        if (isDelete) {
+            for (Long id : ids) {
+                //删除缓存
+                redisCache.delCacheMapValue(RedisKeyConstants.BES_BasicData_Product_Function, id);
+            }
+            return AjaxResult.success("删除成功");
+        } else {
+            return AjaxResult.error("删除失败");
+        }
+    }
+
+    /**
+     * 删除产品配置-功能定义信息
+     *
+     * @param id 产品配置-功能定义主键
+     * @return AjaxResult
+     */
+    @Override
+    public AjaxResult deleteAthenaBesProductFunctionById(Long id) {
+        if (id == null) {
+            return AjaxResult.error("参数错误");
+        }
+        boolean isDelete = productMapper.deleteAthenaBesProductFunctionById(id);
+        if (isDelete) {
+            //删除缓存
+            redisCache.delCacheMapValue(RedisKeyConstants.BES_BasicData_Product_Function, id);
+            return AjaxResult.success("删除成功");
+        } else {
+            return AjaxResult.error("删除失败");
+        }
+    }
+
+
+    /**
+     * 查询数据类型list
+     *
+     * @return List<Map < String, Object>>
+     */
+    @Override
+    public List<Map<String, Object>> getAllIotTypeList(String dictType, String id) {
+        return productMapper.getAllIotTypeList(dictType, id);
+    }
+
+    /**
+     * 查询物联类型/消息协议list
+     */
+    @Override
+    public List<Map<String, Object>> getAllMessageIdList(String dictType, String id) {
+        return productMapper.getAllMessageIdList(dictType, id);
+    }
+
+    /**
+     * 查询对应的消息协议list
+     */
+    @Override
+    public AjaxResult getMessageListById(String id) {
+        List<Agreement> list = new ArrayList<>();
+        if (StringUtils.isEmpty(id)) {
+            return AjaxResult.error("参数错误");
+        }
+        Collection<Object> values = redisCache.getCacheMapValue(RedisKeyConstants.BES_BasicData_Agreement).values();
+        for (Object j : values) {
+            Agreement a = (Agreement) j;
+            if (id.equals(a.getAgreementType().toString())) {
+                list.add(a);
+            }
+        }
+        return AjaxResult.success(list);
+    }
+
+
+    /**
+     * @description:根据产品id查询消息协议
+     * @author: sunshangeng
+     * @date: 2023/3/15 15:05
+     * @param: [productId]
+     * @return: com.ruoyi.common.core.domain.AjaxResult
+     **/
+    @Override
+    public AjaxResult getAgreeMentByProductId(Long productId) {
+        Product product = redisCache.getCacheMapValue(RedisKeyConstants.BES_BasicData_Product, productId);
+        if (product == null) {
+            return AjaxResult.error("查询不到相关产品定义");
+        }
+        if (product.getMessageProtocol() == null) {
+            return AjaxResult.error("查询不到相关消息协议");
+        }
+        Agreement agreement = redisCache.getCacheMapValue(RedisKeyConstants.BES_BasicData_Agreement, product.getMessageProtocol());
+
+        if (agreement == null) {
+            return AjaxResult.error("查询不到相关消息协议");
+        }
+        return AjaxResult.success(agreement);
+    }
+
+    @Override
+    public AjaxResult energyTypeList() {
+        List<Map<String, Object>> list = productMapper.energyTypeList();
+        return AjaxResult.success(list);
+    }
+}

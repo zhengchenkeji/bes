@@ -1,0 +1,70 @@
+package com.ruoyi.deviceManagement.modulePoint.mapper;
+
+import com.ruoyi.deviceManagement.modulePoint.domain.ModulePoint;
+
+import java.util.List;
+import java.util.Map;
+
+/**
+ * 模块点类型定义Mapper接口
+ * 
+ * @author ruoyi
+ * @date 2022-09-06
+ */
+public interface ModulePointMapper
+{
+    /**
+     * 查询模块点类型定义
+     *
+     * @param id 模块点类型定义主键
+     * @return 模块点类型定义
+     */
+    public ModulePoint selectModulePointById(Long id);
+
+    public ModulePoint selectModulePointCheck(ModulePoint modulePoint);
+
+    /**
+     * 查询模块点类型定义列表
+     *
+     * @param modulePoint 模块点类型定义
+     * @return 模块点类型定义集合
+     */
+    List<ModulePoint> selectModulePointList(ModulePoint modulePoint);
+
+    /**
+     * 查询全部点类型列表
+     */
+    List<Map<String,Object>> selectAllModulePointList();
+
+    /**
+     * 新增模块点类型定义
+     *
+     * @param modulePoint 模块点类型定义
+     * @return 结果
+     */
+    boolean insertModulePoint(ModulePoint modulePoint);
+
+    /**
+     * 修改模块点类型定义
+     *
+     * @param modulePoint 模块点类型定义
+     * @return 结果
+     */
+    boolean updateModulePoint(ModulePoint modulePoint);
+
+    /**
+     * 删除模块点类型定义
+     *
+     * @param id 模块点类型定义主键
+     * @return 结果
+     */
+    int deleteModulePointById(Long id);
+
+    /**
+     * 批量删除模块点类型定义
+     *
+     * @param ids 需要删除的数据主键集合
+     * @return 结果
+     */
+    boolean deleteModulePointByIds(Long[] ids);
+}

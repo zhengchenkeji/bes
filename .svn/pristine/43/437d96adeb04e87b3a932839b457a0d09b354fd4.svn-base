@@ -1,0 +1,19 @@
+package com.zc.connect.business.handler;
+
+/**
+ * @Author: wanghongjie
+ * @Description:
+ * @Date: Created in 11:16 2023/2/22
+ * @Modified By:
+ */
+public interface ModbusMsgReceive {
+
+    /**
+     *
+     * @param ip 控制器 ip 地址
+     * @param state 在线状态 true 在线， false 离线
+     */
+    void controllerState(String ip, int post, Boolean state);
+
+    void sendRegistrationMessage(String s) throws Exception;
+}

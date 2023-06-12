@@ -1,0 +1,314 @@
+package com.zc.iot.service.impl;
+
+import java.util.List;
+
+import com.ruoyi.common.constant.HttpStatus;
+import com.ruoyi.common.exception.ServiceException;
+import com.ruoyi.common.utils.DateUtils;
+import com.zc.common.core.foreignkeyservice.AssociatedService;
+import com.zc.common.core.foreignkeyservice.ForeignKeyService;
+import com.zc.common.core.foreignkeyservice.LinkModel;
+import org.springframework.stereotype.Service;
+import com.zc.iot.mapper.IotCategoryMapper;
+import com.zc.iot.domain.IotCategory;
+import com.zc.iot.service.IIotCategoryService;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
+
+/**
+ * 品类Service业务层处理
+ *
+ * @author xiepufeng
+ * @date 2022-05-28
+ */
+@Service
+public class IotCategoryServiceImpl
+        extends AssociatedService
+        implements IIotCategoryService, ForeignKeyService
+{
+    @Resource
+    private IotCategoryMapper iotCategoryMapper;
+
+    @PostConstruct
+    public void init()
+    {
+        // 注册外键
+        registerForeignKey();
+    }
+
+    /**
+     * 查询品类
+     *
+     * @param id 品类主键
+     * @return 品类
+     */
+    @Override
+    public IotCategory selectIotCategoryById(Long id)
+    {
+        return iotCategoryMapper.selectIotCategoryById(id);
+    }
+
+    /**
+     * 查询品类列表
+     *
+     * @param iotCategory 品类
+     * @return 品类
+     */
+    @Override
+    public List<IotCategory> selectIotCategoryList(IotCategory iotCategory)
+    {
+        return iotCategoryMapper.selectIotCategoryList(iotCategory);
+    }
+
+    /**
+     * 新增品类
+     *
+     * @param iotCategory 品类
+     * @return 结果
+     */
+    @Override
+    public int insertIotCategory(IotCategory iotCategory)
+    {
+
+        // 1. 品类标识验证重复
+        String categoryMark = iotCategory.getCategoryMark();
+
+        // 1.1 根据品类标识查询数库是否有重复品类标识数据
+        IotCategory category = iotCategoryMapper.selectIotCategoryByMark(categoryMark);
+
+        // 1.2 查询到相同品类标识数据抛出异常
+        if (category != null)
+        {
+            throw new ServiceException("品类标识不能重复", HttpStatus.BAD_REQUEST);
+        }
+
+        // 2. 判断关联的上级品类是否存在
+        Long parentId = iotCategory.getParentId();
+
+
+        if (parentId != null && parentId != 0)
+        {
+            // 2.1 根据id查询数据
+            IotCategory upperCategory = iotCategoryMapper.selectIotCategoryById(parentId);
+
+            if (upperCategory == null)
+            {
+                // 2.2 查询不到上级品类者抛出异常
+                throw new ServiceException("上级品类不存在", HttpStatus.BAD_REQUEST);
+            }
+
+        }
+
+        iotCategory.setCreateTime(DateUtils.getNowDate());
+        return iotCategoryMapper.insertIotCategory(iotCategory);
+    }
+
+    /**
+     * 修改品类
+     *
+     * @param iotCategory 品类
+     * @return 结果
+     */
+    @Override
+    public int updateIotCategory(IotCategory iotCategory)
+    {
+
+        // 1. 验证主键是否存在
+        Long id = iotCategory.getId();
+
+        // 1.1 判断主键是否为空
+        if (id == null)
+        {
+            // 1.2 主键为空则抛出异常
+            throw new ServiceException("主键不能为空", HttpStatus.BAD_REQUEST);
+        }
+
+        // 1.3 根据主键查询数据库
+        IotCategory iotCategory1 =  iotCategoryMapper.selectIotCategoryById(id);
+
+        // 1.4 根据id查询数据库是否有数据
+        if (iotCategory1 == null)
+        {
+            // 1.5 根据id查询数据库数据未查询到数据则抛出异常
+            throw new ServiceException("当前数据不存在", HttpStatus.BAD_REQUEST);
+        }
+
+        // 2. 验证品类标识合法性
+        String categoryMark = iotCategory.getCategoryMark();
+
+        if (categoryMark != null)
+        {
+            // 2.1 根据mark数据库中查询数据
+            IotCategory iotCategory2 = iotCategoryMapper.selectIotCategoryByMark(categoryMark);
+
+            // 2.2 判断 categoryMark 是否和其他数据重复
+            if (!iotCategory2.getId().equals(id) && categoryMark.equals(iotCategory2.getCategoryMark()))
+            {
+                throw new ServiceException("品类标识不能重复", HttpStatus.BAD_REQUEST);
+            }
+        }
+
+        // 3. 验证 parentId 合法性
+        Long parentId = iotCategory.getParentId();
+
+        if (parentId != null && parentId != 0)
+        {
+            // 3.1 判断上级品类是否在数据库中存在，不存在则抛出异常
+            IotCategory iotCategory3 =  iotCategoryMapper.selectIotCategoryById(id);
+
+            if (iotCategory3 == null)
+            {
+                throw new ServiceException("上级品类不存在", HttpStatus.BAD_REQUEST);
+            }
+        }
+
+        // 3.2 判断选择的上级品类是否是自己，是则抛出异常
+        if (id.equals(parentId))
+        {
+            throw new ServiceException("上级品类不能是自己", HttpStatus.BAD_REQUEST);
+        }
+
+        // 3.3 判断是否是自己的从属节点, 是则是非法的
+        if (isSubordinateNode(id, parentId))
+        {
+            throw new ServiceException("自己不可以是自己的从属节点", HttpStatus.BAD_REQUEST);
+        }
+
+        iotCategory.setUpdateTime(DateUtils.getNowDate());
+        return iotCategoryMapper.updateIotCategory(iotCategory);
+    }
+
+    /**
+     * 批量删除品类
+     *
+     * @param ids 需要删除的品类主键
+     * @return 结果
+     */
+    @Override
+    public int deleteIotCategoryByIds(Long[] ids)
+    {
+        // 1. 有关联数据则不允许删除
+
+        // 1.1 检擦是否有数据关联
+        LinkModel linkModel = getWhoReferenceMe(ids);
+
+        // 1.2 不为空则有数据关联
+        if (linkModel != null)
+        {
+            // 1.3 抛异常返回前端关联信息
+            throw new ServiceException(linkModel.getDescription(), HttpStatus.BAD_REQUEST);
+        }
+
+        // 2. 批量删除数据库数据
+        return iotCategoryMapper.deleteIotCategoryByIds(ids);
+    }
+
+    /**
+     * 删除品类信息
+     *
+     * @param id 品类主键
+     * @return 结果
+     */
+    @Override
+    public int deleteIotCategoryById(Long id)
+    {
+        // 1. 有关联数据则不允许删除
+
+        // 1.1 检擦是否有数据关联
+        LinkModel linkModel = getWhoReferenceMe(id);
+
+        // 1.2 不为空则有数据关联
+        if (linkModel != null)
+        {
+            // 1.3 抛异常返回前端关联信息
+            throw new ServiceException(linkModel.getDescription(), HttpStatus.BAD_REQUEST);
+        }
+
+        // 2. 根据id删除数据库数据
+        return iotCategoryMapper.deleteIotCategoryById(id);
+    }
+
+    /**
+     * 判断id2 是否是id1的从属节点
+     * @param id1
+     * @param id2
+     * @return
+     */
+    public Boolean isSubordinateNode(Long id1, Long id2)
+    {
+        if (null == id1 || null == id2)
+        {
+            return false;
+        }
+
+        if (id1.equals(id2))
+        {
+            return true;
+        }
+
+        IotCategory iotCategory = iotCategoryMapper.selectIotCategoryById(id2);
+
+        if (null == iotCategory)
+        {
+            return false;
+        }
+
+        Long parentId = iotCategory.getParentId();
+
+        if (id1.equals(parentId))
+        {
+            return true;
+        }
+
+        return isSubordinateNode(id1, parentId);
+    }
+
+    /**
+     * 通过外键值查找本实体，如果查找到则说明本实体关联了外键对应的实体。
+     *
+     * @param foreignKey      ： 本实体外键属性
+     * @param foreignKeyValue ： 本实体的外键值
+     * @return
+     */
+    @Override
+    public LinkModel findByForeignKey(String foreignKey, Long foreignKeyValue)
+    {
+
+        IotCategory iotCategory = iotCategoryMapper.selectIotCategoryByParentId(foreignKeyValue);
+
+        if (iotCategory == null)
+        {
+            return null;
+        }
+
+        return new LinkModel("品类数据已被关联");
+    }
+
+    /**
+     * 根据外键删除所有关联数据
+     *
+     * @param foreignKey      ： 本实体外键属性
+     * @param foreignKeyValue ： 本实体的外键值
+     * @return
+     */
+    @Override
+    public boolean deleteAllByForeignKey(String foreignKey, Long foreignKeyValue)
+    {
+        return false;
+    }
+
+    /**
+     * 外键标识
+     */
+    private static final String FOREIGN_KEY_IDENTIFY =  "parent_id";
+
+    /**
+     * 如果实体存在外键关联，则向外该键所指的实体服务注册外键，从而建立关联链关系。
+     */
+    @Override
+    public void registerForeignKey()
+    {
+        super.registerForeignKey(this, FOREIGN_KEY_IDENTIFY);
+    }
+}

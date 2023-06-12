@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.systemSetting.electricityPriceSetting.mapper.ElectricityPriceSettingMapper">
+    
+    <resultMap type="ElectricityPriceSetting" id="ElectricityPriceSettingResult">
+        <result property="id"    column="id"    />
+        <result property="startTime"    column="start_time"    />
+        <result property="endTime"    column="end_time"    />
+        <result property="price"    column="price"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="upadteBy"    column="upadte_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <resultMap type="ElectricityPriceRule" id="ElectricityPriceRuleMap">
+        <result property="id"    column="id"    />
+        <result property="name"    column="name"    />
+        <result property="parentId"    column="parent_id"    />
+        <result property="remark"    column="remark"    />
+    </resultMap>
+
+    <sql id="selectElectricityPriceSettingVo">
+        select id, start_time, end_time, price, create_by, create_time, upadte_by, update_time,remark from athena_bes_electricity_price_setting
+    </sql>
+
+    <sql id="selectElectricityPriceRuleVo">
+        select id, name, parent_id, create_by, create_time, update_by, update_time,remark from athena_bes_electricity_price_rule
+    </sql>
+
+    <!--获取电价规则列表-->
+    <select id="periceConfigListInfo" parameterType="ElectricityPriceRule" resultMap="ElectricityPriceRuleMap">
+        <include refid="selectElectricityPriceRuleVo"/>
+        <where>
+            <if test="id != null">
+                and id = #{id}
+            </if>
+            <if test="parentId != null">
+                and parent_id = #{parentId}
+            </if>
+            <if test="name != null and name != ''">
+                and name = #{name}
+            </if>
+        </where>
+    </select>
+
+    <!--电价规则名称查重-->
+    <select id="periceConfigCheck" parameterType="ElectricityPriceRule" resultMap="ElectricityPriceRuleMap">
+        <include refid="selectElectricityPriceRuleVo"/>
+        <where>
+            <if test="id != null">
+                and id != #{id}
+            </if>
+            <if test="name != null and name != ''">
+                and name = #{name}
+            </if>
+        </where>
+    </select>
+
+    <!--删除电价规则-->
+    <delete id="deletepriceConfig" parameterType="String">
+        delete from athena_bes_electricity_price_rule where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <!--添加电价规则-->
+    <insert id="addPriceConfig" parameterType="ElectricityPriceRule" useGeneratedKeys="true" keyProperty="id">
+        insert into athena_bes_electricity_price_rule
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            parent_id,
+            <if test="name != null and name != ''">name,</if>
+            <if test="remark != null and remark != ''">remark,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            #{parentId},
+            <if test="name != null and name != ''">#{name},</if>
+            <if test="remark != null and remark != ''">#{remark},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+        </trim>
+    </insert>
+
+    <!--修改电价规则-->
+    <update id="updatePriceConfig" parameterType="ElectricityPriceRule">
+        update athena_bes_electricity_price_rule
+        <set>
+            <if test="name != null and name != ''">name = #{name},</if>
+            <if test="remark != null and remark != ''">remark = #{remark},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </set>
+        <where>
+            id = #{id}
+        </where>
+    </update>
+
+
+    <!--查询电价设置列表-->
+    <select id="selectElectricityPriceSettingList" parameterType="ElectricityPriceSetting" resultMap="ElectricityPriceSettingResult">
+        <include refid="selectElectricityPriceSettingVo"/>
+        <where>  
+            <if test="startTime != null "> and date_format(start_time,'%H:%i:%S') &gt;= #{startTimeStr}</if>
+            <if test="endTime != null "> and date_format(end_time,'%H:%i:%S') &lt;= #{endTimeStr}</if>
+            <if test="price != null "> and price = #{price}</if>
+            <if test="ruleId != null "> and rule_id = #{ruleId}</if>
+            <if test="upadteBy != null  and upadteBy != ''"> and upadte_by = #{upadteBy}</if>
+        </where>
+    </select>
+
+    <select id="CheckList" parameterType="ElectricityPriceSetting" resultMap="ElectricityPriceSettingResult">
+        <include refid="selectElectricityPriceSettingVo"/>
+        <where>
+            <if test="ruleId != null "> and rule_id = #{ruleId}</if>
+            <if test="id != null "> and id != #{id}</if>
+        </where>
+    </select>
+
+    <!--查询电价设置-->
+    <select id="selectElectricityPriceSettingById" parameterType="Long" resultMap="ElectricityPriceSettingResult">
+        <include refid="selectElectricityPriceSettingVo"/>
+        where id = #{id}
+    </select>
+
+    <!--新增电价设置-->
+    <insert id="insertElectricityPriceSetting" parameterType="ElectricityPriceSetting">
+        insert into athena_bes_electricity_price_setting
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">id,</if>
+            <if test="startTime != null">start_time,</if>
+            <if test="endTime != null">end_time,</if>
+            <if test="price != null">price,</if>
+            <if test="ruleId != null">rule_id,</if>
+            <if test="remark != null">remark,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="upadteBy != null">upadte_by,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">#{id},</if>
+            <if test="startTime != null">#{startTime},</if>
+            <if test="endTime != null">#{endTime},</if>
+            <if test="price != null">#{price},</if>
+            <if test="ruleId != null">#{ruleId},</if>
+            <if test="remark != null">#{remark},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="upadteBy != null">#{upadteBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <!--修改电价设置-->
+    <update id="updateElectricityPriceSetting" parameterType="ElectricityPriceSetting">
+        update athena_bes_electricity_price_setting
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="startTime != null">start_time = #{startTime},</if>
+            <if test="endTime != null">end_time = #{endTime},</if>
+            <if test="price != null">price = #{price},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="upadteBy != null">upadte_by = #{upadteBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <!--删除电价设置信息-->
+    <delete id="deleteElectricityPriceSettingById" parameterType="Long">
+        delete from athena_bes_electricity_price_setting where id = #{id}
+    </delete>
+
+    <!--删除电价设置信息-->
+    <delete id="deleteElectricityPriceSettingByIds" parameterType="String">
+        delete from athena_bes_electricity_price_setting where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

@@ -1,0 +1,121 @@
+package com.ruoyi.safetyWarning.alarmNotifier.controller;
+
+import java.util.List;
+import java.util.UUID;
+import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
+
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import com.ruoyi.common.annotation.Log;
+import com.ruoyi.common.core.controller.BaseController;
+import com.ruoyi.common.core.domain.AjaxResult;
+import com.ruoyi.common.enums.BusinessType;
+import com.ruoyi.safetyWarning.alarmNotifier.domain.AlarmNotifier;
+import com.ruoyi.safetyWarning.alarmNotifier.service.AlarmNotifierService;
+import com.ruoyi.common.utils.poi.ExcelUtil;
+import com.ruoyi.common.core.page.TableDataInfo;
+
+/**
+ * 告警接收组Controller
+ *
+ * @author sunshangeng
+ * @date 2022-09-15
+ */
+@RestController
+@RequestMapping("/safetyWarning/AlarmNotifier")
+public class AlarmNotifierController extends BaseController
+{
+    @Autowired
+    private AlarmNotifierService alarmNotifierService;
+
+    /**
+     * sunshangeng
+     * 查询告警接收组列表
+     */
+    @PreAuthorize("@ss.hasPermi('safetyWarning:AlarmNotifier:list')")
+    @GetMapping("/list")
+    public TableDataInfo list(AlarmNotifier alarmNotifier)
+    {
+//        alarmNotifier.setTacticsId("6");
+        startPage();
+        List<AlarmNotifier> list = alarmNotifierService.selectAlarmNotifierList(alarmNotifier);
+        return getDataTable(list);
+    }
+
+    /**
+     * 导出告警接收组列表
+     * sunshangeng
+     */
+    @PreAuthorize("@ss.hasPermi('safetyWarning:AlarmNotifier:export')")
+    @Log(title = "告警接收组", businessType = BusinessType.EXPORT)
+    @PostMapping("/export")
+    public void export(HttpServletResponse response, AlarmNotifier alarmNotifier)
+    {
+        List<AlarmNotifier> list = alarmNotifierService.selectAlarmNotifierList(alarmNotifier);
+        ExcelUtil<AlarmNotifier> util = new ExcelUtil<>(AlarmNotifier.class);
+        util.exportExcel(response, list, "告警接收组数据");
+    }
+    /**
+     * 获取告警接收组详细信息
+     * sunshangeng
+     */
+    @PreAuthorize("@ss.hasPermi('safetyWarning:AlarmNotifier:query')")
+    @GetMapping(value = "/{id}")
+    public AjaxResult getInfo(@PathVariable("id") Long id)
+    {
+        return AjaxResult.success(alarmNotifierService.selectAlarmNotifierById(id));
+    }
+    /**
+     * 新增告警接收组
+     * sunshangeng
+     */
+    @PreAuthorize("@ss.hasPermi('safetyWarning:AlarmNotifier:add')")
+    @Log(title = "告警接收组", businessType = BusinessType.INSERT)
+    @PostMapping
+    public AjaxResult add(@Valid @RequestBody AlarmNotifier alarmNotifier)
+    {
+
+        System.out.println(UUID.randomUUID().toString().replaceAll("-", ""));
+        return toAjax(alarmNotifierService.insertAlarmNotifier(alarmNotifier));
+    }
+
+    /**
+     * 修改告警接收组
+     * sunshangeng
+     */
+    @PreAuthorize("@ss.hasPermi('safetyWarning:AlarmNotifier:edit')")
+    @Log(title = "告警接收组", businessType = BusinessType.UPDATE)
+    @PutMapping
+    public AjaxResult edit(@Valid @RequestBody AlarmNotifier alarmNotifier)
+    {
+        return toAjax(alarmNotifierService.updateAlarmNotifier(alarmNotifier));
+    }
+
+    /**
+     * 删除告警接收组
+     * sunshangeng
+     */
+    @PreAuthorize("@ss.hasPermi('safetyWarning:AlarmNotifier:remove')")
+    @Log(title = "告警接收组", businessType = BusinessType.DELETE)
+	@DeleteMapping("/{ids}")
+    public AjaxResult remove(@PathVariable Long[] ids)
+    {
+        int resultRows = alarmNotifierService.deleteAlarmNotifierByIds(ids);
+        if(resultRows==0){
+            return  AjaxResult.error("删除失败，请核对信息");
+        }
+        return toAjax(resultRows);
+    }
+
+
+
+}

@@ -1,0 +1,402 @@
+<template>
+  <div>
+    <button :style="styles"
+      class="v-button">{{ propValue }}
+    </button>
+
+    <!-- 添加或修改设备对话框 -->
+    <el-dialog :title="title" :visible.sync="open" width="600px" append-to-body>
+      <el-row v-for="(item, index) in pointList" :key="index" style="margin-left: 0.5vw">
+        <el-col :span="24">
+
+          <el-form :inline="true" :model="item" class="demo-ruleForm" ref="formInline">
+            <el-form-item label="功能">
+              <el-input v-model="item.nickName" :disabled="true" style="width: 300px"></el-input>
+            </el-form-item>
+            <el-button type="primary" @click="openSettingDialog(index)">配置参数</el-button>
+          </el-form>
+        </el-col>
+      </el-row>
+      <el-form :inline="true" label-width="80px" style="text-align: center">
+        <el-form-item>
+          <el-button type="primary" @click="submitItem">下发</el-button>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="disItem">取消</el-button>
+        </el-form-item>
+      </el-form>
+    </el-dialog>
+
+
+    <!-- 功能参数配置 -->
+    <el-dialog :title="titleSet" :visible.sync="openSet" width="600px" append-to-body>
+      <!-- 循环遍历参数列表 -->
+      <el-row v-for="(item, index) in paramsSetList" :key="index" style="margin-left: 0.5vw">
+        <el-col :span="24" v-if="item.msg == null || item.msg == undefined">
+          <el-form :inline="true" :model="item" class="demo-ruleForm" ref="formInline">
+            <el-form-item label="参数">
+              <el-input v-model="item.name" :disabled="true" style="width: 200px"></el-input>
+            </el-form-item>
+            <!-- 有枚举参数则下拉框 -->
+            <el-form-item label="数值"
+                          v-if="item.enumDetail != null && item.enumDetail != undefined && item.enumDetail.length > 0">
+              <el-select v-model="item.sendValue" placeholder="请选枚举参数" style="width: 200px">
+                <el-option
+                  v-for="(valueItem,indexItem) in item.enumDetail"
+                  :key="'dataItem'+indexItem+valueItem.id"
+                  :label="valueItem.dataValue+':'+valueItem.info"
+                  :value="valueItem.dataValue">
+                </el-option>
+              </el-select>
+            </el-form-item>
+            <!-- 无枚举参数则输入框 -->
+            <el-form-item label="数值" v-else>
+              <el-input v-model="item.sendValue" style="width: 200px"></el-input>
+            </el-form-item>
+          </el-form>
+        </el-col>
+
+        <el-col :span="24" v-else>
+          <el-form :inline="true" :model="item" class="demo-ruleForm" ref="formInline">
+            <el-form-item label="指令">
+              <el-input v-model="item.msg" style="width: 500px"></el-input>
+            </el-form-item>
+          </el-form>
+        </el-col>
+      </el-row>
+
+      <el-form :inline="true" label-width="80px" style="text-align: center">
+        <el-form-item>
+          <el-button type="primary" @click="submitSet">确定</el-button>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="disSet">取消</el-button>
+        </el-form-item>
+      </el-form>
+    </el-dialog>
+  </div>
+
+</template>
+
+<script>
+  // import OnEvent from '../common/OnEvent'
+  import {debugPointListInfo} from '@/api/basicData/deviceManagement/deviceTree/deviceTreePoint'
+  import {mapState} from "vuex";
+  import eventBus from "@/utils/designer/eventBus";
+  import screenfull from "screenfull";
+  import {selectItemDataList} from "@/api/basicData/deviceDefinition/product/product";
+  import {delAgreement} from "@/api/basicData/deviceDefinition/agreement/agreement";
+  import {pointType} from "@/store/modules/pointType";
+
+  export default {
+    // extends: OnEvent,
+    props: {
+      propValue: {
+        type: String,
+        required: true,
+        default: '',
+      },
+      linkage: {
+        type: Object,
+        default: () => {
+        },
+      },
+      element: {
+        type: Object,
+        default: () => {
+        },
+      },
+      styles: {
+        type: Object,
+        default: () => {
+        },
+      }
+    },
+    computed: {
+      ...mapState([
+        'editMode',
+        'curComponent',
+        'isUnsubscribe'
+      ]),
+    },
+    data() {
+      return {
+        // 是否显示弹出层
+        open: false,
+        // 是否显示功能参数配置弹窗
+        openSet: false,
+        // 弹出层标题
+        title: "",
+        // 功能参数配置弹窗标题
+        titleSet: "",
+        pointList: [],//点位list
+        paramsSetList: [],//参数配置list
+        indexParamsSetList: [],//素有功能参数配置list
+        value: '',
+      }
+    },
+    created() {
+      if (this.editMode != 'edit') {
+
+        //清空所有功能参数
+        this.indexParamsSetList = []
+        let linkagePoint = this.element.linkage.data[0].point;
+        if (linkagePoint.length > 0) {
+          linkagePoint.forEach((value, index) => {
+            let param = {};
+            param.equipmentId = value.pId;
+            param.pointType = value.pointType;
+            param.nickName = value.nickName;
+            param.value = value.value;
+            param.valueList = [];
+            param.sysName = value.sysName;
+            param.workMode = 0;
+            if (value.pointType == pointType.BES_POINT_TYPE) {
+              param.id = value.id;
+            } else {
+              param.id = value.sysName;
+            }
+
+            if (value.id != '') {
+              //查询数据项及相应参数配置
+              const params = {
+                id: value.sysName,
+                equipmentId: value.pId
+              }
+              selectItemDataList(params).then(response => {
+                if (response.msg == '操作成功') {
+                  let add = {
+                    index: index,
+                    data: response.data
+                  }
+                  //添加功能参数信息
+                  this.indexParamsSetList.push(add)
+                } else {
+                  let add = {
+                    index: index,
+                    msg: response.msg,
+                    data: response.data
+                  }
+                  //添加功能参数信息
+                  this.indexParamsSetList.push(add)
+                }
+                //添加功能
+                this.pointList.push(param)
+              })
+            } else {
+              //添加功能
+              this.pointList.push(param)
+            }
+          })
+        }
+
+      }
+      if (this.linkage?.data?.length) {
+        eventBus.$on('v-click', this.onClick)
+        eventBus.$on('v-hover', this.onHover)
+      }
+    },
+    methods: {
+      //打开功能参数配置弹窗
+      openSettingDialog(index) {
+        this.paramsSetList = []
+        if (this.indexParamsSetList[index].msg == null || this.indexParamsSetList[index].msg == undefined) {
+          this.titleSet = '功能参数配置'
+          this.indexParamsSetList[index].data.forEach(item => {
+            this.paramsSetList.push(item)
+          })
+        }
+        if (this.indexParamsSetList[index].msg != null && this.indexParamsSetList[index].msg != undefined) {
+          this.titleSet = '功能指令配置'
+          this.paramsSetList.push(this.indexParamsSetList[index])
+        }
+
+        this.openSet = true
+      },
+      //提交功能参数配置弹窗
+      submitSet() {
+        this.openSet = false;
+      },
+      //关闭功能参数配置弹窗
+      disSet() {
+        //关闭弹窗
+        this.paramsSetList = []
+        this.openSet = false;
+      },
+      onClick(componentId) {
+        const data = this.linkage.data.filter(item => item.id === componentId && item.event === 'v-click')
+        this.changeStyle(data)
+        //传递父组件,打开相应弹窗
+        this.openInout(componentId, this.element)
+      },
+
+      onHover(componentId) {
+        const data = this.linkage.data.filter(item => item.id === componentId && item.event === 'v-hover')
+        this.changeStyle(data)
+      },
+
+      changeStyle(data = []) {
+        data.forEach(item => {
+          item.style.forEach(e => {
+            if (e.key) {
+              this.element.style[e.key] = e.value
+            }
+          })
+        })
+      },
+
+      openInout(componentId, data) {
+        if (data.id == componentId && data.component == "VButton") {
+          if (!screenfull.isFullscreen) {
+            this.title = '下发功能'
+            this.open = true
+          }
+        }
+      },
+
+      //下发
+      submitItem() {
+        //组装下发值
+        this.pointList.forEach((item, index) => {
+          item.valueList = []
+          let addArr = []
+          if (this.indexParamsSetList[index].msg != null || this.indexParamsSetList[index].msg != undefined) {
+            if(this.indexParamsSetList[index].msg.indexOf('YYMMDD') > -1){
+              //设置时间
+              //直接跳过
+              item.valueList = []
+            }else{
+              //指令下发
+              if (this.indexParamsSetList[index].data.length > 0) {
+                //根据指令获取值
+                let msg = null;
+                msg = this.indexParamsSetList[index].msg
+                //获取到指令数据
+                msg = msg.substring(13);
+                let dataArr = []
+                while (msg.length >= 4) {
+                  let add = null;
+                  add = msg.substring(0, 4);
+                  dataArr.push(add)
+                  msg = msg.substring(4);
+                }
+                //赋值
+                if (this.indexParamsSetList[index].data[0].paramsType == '1' || this.indexParamsSetList[index].data[0].paramsType == '2') {
+                  //1.高低位
+                  if (this.indexParamsSetList[index].data.length == 1) {
+                    //补位操作
+                    item.valueList.push({value: "0"})
+                  }
+                  this.indexParamsSetList[index].data.forEach((iteam, index1) => {
+                    let addMap = {
+                      //value: parseInt(dataArr[index1], 16),//下发值
+                      value: dataArr[index1],//下发值
+                    }
+                    //先高位参数后低位参数
+                    if (iteam.paramsType == '1') {
+                      item.valueList.unshift(addMap)
+                    } else {
+                      item.valueList.push(addMap)
+                    }
+                  })
+
+                } else {
+                  //2.结构体
+                  this.indexParamsSetList[index].data.forEach((iteam, index1) => {
+                    //往头部添加
+                    addArr.unshift(dataArr[index1]);
+                  })
+                  //获取到结构体下发值
+                  let sendValue = addArr.join('');
+                  let addMap = {
+                    //二进制转换成十进制
+                    value: parseInt(sendValue,10),//下发值
+                  }
+                  item.valueList.push(addMap)
+                }
+              } else {
+                this.$modal.msgError("功能指令未关联数据项");
+              }
+            }
+          } else {
+            //数据项下发
+            if (this.indexParamsSetList[index].data[0].paramsType != '4') {
+              //1.高低位
+              if (this.indexParamsSetList[index].data.length == 1) {
+                //补位操作
+                item.valueList.push({value: "0"})
+              }
+              this.indexParamsSetList[index].data.forEach((iteam, index) => {
+                let addMap = {
+                  // value: parseInt(iteam.sendValue, 16),//下发值
+                  value: iteam.sendValue,//下发值
+                }
+                //先高位参数后低位参数
+                if (iteam.paramsType == '1') {
+                  item.valueList.unshift(addMap)
+                } else {
+                  item.valueList.push(addMap)
+                }
+              })
+
+            } else {
+              //2.结构体
+              this.indexParamsSetList[index].data.forEach((iteam, index) => {
+                //往头部添加
+                addArr.unshift(iteam.sendValue)
+              })
+              //获取到结构体下发值
+              let sendValue = addArr.join('');
+              let addMap = {
+                //二进制转换成十进制
+                value: parseInt(sendValue,2),//下发值
+              }
+              item.valueList.push(addMap)
+            }
+          }
+        })
+        debugPointListInfo(JSON.stringify(this.pointList)).then(responent => {
+          this.open = false;
+          this.$modal.msgSuccess(responent.msg);
+        })
+      },
+      //取消
+      disItem() {
+        this.open = false
+      }
+    }
+  }
+</script>
+
+<style lang="scss" scoped>
+  .v-button {
+    display: inline-block;
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+    background: #fff;
+    border: 1px solid #dcdfe6;
+    color: #606266;
+    -webkit-appearance: none;
+    text-align: center;
+    box-sizing: border-box;
+    outline: 0;
+    margin: 0;
+    transition: .1s;
+    font-weight: 500;
+    width: 100%;
+    height: 100%;
+    font-size: 14px;
+
+    &:active {
+      color: #3a8ee6;
+      border-color: #3a8ee6;
+      outline: 0;
+    }
+
+    &:hover {
+      background-color: #ecf5ff;
+      color: #3a8ee6;
+    }
+  }
+</style>

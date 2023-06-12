@@ -1,0 +1,1469 @@
+  <template>
+    <el-col class="white-body-view">
+      <div>
+      <el-form :inline="true" ref="updateForm" :model="updateForm" :rules="rules" label-width="80px" >
+        <el-form-item label="系统名称" class="item_class">
+          <el-input v-model="updateForm.sysName" disabled></el-input>
+        </el-form-item>
+        <el-form-item label="电表别名"  prop="alias" class="item_class">
+          <el-input v-model="updateForm.alias" :maxlength="24" show-word-limit type="text"></el-input>
+        </el-form-item>
+
+        <el-form-item label="使能状态" prop="active" class="item_class">
+          <el-radio-group v-model="updateForm.active" style="width: 200px">
+            <el-radio
+              v-for="dict in dict.type.athena_active"
+              :key="dict.value"
+              :label="parseInt(dict.value)"
+            >{{dict.label}}</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="安装位置"  prop="location" class="item_class">
+          <el-input v-model="updateForm.location" :maxlength="24" show-word-limit type="text"></el-input>
+        </el-form-item>
+        <el-form-item label="物理地址"  prop="physicalAddress" class="item_class">
+          <el-input v-model="updateForm.physicalAddress" show-word-limit type="text"
+                    @input="updatePhysicalAddress(updateForm.physicalAddress,'update')" ></el-input>
+        </el-form-item>
+        <el-form-item label="电表类型"  prop="meterTypeCode" class="item_class">
+          <el-select v-model="updateForm.meterTypeCode" style="width: 200px">
+            <el-option
+              v-for="dict in dict.type.sys_meter_type"
+              :key="dict.value"
+              :label="dict.label"
+              :value="dict.value"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="通信协议"  prop="protocolTypeId" class="item_class">
+          <el-select v-model="updateForm.protocolTypeId" style="width: 200px">
+            <el-option
+              v-for="dict in dict.type.communication_protocol"
+              :key="dict.value"
+              :label="dict.label"
+              :value="parseInt(dict.value)"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="采集方案" prop="collectionMethodCode" class="item_class">
+          <el-select v-model="updateForm.collectionMethodCode"  style="width: 200px">
+            <el-option
+              v-for="item in collectionMethodList"
+              :key="item.id"
+              :label="item.name"
+              :value="item.id">
+            </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="功能码"  prop="functionCodeId" class="item_class">
+          <el-select v-model="updateForm.functionCodeId" style="width: 200px">
+            <el-option
+              v-for="dict in dict.type.meter_function_code"
+              :key="dict.value"
+              :label="dict.label"
+              :value="parseInt(dict.value)"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="波特率"  prop="commRate" class="item_class">
+          <el-select v-model="updateForm.commRate" style="width: 200px">
+            <el-option
+              v-for="dict in dict.type.communication_baud_rate"
+              :key="dict.value"
+              :label="dict.label"
+              :value="parseInt(dict.value)"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="数据位"  prop="commDataBit" class="item_class">
+          <el-select v-model="updateForm.commDataBit" style="width: 200px">
+            <el-option
+              v-for="dict in dict.type.meter_comm_data_bit"
+              :key="dict.value"
+              :label="dict.label"
+              :value="parseInt(dict.value)"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="检验位"  prop="commParityBit" class="item_class">
+          <el-select v-model="updateForm.commParityBit" style="width: 200px">
+            <el-option
+              v-for="dict in dict.type.meter_comm_parity_bit"
+              :key="dict.value"
+              :label="dict.label"
+              :value="parseInt(dict.value)"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="停止位"  prop="commStopBit" class="item_class">
+          <el-select v-model="updateForm.commStopBit" style="width: 200px">
+            <el-option
+              v-for="dict in dict.type.meter_comm_stop_bit"
+              :key="dict.value"
+              :label="dict.label"
+              :value="parseInt(dict.value)"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="静电电表" prop="isStatic" class="item_class">
+          <el-radio-group v-model="updateForm.isStatic"  style="width: 200px">
+            <el-radio
+              v-for="item in isStaticList"
+              :key="item.value"
+              :label="item.value"
+            >{{item.label}}
+            </el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="通信端口"  prop="commPort" class="item_class">
+          <el-input v-model="updateForm.commPort" disabled></el-input>
+        </el-form-item>
+        <el-form-item label="比率"  prop="rate" class="item_class">
+          <el-input v-model="updateForm.rate"  type="number"></el-input>
+        </el-form-item>
+        <el-form-item label="描述"  prop="description" class="item_class">
+          <el-input v-model="updateForm.description" :maxlength="24" show-word-limit type="text"></el-input>
+        </el-form-item>
+        <el-form-item label="同步状态" prop="synchState" class="item_class">
+          <!--<el-radio-group v-model="updateForm.synchState" disabled style="width: 200px">
+            <el-radio
+              v-for="item in synchStateList"
+              :key="item.value"
+              :label="item.value"
+            >{{item.label}}
+            </el-radio>
+          </el-radio-group>-->
+          <el-switch disabled v-model="updateForm.synchState" :active-value="1" :inactive-value="0"
+                     active-color="#13ce66" inactive-color="#ff4949">
+          </el-switch>
+        </el-form-item>
+      </el-form>
+      <div style="text-align: center">
+        <el-button
+          v-hasPermi="['deviceTree:meter:sync']"
+          type="primary" @click="syncMeter">同步数据</el-button>
+        <el-button
+          v-hasPermi="['deviceTree:meter:contrast']"
+          type="primary" @click="getMeterInfoParam">数据对比</el-button>
+        <el-button
+          v-hasPermi="['deviceTree:meter:getMeterRealTimeData']"
+          type="primary" @click="getMeterRealTimeData">获取能耗数据</el-button>
+        <el-button
+          v-hasPermi="['deviceTree:meter:getMeterHistoryData']"
+          type="primary" @click="meterHistoryData">获取历史能耗数据</el-button>
+        <el-button
+          v-hasPermi="['deviceTree:meter:edit']"
+          type="primary" @click="submitForm('updateForm')" :disabled="saveBoolean">保存</el-button>
+        <!--<el-button type="primary" @click="testData" >测试</el-button>-->
+      </div>
+    </div>
+      <!-- 新增电表 -->
+      <el-drawer
+        size='35%'
+        title="新增电表"
+        :visible.sync="visible"
+        :before-close="handleClose"
+        direction="rtl"
+      >
+        <div style="margin-left: 15px; margin-right: 15px">
+          <div style="margin-bottom: 15px;">
+            <!-- 选择下拉框和搜索 -->
+            <el-row :span="10" :xs="24">
+              <el-col>
+                <el-form :inline="true" ref="addForm" :model="form" :rules="rules"  label-width="90px" >
+                  <el-form-item label="系统名称"  prop="sysName">
+                    <el-input v-model="form.sysName" :maxlength="24" show-word-limit type="text"></el-input>
+                  </el-form-item>
+                  <el-form-item label="电表别名"  prop="alias">
+                    <el-input v-model="form.alias" :maxlength="24" show-word-limit type="text"></el-input>
+                  </el-form-item>
+
+                  <el-form-item label="使能状态" prop="active">
+                    <!--<el-input v-model="form.port"></el-input>-->
+                    <el-radio-group v-model="form.active" style="width: 200px">
+                      <el-radio
+                        v-for="dict in dict.type.athena_active"
+                        :key="dict.value"
+                        :label="parseInt(dict.value)"
+                      >{{dict.label}}</el-radio>
+                    </el-radio-group>
+                  </el-form-item>
+                  <el-form-item label="安装位置"  prop="location">
+                    <el-input v-model="form.location" :maxlength="24" show-word-limit type="text"></el-input>
+                  </el-form-item>
+                  <el-form-item label="物理地址"  prop="physicalAddress">
+                    <el-input v-model="form.physicalAddress" show-word-limit type="text"
+                              @input="updatePhysicalAddress(form.physicalAddress,'add')"></el-input>
+                  </el-form-item>
+                  <el-form-item label="电表类型"  prop="meterTypeCode">
+                    <el-select v-model="form.meterTypeCode" style="width: 200px">
+                      <el-option
+                        v-for="dict in dict.type.sys_meter_type"
+                        :key="dict.value"
+                        :label="dict.label"
+                        :value="dict.value"
+                      />
+                    </el-select>
+                  </el-form-item>
+                  <el-form-item label="通信协议"  prop="protocolTypeId">
+                    <el-select v-model="form.protocolTypeId" style="width: 200px">
+                      <el-option
+                        v-for="dict in dict.type.communication_protocol"
+                        :key="dict.value"
+                        :label="dict.label"
+                        :value="parseInt(dict.value)"
+                      />
+                    </el-select>
+                  </el-form-item>
+                  <el-form-item label="采集方案" prop="collectionMethodCode">
+                    <el-select v-model="form.collectionMethodCode"  style="width: 200px">
+                      <el-option
+                        v-for="item in collectionMethodList"
+                        :key="item.id"
+                        :label="item.name"
+                        :value="item.id">
+                      </el-option>
+                    </el-select>
+                  </el-form-item>
+                  <el-form-item label="功能码"  prop="functionCodeId">
+                    <el-select v-model="form.functionCodeId" style="width: 200px">
+                      <el-option
+                        v-for="dict in dict.type.meter_function_code"
+                        :key="dict.value"
+                        :label="dict.label"
+                        :value="parseInt(dict.value)"
+                      />
+                    </el-select>
+                  </el-form-item>
+                  <el-form-item label="波特率"  prop="commRate">
+                    <el-select v-model="form.commRate" style="width: 200px">
+                      <el-option
+                        v-for="dict in dict.type.communication_baud_rate"
+                        :key="dict.value"
+                        :label="dict.label"
+                        :value="parseInt(dict.value)"
+                      />
+                    </el-select>
+                  </el-form-item>
+                  <el-form-item label="数据位"  prop="commDataBit">
+                    <el-select v-model="form.commDataBit" style="width: 200px">
+                      <el-option
+                        v-for="dict in dict.type.meter_comm_data_bit"
+                        :key="dict.value"
+                        :label="dict.label"
+                        :value="parseInt(dict.value)"
+                      />
+                    </el-select>
+                  </el-form-item>
+                  <el-form-item label="检验位"  prop="commParityBit">
+                    <el-select v-model="form.commParityBit" style="width: 200px">
+                      <el-option
+                        v-for="dict in dict.type.meter_comm_parity_bit"
+                        :key="dict.value"
+                        :label="dict.label"
+                        :value="parseInt(dict.value)"
+                      />
+                    </el-select>
+                  </el-form-item>
+                  <el-form-item label="停止位"  prop="commStopBit">
+                    <el-select v-model="form.commStopBit" style="width: 200px">
+                      <el-option
+                        v-for="dict in dict.type.meter_comm_stop_bit"
+                        :key="dict.value"
+                        :label="dict.label"
+                        :value="parseInt(dict.value)"
+                      />
+                    </el-select>
+                  </el-form-item>
+                  <el-form-item label="静电电表" prop="isStatic">
+                    <el-radio-group v-model="form.isStatic"  style="width: 200px">
+                      <el-radio
+                        v-for="item in isStaticList"
+                        :key="item.value"
+                        :label="item.value"
+                        >{{item.label}}
+                      </el-radio>
+                    </el-radio-group>
+                  </el-form-item>
+                  <el-form-item label="通信端口"  prop="commPort">
+                    <el-input v-model="form.commPort" disabled></el-input>
+                  </el-form-item>
+                  <el-form-item label="比率"  prop="rate">
+                    <el-input v-model="form.rate" type="number"></el-input>
+                  </el-form-item>
+                  <el-form-item label="描述"  prop="description">
+                    <el-input v-model="form.description" :maxlength="24" show-word-limit type="text"></el-input>
+                  </el-form-item>
+                  <el-form-item label="同步状态" prop="synchState">
+                    <!--<el-radio-group v-model="form.synchState" disabled style="width: 200px">
+                      <el-radio
+                        v-for="item in synchStateList"
+                        :key="item.value"
+                        :label="item.value"
+                        >{{item.label}}
+                      </el-radio>
+                    </el-radio-group>-->
+                    <el-switch disabled v-model="form.synchState" :active-value="1" :inactive-value="0"
+                               active-color="#13ce66" inactive-color="#ff4949">
+                    </el-switch>
+                  </el-form-item>
+                </el-form>
+                <el-form  :inline="true" label-width="80px" style="text-align: center">
+                  <el-form-item>
+                    <el-button
+                      v-hasPermi="['deviceTree:meter:add']"
+                      type="primary" @click="submitForm('addForm')">新增</el-button>
+                  </el-form-item>
+                </el-form>
+              </el-col>
+            </el-row>
+          </div>
+        </div>
+      </el-drawer>
+
+      <!--数据对比-->
+      <el-dialog title="数据对比" :visible.sync="parmasVisible" width="800px" append-to-body>
+        <el-row>
+          <el-col :span="11" style="background-color: #ebf6fb;text-align: center">
+            <el-button style="margin-bottom: 15px;margin-top: 10px">上位机数据</el-button>
+            <el-form :inline="true" :model="upperFormData" label-width="90px">
+              <el-form-item label="电表ID"  prop="meterId">
+                <el-input v-model="upperFormData.meterId" readonly></el-input>
+              </el-form-item>
+              <el-form-item label="电表别名"  prop="alias">
+                <el-input v-model="upperFormData.alias" readonly></el-input>
+              </el-form-item>
+
+              <el-form-item label="使能状态" prop="active">
+                <el-input v-model="upperFormData.active"readonly></el-input>
+              </el-form-item>
+              <el-form-item label="安装位置"  prop="location" >
+                <el-input v-model="upperFormData.location" readonly></el-input>
+              </el-form-item>
+              <el-form-item label="物理地址"  prop="physicalAddress" >
+                <el-input v-model="upperFormData.physicalAddress" readonly></el-input>
+              </el-form-item>
+              <el-form-item label="电表类型"  prop="meterTypeCode" >
+                <el-input v-model="upperFormData.meterTypeCode" readonly></el-input>
+              </el-form-item>
+              <el-form-item label="通信协议"  prop="protocolTypeId" >
+                <el-input v-model="upperFormData.protocolTypeId" readonly></el-input>
+              </el-form-item>
+              <el-form-item label="采集方案" prop="collectionMethodCode">
+                <el-input v-model="upperFormData.collectionMethodCode" readonly></el-input>
+              </el-form-item>
+              <el-form-item label="功能码"  prop="functionCodeId">
+                <el-input v-model="upperFormData.functionCodeId" readonly></el-input>
+              </el-form-item>
+              <el-form-item label="波特率"  prop="commRate">
+                <el-input v-model="upperFormData.commRate" readonly></el-input>
+              </el-form-item>
+              <el-form-item label="数据位"  prop="commDataBit">
+                <el-input v-model="upperFormData.commDataBit" readonly></el-input>
+              </el-form-item>
+              <el-form-item label="检验位"  prop="commParityBit">
+                <el-input v-model="upperFormData.commParityBit" readonly></el-input>
+              </el-form-item>
+              <el-form-item label="停止位"  prop="commStopBit">
+                <el-input v-model="upperFormData.commStopBit" readonly></el-input>
+              </el-form-item>
+              <el-form-item label="通信端口"  prop="commPort">
+                <el-input v-model="upperFormData.commPort" readonly></el-input>
+              </el-form-item>
+              <el-form-item label="描述"  prop="description">
+                <el-input v-model="upperFormData.description" readonly></el-input>
+              </el-form-item>
+            </el-form>
+          </el-col>
+          <el-col :span="2" style="height: 1px"></el-col>
+          <el-col :span="11" style="background-color: #ebf6fb;text-align: center">
+            <el-button style="margin-bottom: 15px;margin-top: 10px">下位机数据</el-button>
+            <el-form :inline="true" :model="underFormData" label-width="90px">
+              <el-form-item label="电表ID"  prop="meterId">
+                <el-input v-model="underFormData.meterId" readonly class="error_input" v-if="underFormData.meterId != upperFormData.meterId"></el-input>
+                <el-input v-model="underFormData.meterId" readonly v-else></el-input>
+              </el-form-item>
+              <el-form-item label="电表别名"  prop="alias">
+                <el-input v-model="underFormData.alias" readonly  class="error_input" v-if="underFormData.alias != upperFormData.alias"></el-input>
+                <el-input v-model="underFormData.alias" readonly v-else></el-input>
+              </el-form-item>
+              <el-form-item label="使能状态" prop="active">
+                <el-input v-model="underFormData.active" readonly class="error_input" v-if="underFormData.active != upperFormData.active"></el-input>
+                <el-input v-model="underFormData.active" readonly v-else></el-input>
+              </el-form-item>
+              <el-form-item label="安装位置"  prop="location" >
+                <el-input v-model="underFormData.location" readonly class="error_input" v-if="underFormData.location != upperFormData.location"></el-input>
+                <el-input v-model="underFormData.location" readonly v-else></el-input>
+              </el-form-item>
+              <el-form-item label="物理地址"  prop="physicalAddress" >
+                <el-input v-model="underFormData.physicalAddress" readonly class="error_input" v-if="underFormData.physicalAddress != upperFormData.physicalAddress"></el-input>
+                <el-input v-model="underFormData.physicalAddress" readonly v-else></el-input>
+              </el-form-item>
+              <el-form-item label="电表类型"  prop="meterTypeCode" >
+                <el-input v-model="underFormData.meterTypeCode" readonly class="error_input" v-if="underFormData.meterTypeCode != upperFormData.meterTypeCode"></el-input>
+                <el-input v-model="underFormData.meterTypeCode" readonly v-else></el-input>
+              </el-form-item>
+              <el-form-item label="通信协议"  prop="protocolTypeId" >
+                <el-input v-model="underFormData.protocolTypeId" readonly class="error_input" v-if="underFormData.protocolTypeId != upperFormData.protocolTypeId"></el-input>
+                <el-input v-model="underFormData.protocolTypeId" readonly v-else></el-input>
+              </el-form-item>
+              <el-form-item label="采集方案" prop="collectionMethodCode">
+                <el-input v-model="underFormData.collectionMethodCode" readonly class="error_input" v-if="underFormData.collectionMethodCode != upperFormData.collectionMethodCode"></el-input>
+                <el-input v-model="underFormData.collectionMethodCode" readonly v-else></el-input>
+              </el-form-item>
+              <el-form-item label="功能码"  prop="functionCodeId">
+                <el-input v-model="underFormData.functionCodeId" readonly class="error_input" v-if="underFormData.functionCodeId != upperFormData.functionCodeId"></el-input>
+                <el-input v-model="underFormData.functionCodeId" readonly v-else></el-input>
+              </el-form-item>
+              <el-form-item label="波特率"  prop="commRate">
+                <el-input v-model="underFormData.commRate" readonly class="error_input" v-if="underFormData.commRate != upperFormData.commRate"></el-input>
+                <el-input v-model="underFormData.commRate" readonly v-else></el-input>
+              </el-form-item>
+              <el-form-item label="数据位"  prop="commDataBit">
+                <el-input v-model="underFormData.commDataBit" readonly class="error_input" v-if="underFormData.commDataBit != upperFormData.commDataBit"></el-input>
+                <el-input v-model="underFormData.commDataBit" readonly v-else></el-input>
+              </el-form-item>
+              <el-form-item label="检验位"  prop="commParityBit">
+                <el-input v-model="underFormData.commParityBit" readonly class="error_input" v-if="underFormData.commParityBit != upperFormData.commParityBit"></el-input>
+                <el-input v-model="underFormData.commParityBit" readonly v-else></el-input>
+              </el-form-item>
+              <el-form-item label="停止位"  prop="commStopBit">
+                <el-input v-model="underFormData.commStopBit" readonly class="error_input" v-if="underFormData.commStopBit != upperFormData.commStopBit"></el-input>
+                <el-input v-model="underFormData.commStopBit" readonly v-else></el-input>
+              </el-form-item>
+              <el-form-item label="通信端口"  prop="commPort">
+                <el-input v-model="underFormData.commPort" readonly class="error_input" v-if="underFormData.commPort != upperFormData.commPort"></el-input>
+                <el-input v-model="underFormData.commPort" readonly v-else></el-input>
+              </el-form-item>
+              <el-form-item label="描述"  prop="description">
+                <el-input v-model="underFormData.description" readonly class="error_input" v-if="underFormData.description != upperFormData.description"></el-input>
+                <el-input v-model="underFormData.description" readonly v-else></el-input>
+              </el-form-item>
+            </el-form>
+          </el-col>
+          <el-button type="primary" @click="getElectricParams">电能参数</el-button>
+        </el-row>
+      </el-dialog>
+
+      <!--电能参数-->
+      <el-dialog title="电能参数" :visible.sync="electricParamsVisible" width="1650px" append-to-body>
+        <el-row>
+          <el-col :span="11" style="text-align: center">
+            <el-button style="margin-bottom: 15px;margin-top: 10px">上位机数据</el-button>
+            <el-table :data="upperElectricParams">
+              <el-table-column label="能耗ID" align="center" prop="code" />
+              <el-table-column label="能耗名称" align="center" prop="name" />
+              <el-table-column label="偏移地址" align="center" prop="offsetAddress" />
+              <el-table-column label="数据长度" align="center" prop="dataLength" />
+              <el-table-column label="编码规则" align="center" prop="dataEncodeType" >
+                <template slot-scope="scope">
+                  <span v-if="scope.row.dataEncodeType == 0">bcd编码</span>
+                  <span v-if="scope.row.dataEncodeType == 1">dec编码</span>
+                  <span v-if="scope.row.dataEncodeType == 2">其他</span>
+                </template>
+              </el-table-column>
+              <el-table-column label="单位" align="center" prop="unit" />
+              <el-table-column label="小数点位置" align="center" prop="pointLocation" />
+              <el-table-column label="数据类型" align="center" prop="dataType" >
+                <template slot-scope="scope">
+                  <span v-if="scope.row.dataType == 0">int</span>
+                  <span v-if="scope.row.dataType == 1">float</span>
+                  <span v-if="scope.row.dataType == 2">double</span>
+                </template>
+              </el-table-column>
+              <el-table-column label="解码顺序" align="center" prop="codeSeq" >
+                <template slot-scope="scope">
+                  <span v-if="scope.row.codeSeq == 0">12</span>
+                  <span v-if="scope.row.codeSeq == 1">21</span>
+                  <span v-if="scope.row.codeSeq == 2">1234</span>
+                  <span v-if="scope.row.codeSeq == 3">4321</span>
+                  <span v-if="scope.row.codeSeq == 4">2143</span>
+                  <span v-if="scope.row.codeSeq == 5">3412</span>
+                  <span v-if="scope.row.codeSeq == 6">123456</span>
+                  <span v-if="scope.row.codeSeq == 7">12345678</span>
+                </template>
+              </el-table-column>
+            </el-table>
+          </el-col>
+          <el-col :span="2" style=" height: 1px"></el-col>
+          <el-col :span="11" style="text-align: center">
+            <el-button style="margin-bottom: 15px;margin-top: 10px">下位机数据</el-button>
+            <el-table :data="underElectricParams">
+              <el-table-column label="能耗ID" align="center" prop="electricID" />
+              <el-table-column label="能耗名称" align="center" prop="electricName" />
+              <el-table-column label="偏移地址" align="center" prop="offsetAddr" />
+              <el-table-column label="数据长度" align="center" prop="dataLength" />
+              <el-table-column label="编码规则" align="center" prop="dataEncodeType" >
+                <template slot-scope="scope">
+                  <span v-if="scope.row.dataEncodeType == 0">bcd编码</span>
+                  <span v-if="scope.row.dataEncodeType == 1">dec编码</span>
+                  <span v-if="scope.row.dataEncodeType == 2">其他</span>
+                </template>
+              </el-table-column>
+              <el-table-column label="单位" align="center" prop="unitType" />
+              <el-table-column label="小数点位置" align="center" prop="pointLocation" />
+              <el-table-column label="数据类型" align="center" prop="dataType" >
+                <template slot-scope="scope">
+                  <span v-if="scope.row.dataType == 0">int</span>
+                  <span v-if="scope.row.dataType == 1">float</span>
+                  <span v-if="scope.row.dataType == 2">double</span>
+                </template>
+              </el-table-column>
+              <el-table-column label="解码顺序" align="center" prop="codeSeq" >
+                <template slot-scope="scope">
+                  <span v-if="scope.row.codeSeq == 0">12</span>
+                  <span v-if="scope.row.codeSeq == 1">21</span>
+                  <span v-if="scope.row.codeSeq == 2">1234</span>
+                  <span v-if="scope.row.codeSeq == 3">4321</span>
+                  <span v-if="scope.row.codeSeq == 4">2143</span>
+                  <span v-if="scope.row.codeSeq == 5">3412</span>
+                  <span v-if="scope.row.codeSeq == 6">123456</span>
+                  <span v-if="scope.row.codeSeq == 7">12345678</span>
+                </template>
+              </el-table-column>
+            </el-table>
+
+          </el-col>
+        </el-row>
+      </el-dialog>
+
+      <!--能耗数据-->
+      <el-dialog title="能耗数据" :visible.sync="realTimeDataVisible" width="1000px" append-to-body>
+        <el-row>
+          <el-col :span="6">
+            电表名称:{{treeNodeMsg.sysName}}
+          </el-col>
+          <el-col :span="6">
+            电表别名:{{treeNodeMsg.alias}}
+          </el-col>
+          <el-col :span="6">
+            电能参数个数:{{collectCount}}
+          </el-col>
+          <el-col :span="6">
+            采集时间:{{dataTime}}
+          </el-col>
+          <el-col :span="24" style="margin-top: 10px">
+            <el-table :data="realTimeData">
+              <el-table-column label="能耗ID" align="center" prop="code" />
+              <el-table-column label="能耗名称" align="center" prop="name" />
+              <el-table-column label="偏移地址" align="center" prop="offsetAddress" />
+              <el-table-column label="数据长度" align="center" prop="dataLength" />
+              <el-table-column label="编码规则" align="center" prop="dataEncodeType" >
+                <template slot-scope="scope">
+                  <span v-if="scope.row.dataEncodeType == 0">bcd编码</span>
+                  <span v-if="scope.row.dataEncodeType == 1">dec编码</span>
+                  <span v-if="scope.row.dataEncodeType == 2">其他</span>
+                </template>
+              </el-table-column>
+              <el-table-column label="单位" align="center" prop="unit" />
+              <el-table-column label="小数点位置" align="center" prop="pointLocation" />
+              <el-table-column label="数据类型" align="center" prop="dataType" >
+                <template slot-scope="scope">
+                  <span v-if="scope.row.dataType == 0">int</span>
+                  <span v-if="scope.row.dataType == 1">float</span>
+                  <span v-if="scope.row.dataType == 2">double</span>
+                </template>
+              </el-table-column>
+              <el-table-column label="解码顺序" align="center" prop="codeSeq" >
+                <template slot-scope="scope">
+                  <span v-if="scope.row.codeSeq == 0">12</span>
+                  <span v-if="scope.row.codeSeq == 1">21</span>
+                  <span v-if="scope.row.codeSeq == 2">1234</span>
+                  <span v-if="scope.row.codeSeq == 3">4321</span>
+                  <span v-if="scope.row.codeSeq == 4">2143</span>
+                  <span v-if="scope.row.codeSeq == 5">3412</span>
+                  <span v-if="scope.row.codeSeq == 6">123456</span>
+                  <span v-if="scope.row.codeSeq == 7">12345678</span>
+                </template>
+              </el-table-column>
+              <el-table-column label="数据值" align="center" prop="rawdata" />
+            </el-table>
+
+          </el-col>
+        </el-row>
+      </el-dialog>
+
+      <!--历史能耗数据-->
+      <el-dialog title="能耗数据" :visible.sync="historyDataVisible" width="1400px" append-to-body>
+        <el-row style="display: flex;align-items: center;flex-wrap: wrap;">
+          <el-col :span="6">
+            电表名称:{{treeNodeMsg.sysName}}
+          </el-col>
+          <el-col :span="6">
+            电表别名:{{treeNodeMsg.alias}}
+          </el-col>
+          <el-col :span="6">
+            小时个数:{{hisDataHourCount}}
+          </el-col>
+          <el-col :span="6">
+            请选择:
+            <el-select v-model="selectDay" placeholder="请选择" @change="getMeterHistoryData" size="small" style="width: 100px">
+              <el-option
+                v-for="item in selectDayList"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value">
+              </el-option>
+            </el-select>
+          </el-col>
+          <el-col :span="24" style="margin-top: 10px">
+            <el-table :data="historyData">
+              <el-table-column label="能耗ID" align="center" prop="code" />
+              <el-table-column label="能耗名称" align="center" prop="name" />
+              <el-table-column label="偏移地址" align="center" prop="offsetAddress" />
+              <el-table-column label="数据长度" align="center" prop="dataLength" />
+              <el-table-column label="编码规则" align="center" prop="dataEncodeType" >
+                <template slot-scope="scope">
+                  <span v-if="scope.row.dataEncodeType == 0">bcd编码</span>
+                  <span v-if="scope.row.dataEncodeType == 1">dec编码</span>
+                  <span v-if="scope.row.dataEncodeType == 2">其他</span>
+                </template>
+              </el-table-column>
+              <el-table-column label="单位" align="center" prop="unit" />
+              <el-table-column label="小数点位置" align="center" prop="pointLocation" />
+              <el-table-column label="数据类型" align="center" prop="dataType" >
+                <template slot-scope="scope">
+                  <span v-if="scope.row.dataType == 0">int</span>
+                  <span v-if="scope.row.dataType == 1">float</span>
+                  <span v-if="scope.row.dataType == 2">double</span>
+                </template>
+              </el-table-column>
+              <el-table-column label="解码顺序" align="center" prop="codeSeq" >
+                <template slot-scope="scope">
+                  <span v-if="scope.row.codeSeq == 0">12</span>
+                  <span v-if="scope.row.codeSeq == 1">21</span>
+                  <span v-if="scope.row.codeSeq == 2">1234</span>
+                  <span v-if="scope.row.codeSeq == 3">4321</span>
+                  <span v-if="scope.row.codeSeq == 4">2143</span>
+                  <span v-if="scope.row.codeSeq == 5">3412</span>
+                  <span v-if="scope.row.codeSeq == 6">123456</span>
+                  <span v-if="scope.row.codeSeq == 7">12345678</span>
+                </template>
+              </el-table-column>
+              <el-table-column label="数据值" align="center" prop="rawdata" />
+              <el-table-column label="采集时间" align="center" prop="time" width="150" />
+            </el-table>
+
+          </el-col>
+        </el-row>
+      </el-dialog>
+    </el-col>
+  </template>
+
+  <script>
+    import {addMeter,updateMeter,getCollectionMethodList,syncMeter,getMeterInfoParam,getElectricParams,getMeterRealTimeData,getMeterHistoryData,testData} from '@/api/basicData/deviceManagement/deviceTree/deviceTree'
+    import { mapState } from 'vuex'
+    export default {
+      dicts: ['athena_active','sys_meter_type','communication_protocol','meter_function_code','communication_baud_rate',
+      'meter_comm_data_bit','meter_comm_parity_bit','meter_comm_stop_bit'],
+      components: {},
+      props: {
+        treeNodeMsg: {
+          type:Object,
+          default: {
+            meterId:'',//电表id
+            deviceTreeId:'', //设备树id
+            sysName:'', //系统名称
+            alias:'',//电表别名
+            active:1,//使能状态0：不使能 1：使能
+            location:'',//安装位置
+            physicalAddress:'',//物理地址
+            meterTypeCode:'', //所属电表类
+            protocolTypeId:'',//所属通讯协议
+            collectionMethodCode:'',//所属采集方案
+            functionCodeId:'', //所属功能码
+            commRate:'', //通信波特率 0：1200 1：2400 2：4800 3：9600 4：19200 5：38400 6：57600 7：115200
+            commDataBit:'', //通讯数据位 0：Data5 1：Data6  2：Data7
+            commParityBit:'',//通讯校验位 0：无校验1：偶校验2：奇校验 3：空格校验4：mark校验
+            commStopBit:'',//通讯停止位 0：1 bit  1：1.5 bit  2：2 bit
+            isStatic:'',//是否静态电表 0：否1：是
+            commPort:'',//通讯端口
+            rate:'',//比率
+            synchState:1,//同步状态 0：未同步1：已同步
+            errorState:0,//异常状态 0：正常 1：异常
+            onlineState:0,//在线状态 0：不在线1：在线
+            description:'',//描述
+            deviceType:'3',//设备类型 1:楼控 2:照明  3:采集器
+            deviceNodeId:'5',//所属节点类
+          }
+        },
+      },
+
+      data () {
+        //不允许输入,/!特殊符号
+        var checkText = (rule, value, callback) => {
+          if (!value) {
+            return callback()
+          }
+          if (value) {
+            var reg = /[,/!]/;
+            if (reg.test(value)) {
+              callback(new Error('不允许输入,/!特殊符号'))
+            } else {
+              callback()
+            }
+          }
+        }
+        return {
+          //数值未修改 保存按钮禁用
+          saveBoolean: true,
+          //是否监听
+          watchBoolean: false,
+
+          //新增电表弹窗
+          visible: false,
+
+          //数据对比弹窗
+          parmasVisible:false,
+          //下位机数据
+          underFormData: {
+            meterId:'',//电表id
+            deviceTreeId:'', //设备树id
+            sysName:'', //系统名称
+            alias:'',//电表别名
+            active:'',//使能状态0：不使能 1：使能
+            location:'',//安装位置
+            physicalAddress:'',//物理地址
+            meterTypeCode:'', //所属电表类
+            protocolTypeId:'',//所属通讯协议
+            collectionMethodCode:'',//所属采集方案
+            functionCodeId:'', //所属功能码
+            commRate:'', //通信波特率 0：1200 1：2400 2：4800 3：9600 4：19200 5：38400 6：57600 7：115200
+            commDataBit:'', //通讯数据位 0：Data5 1：Data6  2：Data7
+            commParityBit:'',//通讯校验位 0：无校验1：偶校验2：奇校验 3：空格校验4：mark校验
+            commStopBit:'',//通讯停止位 0：1 bit  1：1.5 bit  2：2 bit
+            commPort:'',//通讯端口
+            rate:'',//比率
+            description:'',//描述
+          },
+          //上位机数据
+          upperFormData: {
+            meterId:'',//电表id
+            deviceTreeId:'', //设备树id
+            sysName:'', //系统名称
+            alias:'',//电表别名
+            active:1,//使能状态0：不使能 1：使能
+            location:'',//安装位置
+            physicalAddress:'',//物理地址
+            meterTypeCode:'', //所属电表类
+            protocolTypeId:'',//所属通讯协议
+            collectionMethodCode:'',//所属采集方案
+            functionCodeId:'', //所属功能码
+            commRate:'', //通信波特率 0：1200 1：2400 2：4800 3：9600 4：19200 5：38400 6：57600 7：115200
+            commDataBit:'', //通讯数据位 0：Data5 1：Data6  2：Data7
+            commParityBit:'',//通讯校验位 0：无校验1：偶校验2：奇校验 3：空格校验4：mark校验
+            commStopBit:'',//通讯停止位 0：1 bit  1：1.5 bit  2：2 bit
+            commPort:'',//通讯端口
+            description:'',//描述
+          },
+
+          //电能参数弹窗
+          electricParamsVisible:false,
+          //上位机电能参数
+          upperElectricParams:[],
+          //下位机电能参数
+          underElectricParams:[],
+
+          //实时数据
+          realTimeDataVisible:false,
+          //电能参数个数
+          collectCount:0,
+          //采集时间
+          dataTime:'',
+          //能耗数据
+          realTimeData:[],
+
+          //历史能耗数据
+          historyDataVisible:false,
+          //小时个数
+          hisDataHourCount:'',
+          //选中的日期
+          selectDay:'',
+          //日期列表
+          selectDayList:[],
+          //历史能耗数据列表
+          historyData:[],
+
+          //新增/修改表单
+          updateForm:this.treeNodeMsg,
+          form:{
+            meterId:'',//电表id
+            deviceTreeId:'', //设备树id
+            sysName:'', //系统名称
+            alias:'',//电表别名
+            active:1,//使能状态0：不使能 1：使能
+            location:'',//安装位置
+            physicalAddress:'',//物理地址
+            meterTypeCode:'0', //所属电表类
+            protocolTypeId:0,//所属通讯协议
+            collectionMethodCode:'',//所属采集方案
+            functionCodeId:1, //所属功能码
+            commRate:0, //通信波特率 0：1200 1：2400 2：4800 3：9600 4：19200 5：38400 6：57600 7：115200
+            commDataBit:3, //通讯数据位 0：Data5 1：Data6  2：Data7
+            commParityBit:0,//通讯校验位 0：无校验1：偶校验2：奇校验 3：空格校验4：mark校验
+            commStopBit:0,//通讯停止位 0：1 bit  1：1.5 bit  2：2 bit
+            isStatic:1,//是否静态电表 0：否1：是
+            commPort:'0',//通讯端口
+            rate:'',//比率
+            synchState:0,//同步状态 0：未同步1：已同步
+            errorState:0,//异常状态 0：正常 1：异常
+            onlineState:0,//在线状态 0：不在线1：在线
+            description:'',//描述
+            deviceType:'3',//设备类型 1:楼控 2:照明  3:采集器
+            deviceNodeId:'5',//所属节点类
+          },
+          //保存周期的数据
+          savePeriodOptions:[],
+          // 表单校验
+          rules: {
+            sysName: [{ required: true, message: '系统名称不能为空', trigger: 'blur' },
+              {pattern: /^[a-zA-Z]([a-zA-Z0-9-_]+)?$/,message: '必须以字母开头，其余可用字母、数字、下划线'}],
+            alias: [{ required: true, message: '电表别名不能为空', trigger: 'blur' },
+              {validator: checkText},
+            ],
+            active: [{ required: true, message: '使能状态不能为空', trigger: 'change' }],
+            location: [{ required: true, message: '安装位置不能为空', trigger: 'blur' }],
+            physicalAddress: [{ required: true, message: '物理地址不能为空', trigger: 'blur' },
+              {pattern: /^[0-9]+?$/,message: '只能输入数字'}],
+            meterTypeCode: [{ required: true, message: '电表类型不能为空', trigger: 'change' }],
+            protocolTypeId: [{ required: true, message: '通讯协议不能为空', trigger: 'change' }],
+            collectionMethodCode: [{ required: true, message: '采集方案不能为空', trigger: 'change' }],
+            functionCodeId: [{ required: true, message: '功能码不能为空', trigger: 'change' }],
+            commRate: [{ required: true, message: '波特率不能为空', trigger: 'change' }],
+            commDataBit: [{ required: true, message: '数据位不能为空', trigger: 'change' }],
+            commParityBit: [{ required: true, message: '校验位不能为空', trigger: 'change' }],
+            commStopBit: [{ required: true, message: '停止位不能为空', trigger: 'change' }],
+            isStatic: [{ required: true, message: '静态电表不能为空', trigger: 'change' }],
+            commPort: [{ required: true, message: '通讯端口不能为空', trigger: 'blur' }],
+            rate: [{ required: true, message: '比率不能为空', trigger: 'blur' }],
+          },
+          //采集方案列表
+          collectionMethodList:[],
+          //是否静电电表列表
+          isStaticList:[{label:'否',value:0},{label:'是',value:1}],
+          //同步状态列表
+          synchStateList:[{label:'未同步',value:0},{label:'已同步',value:1}],
+        }
+      },
+      computed: {
+        ...mapState({
+          //同步数据
+          ammeterState: state => state.websocket.ammeterState,
+          //数据对比
+          ammeterGet: state => state.websocket.ammeterGet,
+          //获取能耗数据
+          ammeterRealTimeDataGet: state => state.websocket.ammeterRealTimeDataGet,
+          //获取历史能耗数据
+          ammeterHistoryDataGet: state => state.websocket.ammeterHistoryDataGet,
+        }),
+        watchList: function () {
+          const obj = {}
+          Object.keys(this.treeNodeMsg).forEach(key => {
+            obj[key] = this.treeNodeMsg[key]
+          })
+          return obj
+        },
+      },
+      watch: {
+        //同步状态实时显示
+        ammeterState(res) {
+          this.watchBoolean = false
+          if (res){
+            this.treeNodeMsg.synchState = 1
+          } else {
+            this.treeNodeMsg.synchState = 0
+          }
+
+          this.saveBoolean = true
+        },
+        //数据对比 电能参数
+        ammeterGet(data){
+          if (null == data){
+            return;
+          }
+          var meterParameter = data.meterParameter;
+          var electricDataCollectMethod = data.electricDataCollectMethod;
+          //采集方案id
+          var collectMethodID = electricDataCollectMethod.collectMethodID
+          if (null == meterParameter || null == electricDataCollectMethod){
+            return;
+          }
+
+          //下位机数据
+          this.underFormData.meterId = meterParameter.meterID + ''
+          this.underFormData.alias = meterParameter.alias + ''
+          this.underFormData.meterTypeCode = this.meterTypeToInput(meterParameter.meterType + '')
+          this.underFormData.active = this.activeToInput(meterParameter.active + '')
+          this.underFormData.location = meterParameter.location + ''
+          this.underFormData.physicalAddress = meterParameter.phyAddr + ''
+          this.underFormData.protocolTypeId = this.protocolTypeToInput(meterParameter.comAgreementType + '')
+          this.underFormData.collectionMethodCode = this.collectionMethodToInput(electricDataCollectMethod.collectMethodID + '')
+          this.underFormData.functionCodeId = this.functionCodeToInput(meterParameter.functionCode + '')
+          this.underFormData.commRate = this.commRateToInput(meterParameter.comRate + '')
+          this.underFormData.commDataBit = this.commDataBitToInput(meterParameter.comDataBit + '')
+          this.underFormData.commParityBit = this.commParityBitToInput(meterParameter.comParityBit + '')
+          this.underFormData.commStopBit = this.commStopBitToInput(meterParameter.comStopBit + '')
+          this.underFormData.commPort = meterParameter.comPort + ''
+          this.underFormData.description = meterParameter.description + ''
+
+          //下位机电能参数
+          var electricDataInfo = data.electricDataInfo;
+          if (!Array.isArray(electricDataInfo)){
+            return;
+          }
+          this.underElectricParams = electricDataInfo
+        },
+
+        //获取能耗数据
+        ammeterRealTimeDataGet(data){
+          if (!data){
+            return;
+          }
+          //电能参数个数
+          this.collectCount = data.collectCount;
+          if (this.collectCount <= 0){
+            return;
+          }
+
+          //采集时间
+          var dateDay = data.dateDay;
+          var dateMonth = data.dateMonth;
+          var dateYear = data.dateYear;
+          var timeHour = data.timeHour + '';
+          if (timeHour.length === 1){
+            timeHour = '0' + timeHour
+          }
+          var timeMinute = data.timeMinute  + '';
+          if (timeMinute.length === 1){
+            timeMinute = '0' + timeMinute
+          }
+          var timeSecond = data.timeSecond  + '';
+          if (timeSecond.length === 1){
+            timeSecond = '0' + timeSecond
+          }
+          var time = '20' + dateYear + '-' + dateMonth + '-' + dateDay + ' ' + timeHour + ':' + timeMinute + ':' + timeSecond;
+          this.dataTime = time
+
+          //能耗数据
+          var electricData = data.electricData;
+          if (!electricData){
+            return;
+          }
+          electricData = electricData.split(',');
+          //查询电能参数
+          getElectricParams({
+            deviceTreeId: this.treeNodeMsg.deviceTreeId,
+          }).then(response => {
+            this.upperElectricParams = response.data
+          })
+
+          this.realTimeData = this.upperElectricParams
+          if (this.realTimeData.length != this.collectCount){
+            this.$modal.msgError("上位机与下位机电能参数个数不一致，请同步数据")
+          }
+          //往电能参数中加入数据值
+          this.realTimeData.forEach((item,index) =>{
+            //根据电能参数的小数点位置 转换数据
+            let data = electricData[index] / (Math.pow(10,item.pointLocation))
+            this.$set(item,"rawdata", data)
+          })
+        },
+
+        //获取历史能耗数据
+        ammeterHistoryDataGet(data){
+          if (!data) {
+            return;
+          }
+          //小时数
+          this.hisDataHourCount = data.hisDataHourCount
+          var meterElectricHisData = data.meterElectricHisData;
+          if (!Array.isArray(meterElectricHisData)){
+            return;
+          }
+
+          //查询上位机电能参数
+          getElectricParams({
+            deviceTreeId: this.treeNodeMsg.deviceTreeId,
+          }).then(response => {
+            this.upperElectricParams = response.data
+          })
+
+          if (!Array.isArray(this.upperElectricParams)){
+            return
+          }
+          this.historyData = []
+          for (var i = 0; i < meterElectricHisData.length; i++){
+            var item = meterElectricHisData[i];
+
+            var dateDay = item.dateDay;
+            var dateMonth = item.dateMonth;
+            var dateYear = item.dateYear;
+            var timeHour = item.timeHour  + '';
+
+            //组装时间
+            if (timeHour.length === 1){
+              timeHour = '0' + timeHour
+            }
+            var timeMinute = item.timeMinute  + '';
+            if (timeMinute.length === 1){
+              timeMinute = '0' + timeMinute
+            }
+            var timeSecond = item.timeSecond  + '';
+            if (timeSecond.length === 1){
+              timeSecond = '0' + timeSecond
+            }
+            var time = '20' + dateYear + '-' + dateMonth + '-' + dateDay + ' ' + timeHour + ':' + timeMinute + ':' + timeSecond;
+            var electricData = item.electricData;
+            if (!electricData){
+              return;
+            }
+
+            electricData = electricData.split(',');
+
+            for (var j = 0; j < electricData.length; j++){
+              var copyData = Object.assign({}, this.upperElectricParams[j]);
+
+              copyData.rawdata = electricData[j];
+              copyData.time = time;
+
+              this.historyData.push(copyData);
+
+            }
+          }
+        },
+
+        watchList: {
+          deep: true,
+          handler: function (newVal, oldVal) {
+            if (this.watchBoolean) {
+              if (newVal !== oldVal) {
+                this.saveBoolean = false
+              }
+            }
+          }
+        },
+        deep: true,
+        treeNodeMsg(value) {
+          this.watchBoolean = false
+          this.$refs["updateForm"].resetFields()
+          this.updateForm = this.treeNodeMsg;
+          this.saveBoolean = true
+        },
+        updateForm() {
+          if (!(this.watchBoolean)) {
+            this.watchBoolean = true
+          }
+        },
+      },
+      created() {
+        this.reset()
+        //生成保存周期的数据
+        this.generateSavePeriodOptions();
+        //获取采集方案列表
+        this.getCollectionMethodList();
+      },
+      mounted () {
+      },
+      methods: {
+        // 表单重置
+        reset() {
+          this.updateForm = {
+            meterId:'',//电表id
+            deviceTreeId:'', //设备树id
+            sysName:'', //系统名称
+            alias:'',//电表别名
+            active:1,//使能状态0：不使能 1：使能
+            location:'',//安装位置
+            physicalAddress:'',//物理地址
+            meterTypeCode:'', //所属电表类
+            protocolTypeId:'',//所属通讯协议
+            collectionMethodCode:'',//所属采集方案
+            functionCodeId:'', //所属功能码
+            commRate:'', //通信波特率 0：1200 1：2400 2：4800 3：9600 4：19200 5：38400 6：57600 7：115200
+            commDataBit:'', //通讯数据位 0：Data5 1：Data6  2：Data7
+            commParityBit:'',//通讯校验位 0：无校验1：偶校验2：奇校验 3：空格校验4：mark校验
+            commStopBit:'',//通讯停止位 0：1 bit  1：1.5 bit  2：2 bit
+            isStatic:'',//是否静态电表 0：否1：是
+            commPort:'',//通讯端口
+            rate:'',//比率
+            synchState:0,//同步状态 0：未同步1：已同步
+            errorState:0,//异常状态 0：正常 1：异常
+            onlineState:0,//在线状态 0：不在线1：在线
+            description:'',//描述
+            deviceType:'3',//设备类型 1:楼控 2:照明  3:采集器
+            deviceNodeId:'5',//所属节点类
+          };
+          // this.resetForm("addForm");
+        },
+        //生成保存周期的数据
+        generateSavePeriodOptions() {
+          let time = 0;
+          for (let i = 0; i <= 200; i++) {
+
+            if (time == 0) {
+              let savePeriodOptionsMsg = {};
+              savePeriodOptionsMsg.label = 0 + '分钟';
+              savePeriodOptionsMsg.value = 0
+              this.savePeriodOptions.push(savePeriodOptionsMsg);
+              time = 1;
+            } else if (time == 5) {
+              let savePeriodOptionsMsg = {};
+              savePeriodOptionsMsg.label = i + '分钟';
+              savePeriodOptionsMsg.value = i
+              this.savePeriodOptions.push(savePeriodOptionsMsg);
+              time = 1;
+            }else {
+              time++
+            }
+          }
+        },
+
+        //获取采集方案列表
+        getCollectionMethodList(){
+          getCollectionMethodList().then(response => {
+            this.collectionMethodList = response;
+          })
+        },
+
+        //提交按钮
+        submitForm(formName) {
+          this.saveBoolean = true
+          this.$refs[formName].validate(valid => {
+            if (valid) {
+              if (formName == 'updateForm') {
+                updateMeter(this.updateForm).then(response => {
+                  this.$modal.msgSuccess(response.msg);
+                  this.visible = false;
+                  this.$emit("updateTreeNode", this.updateForm)
+                });
+              } else {
+                this.form.deviceTreeFatherId = this.treeNodeMsg.deviceTreeId //父设备id
+
+                addMeter(this.form).then(response => {
+                  this.$modal.msgSuccess(response.msg);
+                  this.$emit('addTreeNode',response.data);
+
+                  this.$refs["addForm"].resetFields()
+                  this.visible = false;
+                });
+              }
+            }
+          });
+        },
+
+        //同步数据
+        syncMeter(){
+          if (!this.saveBoolean) {
+            return this.$modal.alertError("数据已修改，请先保存！")
+          }
+          let param = {}
+          param.deviceTreeId = this.treeNodeMsg.deviceTreeId
+          param.deviceTreeFatherId = this.treeNodeMsg.deviceTreeFatherId
+          param.meterId = this.treeNodeMsg.meterId
+          syncMeter(param).then(response => {
+            this.$modal.msgSuccess(response.msg);
+          })
+        },
+
+        //数据对比
+        getMeterInfoParam() {
+          if (!this.saveBoolean) {
+            return this.$modal.alertError("数据已修改，请先保存！")
+          }
+          //填充上位机数据
+          var copeData = {
+            meterId:this.treeNodeMsg.meterId + '',//电表id
+            deviceTreeId:this.treeNodeMsg.deviceTreeId + '', //设备树id
+            sysName:this.treeNodeMsg.sysName + '', //系统名称
+            alias:this.treeNodeMsg.alias + '',//电表别名
+            active:this.activeToInput(this.treeNodeMsg.active + ''),//使能状态0：不使能 1：使能
+            location:this.treeNodeMsg.location + '',//安装位置
+            physicalAddress:this.treeNodeMsg.physicalAddress + '',//物理地址
+            meterTypeCode:this.meterTypeToInput(this.treeNodeMsg.meterTypeCode + ''), //所属电表类
+            protocolTypeId:this.protocolTypeToInput(this.treeNodeMsg.protocolTypeId + ''),//所属通讯协议
+            collectionMethodCode:this.collectionMethodToInput(this.treeNodeMsg.collectionMethodCode + ''),//所属采集方案
+            functionCodeId:this.functionCodeToInput(this.treeNodeMsg.functionCodeId + ''), //所属功能码
+            commRate:this.commRateToInput(this.treeNodeMsg.commRate + ''), //通信波特率 0：1200 1：2400 2：4800 3：9600 4：19200 5：38400 6：57600 7：115200
+            commDataBit:this.commDataBitToInput(this.treeNodeMsg.commDataBit + ''), //通讯数据位 0：Data5 1：Data6  2：Data7
+            commParityBit:this.commParityBitToInput(this.treeNodeMsg.commParityBit + ''),//通讯校验位 0：无校验1：偶校验2：奇校验 3：空格校验4：mark校验
+            commStopBit:this.commStopBitToInput(this.treeNodeMsg.commStopBit + ''),//通讯停止位 0：1 bit  1：1.5 bit  2：2 bit
+            commPort:this.treeNodeMsg.commPort + '',//通讯端口
+            rate:this.treeNodeMsg.rate + '',//比率
+            description:this.treeNodeMsg.description + '',//描述
+          }
+          this.upperFormData = copeData
+
+          //清空下位机数据
+          this.underFormData = {
+              meterId:'',//电表id
+              deviceTreeId:'', //设备树id
+              sysName:'', //系统名称
+              alias:'',//电表别名
+              active:'',//使能状态0：不使能 1：使能
+              location:'',//安装位置
+              physicalAddress:'',//物理地址
+              meterTypeCode:'', //所属电表类
+              protocolTypeId:'',//所属通讯协议
+              collectionMethodCode:'',//所属采集方案
+              functionCodeId:'', //所属功能码
+              commRate:'', //通信波特率 0：1200 1：2400 2：4800 3：9600 4：19200 5：38400 6：57600 7：115200
+              commDataBit:'', //通讯数据位 0：Data5 1：Data6  2：Data7
+              commParityBit:'',//通讯校验位 0：无校验1：偶校验2：奇校验 3：空格校验4：mark校验
+              commStopBit:'',//通讯停止位 0：1 bit  1：1.5 bit  2：2 bit
+              commPort:'',//通讯端口
+              rate:'',//比率
+              description:'',//描述
+          }
+          //清空下位机电能参数
+          this.underElectricParams = []
+
+          //展示数据对比弹窗
+          this.parmasVisible = true;
+
+          //获取下位机数据 下发
+          getMeterInfoParam({
+            deviceTreeId: this.treeNodeMsg.deviceTreeId,
+          }).then(response => {
+            this.$modal.msgSuccess(response.msg);
+          })
+        },
+
+        //电能参数
+        getElectricParams(){
+          //展示电能参数弹窗
+          this.electricParamsVisible = true
+          //下发
+          getElectricParams({
+            deviceTreeId: this.treeNodeMsg.deviceTreeId,
+          }).then(response => {
+            this.upperElectricParams = response.data
+          })
+        },
+
+        //获取能耗数据
+        getMeterRealTimeData(){
+          this.collectCount = 0
+          this.time = ''
+          this.realTimeData = []
+          this.realTimeDataVisible = true
+          getMeterRealTimeData({
+            deviceTreeId: this.treeNodeMsg.deviceTreeId,
+          }).then(response => {
+            this.$modal.msgSuccess(response.msg);
+          })
+        },
+
+        //初次点击 获取历史能耗数据
+        meterHistoryData(){
+          this.$confirm('确认要获取历史能耗数据吗?', '提示', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning'
+          }).then(() => {
+            this.historyDataVisible = true
+            //日期下拉框
+            this.loadSelectDay()
+            this.selectDay = new Date().getDate()
+            //下发
+            this.getMeterHistoryData(this.selectDay)
+          }).catch(() => {
+          })
+
+
+        },
+        //获取历史能耗数据下发
+        getMeterHistoryData(day){
+          //清空小时数
+          this.hisDataHourCount = 0
+          //清空历史能耗数据列表
+          this.historyData = []
+
+          getMeterHistoryData({
+            deviceTreeId:this.treeNodeMsg.deviceTreeId,
+            selectDay: day,
+          }).then(response => {
+            this.$modal.msgSuccess(response.msg);
+          })
+        },
+
+        //历史能耗数据日期下拉框数据
+        loadSelectDay(){
+          this.selectDayList = []
+
+          // 获取当月多少天
+          var date = new Date();
+          var day = new Date(date.getFullYear(), date.getMonth(), 0).getDate();   //最后一个参数为0,意为获取2018年10月一共多少天
+
+          for (var i = 1; i <= day; i++) {
+            var obj = {
+              value : i,
+              label : i + "日",
+            }
+            this.selectDayList.push(obj);
+          }
+        },
+
+        handleClose(done) {
+          this.$confirm('确认关闭？')
+            .then(_ => {
+              done();
+              //清空表单
+              this.$refs["addForm"].resetFields()
+              //重新加载当前选中的树节点
+              this.$emit('ReloadNode');
+            })
+            .catch(_ => {});
+        },
+
+        //自动补全物理地址
+        updatePhysicalAddress(obj,type){
+          var value = obj.split('');
+          var length = value.length;
+          var totalLenght = 14;
+
+          if (length < totalLenght) {
+            for (var i = 0; i < totalLenght - length; i++)
+            {
+              value.unshift('0');
+            }
+
+          }else {
+            for (var j = 0; j < length - totalLenght; j++)
+            {
+              value.shift();
+            }
+          }
+
+          if (type == 'add'){
+            this.form.physicalAddress = value.join('');
+          } else {
+            this.updateForm.physicalAddress = value.join('');
+          }
+        },
+
+        //转换是否使能 返回是或否
+        activeToInput(value){
+          if (value == '1'){
+            return '是'
+          } else {
+            return '否'
+          }
+        },
+        //转换电表类型 返回label
+        meterTypeToInput(value){
+          if (typeof(value)!='undefined' && value != null && value != ''){
+            for(let i=0; i<this.dict.type.sys_meter_type.length; i++){
+              if (value == this.dict.type.sys_meter_type[i].value){
+                return this.dict.type.sys_meter_type[i].label
+              }
+            }
+          }
+          return ""
+        },
+        //转换通信协议 返回label
+        protocolTypeToInput(value){
+          if (typeof(value)!='undefined' && value != null && value != ''){
+            for(let i=0; i<this.dict.type.communication_protocol.length; i++){
+              if (value == this.dict.type.communication_protocol[i].value){
+                return this.dict.type.communication_protocol[i].label
+              }
+            }
+          }
+          return ""
+        },
+        //转换采集方案 返回采集方案名称
+        collectionMethodToInput(value){
+          if (typeof(value)!='undefined' && value != null && value != ''){
+            for(let i=0; i<this.collectionMethodList.length; i++){
+              if (value == this.collectionMethodList[i].id){
+                return this.collectionMethodList[i].name
+              }
+            }
+          }
+          return ""
+        },
+        //转换所属功能码 返回label
+        functionCodeToInput(value){
+          if (typeof(value)!='undefined' && value != null && value != ''){
+            for(let i=0; i<this.dict.type.meter_function_code.length; i++){
+              if (value == this.dict.type.meter_function_code[i].value){
+                return this.dict.type.meter_function_code[i].label
+              }
+            }
+          }
+          return ""
+        },
+        //转换波特率 返回label
+        commRateToInput(value){
+          if (typeof(value)!='undefined' && value != null && value != ''){
+            for(let i=0; i<this.dict.type.communication_baud_rate.length; i++){
+              if (value == this.dict.type.communication_baud_rate[i].value){
+                return this.dict.type.communication_baud_rate[i].label
+              }
+            }
+          }
+          return ""
+        },
+        //转换数据位 返回label
+        commDataBitToInput(value){
+          if (typeof(value)!='undefined' && value != null && value != ''){
+            for(let i=0; i<this.dict.type.meter_comm_data_bit.length; i++){
+              if (value == this.dict.type.meter_comm_data_bit[i].value){
+                return this.dict.type.meter_comm_data_bit[i].label
+              }
+            }
+          }
+          return ""
+        },
+        //转换校验位 返回label
+        commParityBitToInput(value){
+          if (typeof(value)!='undefined' && value != null && value != ''){
+            for(let i=0; i<this.dict.type.meter_comm_parity_bit.length; i++){
+              if (value == this.dict.type.meter_comm_parity_bit[i].value){
+                return this.dict.type.meter_comm_parity_bit[i].label
+              }
+            }
+          }
+          return ""
+        },
+        //转换停止位 返回label
+        commStopBitToInput(value){
+          if (typeof(value)!='undefined' && value != null && value != ''){
+            for(let i=0; i<this.dict.type.meter_comm_stop_bit.length; i++){
+              if (value == this.dict.type.meter_comm_stop_bit[i].value){
+                return this.dict.type.meter_comm_stop_bit[i].label
+              }
+            }
+          }
+          return ""
+        },
+        /*testData(){
+          testData({
+            meterId:this.updateForm.meterId,
+            collectCount: 5,  //采集参数个数(采集方案里的电能参数个数)
+            electricData: '59,59,59,59,59', //采集数据(必须每次大于等于上次的数据)
+          }).then(response => {
+
+          })
+        },*/
+
+
+
+      }
+    }
+  </script>
+  <style lang="scss" scoped>
+    .white-body-view {
+      width: 100%;
+      min-width: 320px;
+    }
+    .item_class{
+      width: 48%;
+    }
+    .error_input{
+      ::v-deep .el-input__inner{
+        border-color: red;
+        color:red;
+      }
+    }
+  </style>

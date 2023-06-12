@@ -1,0 +1,1756 @@
+<template>
+  <div class="app-container">
+    <span @click="handleClose()" style="font-size: 15px">
+      <i class="el-icon-back"></i>
+      返回
+    </span>
+    &nbsp;&nbsp;
+    <span style="color: #BABABA">
+        |
+    </span>
+    &nbsp;&nbsp;
+    <span style="font-size: 18px">{{this.productName}}</span>
+    <span style="font-size: 18px;color: #BABABA">/{{this.productCode}}</span>
+    <br/>
+    <br/>
+    <el-tabs v-model="activeName" type="border-card" style="height: 80.4vh;">
+      <el-tab-pane label="数据项定义" name="first">
+        <el-row :gutter="10" class="mb8">
+          <el-col :span="1.5">
+            <el-button
+              type="primary"
+              plain
+              icon="el-icon-plus"
+              size="mini"
+              @click="handleAdd"
+              v-hasPermi="['baseData:product:add']"
+            >新增
+            </el-button>
+          </el-col>
+          <el-col :span="1.5">
+            <el-button
+              type="success"
+              plain
+              icon="el-icon-view"
+              size="mini"
+              @click="handleItemDataLook"
+              v-hasPermi="['baseData:product:edit']"
+            >查看物模型
+            </el-button>
+          </el-col>
+          <el-col :span="1.5">
+            <el-button
+              type="warning"
+              plain
+              icon="el-icon-download"
+              size="mini"
+              @click="handleExport"
+              v-hasPermi="['baseData:product:export']"
+            >导出
+            </el-button>
+          </el-col>
+        </el-row>
+
+        <el-table v-loading="loading" :data="productItemDataList" :header-cell-style="{background:'#FAFAFA'}">
+          <el-table-column type="index" label="序号" width="50"/>
+          <el-table-column label="产品编号" align="center">
+            <template slot-scope="scope">
+              <span>{{productCode}}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="数据项编号(对应设备)" align="center" prop="dataItemNum" min-width="150px"/>
+          <el-table-column label="数据项标识(平台自定义)" align="center" prop="dataItemMark" min-width="160px"/>
+          <el-table-column label="数据项名称" align="center" prop="name"/>
+          <el-table-column label="数据类型" align="center" prop="dataName"/>
+          <el-table-column label="单位" align="center" prop="dataUnit"/>
+          <el-table-column label="读写类型" align="center" prop="readType">
+            <template slot-scope="scope">
+              <span v-if="scope.row.readType == '0'">只读</span>
+              <span v-if="scope.row.readType == '1'">读写</span>
+              <span v-if="scope.row.readType == '2'">只写</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="是否保存" align="center" prop="preserveType">
+            <template slot-scope="scope">
+              <span v-if="scope.row.preserveType == '1'">是</span>
+              <span v-if="scope.row.preserveType == '0'">否</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="备注" align="center" prop="remark"/>
+          <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
+            <template slot-scope="scope">
+              <el-button
+                size="mini"
+                type="text"
+                icon="el-icon-edit"
+                @click="handleUpdate(scope.row)"
+                v-hasPermi="['baseData:product:edit']"
+              >修改
+              </el-button>
+              <el-button
+                size="mini"
+                type="text"
+                icon="el-icon-delete"
+                @click="handleDelete(scope.row)"
+                v-hasPermi="['baseData:product:remove']"
+              >删除
+              </el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+
+        <!--        <pagination-->
+        <!--          v-show="total>0"-->
+        <!--          :total="total"-->
+        <!--          :page.sync="queryParams.pageNum"-->
+        <!--          :limit.sync="queryParams.pageSize"-->
+        <!--          @pagination="getList"-->
+        <!--        />-->
+
+        <!-- 添加或修改产品定义对话框 -->
+        <el-dialog :title="title" :visible.sync="open" width="520px" append-to-body>
+          <div class="box">
+            <el-form ref="form" :model="form" :rules="rules" label-width="100px">
+              <el-form-item label="所属产品" prop="productName">
+                <el-input v-model="form.productName" placeholder="请输入所属产品" disabled/>
+              </el-form-item>
+              <el-form-item label="数据项编号" prop="dataItemNum">
+                <el-input v-model="form.dataItemNum" placeholder="请输入数据项编号"/>
+              </el-form-item>
+              <el-form-item label="数据项标识" prop="dataItemMark">
+                <el-input v-model="form.dataItemMark" placeholder="请输入数据项标识"/>
+              </el-form-item>
+              <el-form-item label="数据项名称" prop="name">
+                <el-input v-model="form.name" placeholder="请输入数据项名称"/>
+              </el-form-item>
+              <el-form-item label="订阅地址" prop="subscribeAddress" v-if="productAgreement == '1'">
+                <el-select v-model="form.subscribeAddress" placeholder="请选择mqtt订阅地址" style="width:100%!important;">
+                  <el-option
+                    v-for="item in subscribes"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value">
+                  </el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item label="寄存器地址" prop="sortNum">
+                <el-input v-model="form.sortNum" placeholder="请输入寄存器地址"/>
+              </el-form-item>
+              <el-form-item label="读写类型" prop="readType">
+                <el-radio v-model="form.readType" label="0" style="width: 50px">只读</el-radio>
+                <el-radio v-model="form.readType" label="2" style="width: 50px">只写</el-radio>
+                <el-radio v-model="form.readType" label="1" style="width: 50px">读写</el-radio>
+              </el-form-item>
+              <el-form-item label="读功能码" prop="functionCode" v-if="form.readType == '0' || form.readType == '1'">
+                <el-input type="number" v-model="form.functionCode" placeholder="请输入功能码"/>
+              </el-form-item>
+              <el-form-item label="写功能码" prop="writeFunctionCode" v-if="form.readType == '1' || form.readType == '2'">
+                <el-input type="number" v-model="form.writeFunctionCode" placeholder="请输入功能码"/>
+              </el-form-item>
+              <el-form-item label="高低位" prop="highLow">
+                <el-radio-group v-model="form.highLow" @change="changeStruct">
+                  <el-radio label="0" style="width: 140px">否</el-radio>
+                  <el-radio label="1" style="width: 140px">是</el-radio>
+                </el-radio-group>
+              </el-form-item>
+              <div v-if="form.highLow == '1'" style="height: auto">
+                <span style="font-weight: bold;margin-left: 32px">高位参数</span>
+                <span @click="addHighInfo" style="color: #1c92e0;margin-left: 10px">+ 添加参数</span>
+                <br/>
+                <br/>
+                <div>
+                  <div v-for="(item, index) in form.highDetail" :key="index">
+                    <el-input v-model="item.name" placeholder="参数值" style="width: 130px;margin-left: 100px" disabled/>
+                    <el-button size="mini" icon="el-icon-setting" style="margin-left: 10px"
+                               @click="setHighInfo(index)"></el-button>
+                    <el-button size="mini" icon="el-icon-delete" style="margin-left: 10px"
+                               @click="delHighInfo(index)"></el-button>
+                  </div>
+                  <br/>
+                </div>
+
+                <span style="font-weight: bold;margin-left: 32px">低位参数</span>
+                <span @click="addLowInfo" style="color: #1c92e0;margin-left: 10px">+ 添加参数</span>
+                <br/>
+                <br/>
+                <div>
+                  <div v-for="(item, index) in form.lowDetail" :key="index">
+                    <el-input v-model="item.name" placeholder="参数值" style="width: 130px;margin-left: 100px" disabled/>
+                    <el-button size="mini" icon="el-icon-setting" style="margin-left: 10px"
+                               @click="setLowInfo(index)"></el-button>
+                    <el-button size="mini" icon="el-icon-delete" style="margin-left: 10px"
+                               @click="delLowInfo(index)"></el-button>
+                  </div>
+                  <br/>
+                </div>
+              </div>
+              <el-form-item label="数据类型" prop="dataType">
+                <el-select v-model="form.dataType" placeholder="请选择数据类型" style="width: 340px" @change="getshowEnum">
+                  <el-option
+                    v-for="item in dataTypeList"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value">
+                  </el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item label="单位" prop="dataUnit" v-if="!showEnum && !showStruct">
+                <el-input v-model="form.dataUnit" placeholder="请输入单位"/>
+              </el-form-item>
+              <div v-if="showEnum" style="height: auto">
+                <span style="font-weight: bold;margin-left: 32px">枚举参数</span>
+                <span @click="addGoodsInfo" style="color: #1c92e0;margin-left: 10px">+ 添加参数</span>
+                <br/>
+                <br/>
+                <div v-for="(item, index) in form.enumDetail" :key="index">
+                  <el-input v-model="item.dataValue" placeholder="参数值"
+                            style="width: 130px;margin-left: 100px"></el-input>
+                  <span style="margin-left: 2px">:</span>
+                  <el-input v-model="item.info" placeholder="参数值说明" style="width: 130px;margin-left: 2px"></el-input>
+                  <el-button size="mini" icon="el-icon-delete" style="margin-left: 10px"
+                             @click="delGoodsInfo(index)"></el-button>
+                </div>
+                <br/>
+              </div>
+              <div v-if="showStruct" style="height: auto">
+                <span style="font-weight: bold;margin-left: 32px">结构体参数</span>
+                <span @click="addStructInfo" style="color: #1c92e0;margin-left: 10px">+ 添加参数</span>
+                <br/>
+                <br/>
+                <div v-for="(item, index) in form.structDetail" :key="index">
+                  <el-input v-model="item.name" placeholder="参数值" style="width: 200px;margin-left: 100px" disabled/>
+                  <el-button size="mini" icon="el-icon-setting" style="margin-left: 20px"
+                             @click="setStructInfo(index)"></el-button>
+                  <el-button size="mini" icon="el-icon-delete" style="margin-left: 20px"
+                             @click="delStructInfo(index)"></el-button>
+                </div>
+                <br/>
+              </div>
+              <el-form-item label="二进制" prop="binarySystem" v-if="showStruct">
+                <el-radio v-model="form.binarySystem" label="0" style="width: 140px">否</el-radio>
+                <el-radio v-model="form.binarySystem" label="1" style="width: 140px">是</el-radio>
+              </el-form-item>
+              <el-form-item label="小数点位置" prop="radixPoint" v-if="!showStruct && form.highLow == '0'">
+                <el-input type="number" v-model="form.radixPoint" placeholder="请输入小数点位置"/>
+              </el-form-item>
+              <el-form-item label="比率" prop="ratioSize" v-if="!showStruct && form.highLow == '0'">
+                <el-input type="number" v-model="form.ratioSize" placeholder="请输入比率"/>
+              </el-form-item>
+              <el-form-item label="是否保存" prop="preserveType" v-if="!showStruct && form.highLow == '0'">
+                <el-radio v-model="form.preserveType" label="0" style="width: 140px">否</el-radio>
+                <el-radio v-model="form.preserveType" label="1" style="width: 140px">是</el-radio>
+              </el-form-item>
+              <el-form-item label="能源类型" prop="energyCode"
+                            v-if="!showStruct && form.highLow == '0' && form.preserveType == '1'">
+                <el-select v-model="form.energyCode" filterable placeholder="请选择能源类型" style="width: 340px" clearable>
+                  <el-option
+                    v-for="item in energyList"
+                    :key="item.code"
+                    :label="item.name"
+                    :value="item.code">
+                  </el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item label="备注" prop="remark">
+                <el-input v-model="form.remark" placeholder="请输入备注"/>
+              </el-form-item>
+            </el-form>
+          </div>
+          <div slot="footer" class="dialog-footer">
+            <el-button type="primary" @click="submitForm">确 定</el-button>
+            <el-button @click="cancel">取 消</el-button>
+          </div>
+        </el-dialog>
+
+        <el-dialog :title="titleTwo" :visible.sync="openTwo" width="520px" append-to-body>
+          <div class="box">
+            <el-form ref="formTwo" :model="formTwo" :rules="rulesTwo" label-width="100px">
+              <el-form-item label="所属产品" prop="productName">
+                <el-input v-model="formTwo.productName" placeholder="请输入所属产品" disabled/>
+              </el-form-item>
+              <el-form-item label="数据项编号" prop="dataItemNum">
+                <el-input v-model="formTwo.dataItemNum" placeholder="请输入数据项编号"/>
+              </el-form-item>
+              <el-form-item label="数据项标识" prop="dataItemMark">
+                <el-input v-model="formTwo.dataItemMark" placeholder="请输入数据项标识"/>
+              </el-form-item>
+              <el-form-item label="数据项名称" prop="name">
+                <el-input v-model="formTwo.name" placeholder="请输入数据项名称"/>
+              </el-form-item>
+              <el-form-item label="订阅地址" prop="subscribeAddress" v-if="productAgreement == '1'">
+                <el-select v-model="formTwo.subscribeAddress" placeholder="请选择mqtt订阅地址" style="width:100%!important;">
+                  <el-option
+                    v-for="item in subscribes"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value">
+                  </el-option>
+                </el-select>
+              </el-form-item>
+<!--              <el-form-item label="读写类型" prop="readType">-->
+<!--                <el-radio-group v-model="formTwo.readType" @change="changeUpdate">-->
+<!--                  <el-radio label="0" style="width: 140px">只读</el-radio>-->
+<!--                  <el-radio label="2" style="width: 140px">只写</el-radio>-->
+<!--                  <el-radio label="1" style="width: 140px">读写</el-radio>-->
+<!--                </el-radio-group>-->
+<!--              </el-form-item>-->
+<!--              <el-form-item label="读功能码" prop="functionCode" v-if="formTwo.readType == '0' || formTwo.readType == '1'">-->
+<!--                <el-input type="number" v-model="formTwo.functionCode" placeholder="请输入功能码"/>-->
+<!--              </el-form-item>-->
+<!--              <el-form-item label="写功能码" prop="writeFunctionCode" v-if="formTwo.readType == '1'">-->
+<!--                <el-input type="number" v-model="formTwo.writeFunctionCode" placeholder="请输入功能码"/>-->
+<!--              </el-form-item>-->
+              <el-form-item label="二进制" prop="binarySystem" v-if="form.highLow == '1'">
+                <el-radio v-model="formTwo.binarySystem" label="0" style="width: 140px">否</el-radio>
+                <el-radio v-model="formTwo.binarySystem" label="1" style="width: 140px">是</el-radio>
+              </el-form-item>
+              <el-form-item label="字节长度" prop="byteLength" v-if="formTwo.binarySystem == '1'">
+                <el-input type="number" v-model="formTwo.byteLength" placeholder="请输入字节长度">
+                  <template slot="append">字节</template>
+                </el-input>
+              </el-form-item>
+              <el-form-item label="数据类型" prop="dataType">
+                <el-select v-model="formTwo.dataType" placeholder="请选择数据类型" style="width: 340px"
+                           @change="getshowEnumTwo">
+                  <el-option
+                    v-for="item in dataTypeListTwo"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value">
+                  </el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item label="单位" prop="dataUnit" v-if="!showEnumTwo">
+                <el-input v-model="formTwo.dataUnit" placeholder="请输入单位"/>
+              </el-form-item>
+              <div v-if="showEnumTwo" style="height: auto">
+                <span style="font-weight: bold;margin-left: 32px">枚举参数</span>
+                <span @click="addGoodsInfoTwo" style="color: #1c92e0;margin-left: 10px">+ 添加参数</span>
+                <br>
+                <br>
+                <div v-for="(item, index) in formTwo.enumDetail" :key="index">
+                  <el-input v-model="item.dataValue" placeholder="参数值"
+                            style="width: 130px;margin-left: 100px"></el-input>
+                  <span style="margin-left: 2px">:</span>
+                  <el-input v-model="item.info" placeholder="参数值说明" style="width: 130px;margin-left: 2px"></el-input>
+                  <el-button size="mini" icon="el-icon-delete" style="margin-left: 10px"
+                             @click="delGoodsInfoTwo(index)"></el-button>
+                </div>
+                <br/>
+              </div>
+              <el-form-item label="小数点位置" prop="radixPoint">
+                <el-input type="number" v-model="formTwo.radixPoint" placeholder="请输入小数点位置"/>
+              </el-form-item>
+              <el-form-item label="比率" prop="ratioSize">
+                <el-input type="number" v-model="formTwo.ratioSize" placeholder="请输入比率"/>
+              </el-form-item>
+              <el-form-item label="是否保存" prop="preserveType">
+                <el-radio v-model="formTwo.preserveType" label="0" style="width: 140px">否</el-radio>
+                <el-radio v-model="formTwo.preserveType" label="1" style="width: 140px">是</el-radio>
+              </el-form-item>
+              <el-form-item label="能源类型" prop="energyCode" v-if="formTwo.preserveType == '1'">
+                <el-select v-model="formTwo.energyCode" filterable placeholder="请选择能源类型" style="width: 340px" clearable>
+                  <el-option
+                    v-for="item in energyList"
+                    :key="item.code"
+                    :label="item.name"
+                    :value="item.code">
+                  </el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item label="备注" prop="remark">
+                <el-input v-model="formTwo.remark" placeholder="请输入备注"/>
+              </el-form-item>
+            </el-form>
+          </div>
+          <div slot="footer" class="dialog-footer">
+            <el-button type="primary" @click="submitFormTwo">确 定</el-button>
+            <el-button @click="cancelTwo">取 消</el-button>
+          </div>
+        </el-dialog>
+      </el-tab-pane>
+      <el-tab-pane label="功能定义" name="second">
+        <el-row :gutter="10" class="mb8">
+          <el-col :span="1.5">
+            <el-button
+              type="primary"
+              plain
+              icon="el-icon-plus"
+              size="mini"
+              @click="handleAddFunction"
+              v-hasPermi="['baseData:product:add']"
+            >新增
+            </el-button>
+          </el-col>
+          <el-col :span="1.5">
+            <el-button
+              type="success"
+              plain
+              icon="el-icon-view"
+              size="mini"
+              @click="handleFunctionLook"
+              v-hasPermi="['baseData:product:edit']"
+            >查看物模型
+            </el-button>
+          </el-col>
+          <el-col :span="1.5">
+            <el-button
+              type="warning"
+              plain
+              icon="el-icon-download"
+              size="mini"
+              @click="handleExportFunction"
+              v-hasPermi="['baseData:product:export']"
+            >导出
+            </el-button>
+          </el-col>
+        </el-row>
+
+        <el-table v-loading="loadingFunction" :data="productFunctionList" :header-cell-style="{background:'#FAFAFA'}">
+          <el-table-column type="index" label="序号" width="50"/>
+          <el-table-column label="功能编号" align="center" prop="functionNum"/>
+          <el-table-column label="功能名称" align="center" prop="name" min-width="150px"/>
+          <el-table-column label="产品编号" align="center">
+            <template slot-scope="scope">
+              <span>{{productCode}}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="功能类型" align="center" prop="type">
+            <template slot-scope="scope">
+              <span v-if="scope.row.type == '0'">控制</span>
+              <span v-if="scope.row.type == '1'">采集</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="下发方式" align="center" prop="issuedType">
+            <template slot-scope="scope">
+              <span v-if="scope.row.issuedType == '0'">指令下发</span>
+              <span v-if="scope.row.issuedType == '1'">数据项下发</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="备注" align="center" prop="remark"/>
+          <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
+            <template slot-scope="scope">
+              <el-button
+                size="mini"
+                type="text"
+                icon="el-icon-edit"
+                @click="handleUpdateFunction(scope.row)"
+                v-hasPermi="['baseData:product:edit']"
+              >修改
+              </el-button>
+              <el-button
+                size="mini"
+                type="text"
+                icon="el-icon-delete"
+                @click="handleDeleteFunction(scope.row)"
+                v-hasPermi="['baseData:product:remove']"
+              >删除
+              </el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+
+        <!-- 添加或修改产品定义对话框 -->
+        <el-dialog :title="title" :visible.sync="openFunction" width="500px" append-to-body>
+          <el-form ref="formFunction" :model="formFunction" :rules="rulesFunction" label-width="100px">
+            <el-form-item label="产品" prop="productName">
+              <el-input v-model="formFunction.productName" placeholder="请输入产品" disabled/>
+            </el-form-item>
+            <el-form-item label="功能编号" prop="functionNum">
+              <el-input v-model="formFunction.functionNum" placeholder="请输入功能编号"/>
+            </el-form-item>
+            <el-form-item label="功能名称" prop="name">
+              <el-input v-model="formFunction.name" placeholder="请输入功能名称"/>
+            </el-form-item>
+            <el-form-item label="功能类型" prop="type">
+              <el-radio-group v-model="formFunction.type" @change="changeType">
+                <el-radio label="0" style="width: 150px">控制</el-radio>
+                <el-radio label="1" style="width: 150px">采集</el-radio>
+              </el-radio-group>
+            </el-form-item>
+            <el-form-item label="下发方式" prop="issuedType">
+              <el-radio-group v-model="formFunction.issuedType" @change="changeIssuedType">
+                <el-radio label="0" style="width: 150px">指令下发</el-radio>
+                <el-radio label="1" style="width: 150px">数据项下发</el-radio>
+              </el-radio-group>
+            </el-form-item>
+            <el-form-item label="指令" prop="instruct" v-if="formFunction.issuedType == '0'">
+              <span slot="label">
+                <el-tooltip content="*(固定开头)10(功能码)000c(寄存器起始地址)0001(寄存器数量)02(数据字节数)0000(数据)" placement="bottom"
+                            effect="light">
+                  <i class="el-icon-question"></i>
+                </el-tooltip>指令
+              </span>
+              <el-input v-model="formFunction.instruct" placeholder="请输入指令"/>
+            </el-form-item>
+            <el-form-item label="数据项" prop="dataItem" v-if="formFunction.issuedType == '1'">
+              <el-select v-model="formFunction.dataItem" placeholder="请选择数据项" style="width: 360px"
+                         @change="getParamsListByItemDataId">
+                <el-option
+                  v-for="(item,index) in productItemDataList"
+                  :key="index+'dataItem'+item.id"
+                  :label="item.name"
+                  :value="item.id">
+                </el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item label="寄存器数量" prop="registerNumber"
+                          v-if="formFunction.issuedType == '1' && formFunction.type=='1'">
+              <el-input type="number" v-model="formFunction.registerNumber" placeholder="请输入寄存器数量"/>
+            </el-form-item>
+            <el-form-item label="下发值" prop="itemValue" v-if="showInt && formFunction.type=='0'">
+              <el-input v-model="formFunction.itemValue" placeholder="请输入下发值"/>
+            </el-form-item>
+            <el-form-item label="下发值" prop="itemValue" v-if="showSelect && formFunction.type=='0'">
+              <el-select v-model="formFunction.itemValue" placeholder="请选择" style="width: 360px">
+                <el-option
+                  v-for="(item,index) in productItemParamsSelect"
+                  :key="index+'itemValue'+item.value"
+                  :label="item.name"
+                  :value="item.value">
+                </el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item :label="item.name" v-for="(item, index) in productItemParamsList"
+                          v-if="formFunction.issuedType == '1' && formFunction.type=='0'"
+                          :key="item.dataItem+'productItemParamsList'+index">
+              <el-input v-model="item.sendValue" placeholder="请输入参数值" v-if="item.selectList.length == 0">
+                <template slot="append" v-if="item.binarySystem == '1'">二进制</template>
+              </el-input>
+              <el-select v-model="item.sendValue" placeholder="请选择" style="width: 360px"
+                         v-if="item.selectList.length > 0">
+                <el-option v-for="(item1,index1) in item.selectList"
+                           :key="item1.dataItem+'selectList'+index1"
+                           :label="item1.name"
+                           :value="item1.value">
+                </el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item label="备注" prop="remark">
+              <el-input v-model="formFunction.remark" placeholder="请输入备注"/>
+            </el-form-item>
+          </el-form>
+          <div slot="footer" class="dialog-footer">
+            <el-button type="primary" @click="submitFormFunction">确 定</el-button>
+            <el-button @click="cancelFunction">取 消</el-button>
+          </div>
+        </el-dialog>
+      </el-tab-pane>
+    </el-tabs>
+    <el-dialog :title="title" :visible.sync="openModel" width="520px" append-to-body>
+      <div class="box">
+        <el-input v-model="jsonModel" autosize type="textarea" readonly/>
+      </div>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+  import {
+    listIotType,
+    getProductItemData,
+    delProductItemData,
+    listProductItemData,
+    addProductItemData,
+    updateProductItemData,
+    getProductFunction,
+    delProductFunction,
+    listProductFunction,
+    addProductFunction,
+    updateProductFunction, getProduct, getAgreeMentByProductId, getMessageListById, listEnergy
+  } from "@/api/basicData/deviceDefinition/product/product";
+  import {getEquipment, listEquipmentSon} from "@/api/basicData/deviceDefinition/equipment/equipment";
+
+  export default {
+    name: "setting",
+    data() {
+      return {
+        //枚举参数
+        showEnum: false,
+        showEnumTwo: false,
+        //结构体
+        showStruct: false,
+        //功能下发值
+        showInt: false,
+        showSelect: false,
+        showSelectParams: false,
+        //子弹窗类型
+        addTwo: null,
+        //子弹窗下标
+        updateTwo: null,
+        // 产品通讯协议
+        productAgreement: null,
+        // mqtt订阅主题数组
+        subscribes: [],
+        //tabs默认项
+        activeName: 'first',
+        //产品名称
+        productName: null,
+        //产品编码
+        productCode: null,
+        //产品ID
+        productId: null,
+        // 遮罩层
+        loading: true,
+        loadingFunction: true,
+        // 选中数组
+        ids: [],
+        // 总条数
+        total: 0,
+        totalFunction: 0,
+        // 数据类型
+        dataTypeList: [],
+        dataTypeListTwo: [],
+        // 能源类型
+        energyList: [],
+        //数据项
+        productItemDataList: [],
+        //功能数据项
+        productItemParamsList: [],
+        //功能枚举下拉
+        productItemParamsSelect: [],
+        //功能数据项枚举下拉
+        productItemParamsSelectList: [],
+        productFunctionList: [],
+        // 弹出层标题
+        title: "",
+        //参数弹窗
+        titleTwo: "",
+        // 是否显示弹出层
+        open: false,
+        openTwo: false,
+        openFunction: false,
+        openModel: false,
+        // 查询参数
+        queryParams: {
+          pageNum: 1,
+          pageSize: 10,
+          productId: null,
+        },
+        queryParamsFunction: {
+          pageNum: 1,
+          pageSize: 10,
+          productId: null,
+        },
+        // 表单参数
+        form: {},
+        formTwo: {},
+        formFunction: {},
+        // 表单校验
+        rules: {
+          productName: [{required: true, message: '请输入所属产品', trigger: 'blur'}],
+          dataItemNum: [{required: true, message: '请输入数据项编号', trigger: 'blur'}],
+          dataItemMark: [{required: true, message: '请输入数据项标识', trigger: 'blur'}],
+          name: [{required: true, message: '请输入数据项名称', trigger: 'blur'}],
+          functionCode: [{required: true, message: '请输入功能码', trigger: 'blur'}, {
+            pattern: /^\+?[0-9][0-9]*$/,
+            message: "只能输入数字",
+          }],
+          writeFunctionCode: [{required: true, message: '请输入功能码', trigger: 'blur'}, {
+            pattern: /^\+?[0-9][0-9]*$/,
+            message: "只能输入数字",
+          }],
+          sortNum: [{required: true, message: '请输入寄存器地址', trigger: 'blur'}, {
+            pattern: /^\+?[0-9][0-9]*$/,
+            // pattern: /^[A-Fa-f0-9]+$/,
+            message: "只能输入正整数",
+          }],
+          dataType: [{required: true, message: '请选择数据类型', trigger: 'change'}],
+          subscribeAddress: [{required: true, message: '请选择订阅地址', trigger: 'change'}],
+          radixPoint: [{required: true, message: '请输入小数点位置', trigger: 'blur'}, {
+            pattern: /^\+?[0-9][0-9]*$/,
+            message: "只能输入数字",
+          }],
+          ratioSize: [{required: true, message: '请输入比率', trigger: 'blur'}, {
+            pattern: /^\+?[1-9][0-9]*$/,
+            message: "只能输入正整数",
+          }],
+          energyCode: [{required: true, message: '请选择能源类型', trigger: 'change'}],
+          readType: [{required: true, message: '请选择读写类型', trigger: 'change'}],
+          preserveType: [{required: true, message: '请选择是否保存', trigger: 'change'}],
+          highLow: [{required: true, message: '请选择高低位', trigger: 'change'}],
+          binarySystem: [{required: true, message: '请选择二进制', trigger: 'change'}],
+        },
+        rulesFunction: {
+          productName: [{required: true, message: '请输入产品', trigger: 'blur'}],
+          functionNum: [{required: true, message: '请输入功能编号', trigger: 'blur'}],
+          name: [{required: true, message: '请输入功能名称', trigger: 'blur'}],
+          instruct: [{required: true, message: '请输入指令', trigger: 'blur'}, {
+            pattern: /^\S*$/,
+            message: "不能包含空格",
+          }, {
+            pattern: /^[*][A-Fa-f0-9YMDHmSW]+$/,
+            message: "只能输入以*开头的16进制字母/数字",
+          },],
+          registerNumber: [{required: true, message: '请输入寄存器数量', trigger: 'blur'},
+            {
+              pattern: /^\+?[1-9][0-9]*$/,
+              message: "只能输入正整数",
+            },],
+          dataItem: [{required: true, message: '请选择数据项', trigger: 'change'}],
+        },
+        rulesTwo: {
+          productName: [{required: true, message: '请输入所属产品', trigger: 'blur'}],
+          dataItemNum: [{required: true, message: '请输入数据项编号', trigger: 'blur'}],
+          dataItemMark: [{required: true, message: '请输入数据项标识', trigger: 'blur'}],
+          name: [{required: true, message: '请输入数据项名称', trigger: 'blur'}],
+          functionCode: [{required: true, message: '请输入功能码', trigger: 'blur'}, {
+            pattern: /^\+?[0-9][0-9]*$/,
+            message: "只能输入数字",
+          }],
+          writeFunctionCode: [{required: true, message: '请输入功能码', trigger: 'blur'}, {
+            pattern: /^\+?[0-9][0-9]*$/,
+            message: "只能输入数字",
+          }],
+          dataType: [{required: true, message: '请选择数据类型', trigger: 'change'}],
+          subscribeAddress: [{required: true, message: '请选择订阅地址', trigger: 'change'}],
+          radixPoint: [{required: true, message: '请输入小数点位置', trigger: 'blur'}, {
+            pattern: /^\+?[0-9][0-9]*$/,
+            message: "只能输入数字",
+          }],
+          ratioSize: [{required: true, message: '请输入比率', trigger: 'blur'}, {
+            pattern: /^\+?[1-9][0-9]*$/,
+            message: "只能输入正整数",
+          }],
+          energyCode: [{required: true, message: '请选择能源类型', trigger: 'change'}],
+          readType: [{required: true, message: '请选择读写类型', trigger: 'change'}],
+          preserveType: [{required: true, message: '请选择是否保存', trigger: 'change'}],
+          byteLength: [{required: true, message: '请输入字节长度', trigger: 'blur'}, {
+            pattern: /^\+?[1-9][0-9]*$/,
+            message: "只能输入正整数",
+          }],
+          binarySystem: [{required: true, message: '请选择二进制', trigger: 'change'}],
+        },
+        //物模型
+        jsonModel: '',
+      }
+    },
+    created() {
+      this.productName = this.$route.params.productName
+      this.productCode = this.$route.params.productCode
+      this.productId = this.$route.params.productId
+      this.productAgreement = this.$route.params.productAgreement;
+      this.getDataTypeList()
+      this.getList();
+      this.getFunctionList();
+      this.getEnergyList();
+    },
+    methods: {
+      //添加枚举参数
+      addGoodsInfo() {
+        this.form.enumDetail.push({dataValue: null, info: null, type: '3'})
+      },
+      delGoodsInfo(index) {
+        let that = this
+        this.$modal.confirm('是否确认删除该枚举参数？').then(function () {
+          that.form.enumDetail.splice(index, 1)
+        }).then(() => {
+        }).catch(() => {
+          that.$modal.msgError("删除失败");
+        });
+      },
+      addGoodsInfoTwo() {
+        if (this.formTwo.enumDetail == null || this.formTwo.enumDetail == undefined) {
+          let arr = [{dataValue: null, info: null, type: '3'}]
+          this.formTwo['enumDetail'] = arr
+        } else {
+          this.formTwo.enumDetail.push({dataValue: null, info: null, type: '3'})
+        }
+
+      },
+      delGoodsInfoTwo(index) {
+        let that = this
+        this.$modal.confirm('是否确认删除该枚举参数？').then(function () {
+          that.formTwo.enumDetail.splice(index, 1)
+        }).then(() => {
+        }).catch(() => {
+          that.$modal.msgError("删除失败");
+        });
+      },
+      //添加高位参数
+      addHighInfo() {
+        this.showEnumTwo = false
+        //不是二进制只能添加一个参数
+        if (this.form.highDetail.length > 0) {
+          //第一个是二进制
+          if (this.form.highDetail[0].binarySystem == '0') {
+            this.$modal.msgError("非二进制参数只能添加一个");
+            return;
+          }
+        }
+        this.resetTwo();
+        this.formTwo.paramsType = '1'
+        this.addTwo = 'h-add';
+        this.titleTwo = '添加高位参数';
+        this.openTwo = true;
+      },
+      setHighInfo(index) {
+        this.resetTwo();
+        let info = JSON.parse(JSON.stringify(this.form.highDetail[index]));
+        this.formTwo = info
+        this.formTwo.productName = this.productName
+        if (info.enumDetail == null || info.enumDetail == undefined || info.enumDetail.length == 0) {
+          this.showEnumTwo = false;
+        } else {
+          this.showEnumTwo = true;
+        }
+        this.updateTwo = index
+        this.addTwo = 'h-update';
+        this.titleTwo = '配置高位参数';
+        this.openTwo = true;
+      },
+      delHighInfo(index) {
+        let that = this
+        this.$modal.confirm('是否确认删除该高位参数？').then(function () {
+          that.form.highDetail.splice(index, 1)
+        }).then(() => {
+        }).catch(() => {
+          that.$modal.msgError("删除失败");
+        });
+      },
+      //添加低位参数
+      addLowInfo() {
+        this.showEnumTwo = false
+        //不是二进制只能添加一个参数
+        if (this.form.lowDetail.length > 0) {
+          //第一个是二进制
+          if (this.form.lowDetail[0].binarySystem == '0') {
+            this.$modal.msgError("非二进制参数只能添加一个");
+            return;
+          }
+        }
+        this.resetTwo();
+        this.formTwo.paramsType = '2'
+        this.addTwo = 'l-add';
+        this.titleTwo = '添加低位参数';
+        this.openTwo = true;
+      },
+      setLowInfo(index) {
+        this.resetTwo();
+        let info = JSON.parse(JSON.stringify(this.form.lowDetail[index]));
+        this.formTwo = info
+        this.formTwo.productName = this.productName
+        if (info.enumDetail == null || info.enumDetail == undefined || info.enumDetail.length == 0) {
+          this.showEnumTwo = false;
+        } else {
+          this.showEnumTwo = true;
+        }
+        this.updateTwo = index
+        this.addTwo = 'l-update';
+        this.titleTwo = '配置高位参数';
+        this.openTwo = true;
+      },
+      delLowInfo(index) {
+        let that = this
+        this.$modal.confirm('是否确认删除该低位参数？').then(function () {
+          that.form.lowDetail.splice(index, 1)
+        }).then(() => {
+        }).catch(() => {
+          that.$modal.msgError("删除失败");
+        });
+      },
+      //添加结构体参数
+      addStructInfo() {
+        this.showEnumTwo = false
+        // //不是二进制只能添加一个参数
+        // if (this.form.structDetail.length > 0) {
+        //   //第一个是二进制
+        //   if (this.form.structDetail[0].binarySystem == '0') {
+        //     this.$modal.msgError("非二进制参数只能添加一个");
+        //     return;
+        //   }
+        // }
+        this.resetTwo();
+        this.formTwo.paramsType = '4'
+        this.addTwo = 's-add';
+        this.titleTwo = '添加结构体参数';
+        this.openTwo = true;
+      },
+      setStructInfo(index) {
+        this.resetTwo();
+        let info = JSON.parse(JSON.stringify(this.form.structDetail[index]));
+        this.formTwo = info
+        this.formTwo.productName = this.productName
+        if (info.enumDetail == null || info.enumDetail == undefined || info.enumDetail.length == 0) {
+          this.showEnumTwo = false;
+        } else {
+          this.showEnumTwo = true;
+        }
+        this.updateTwo = index
+        this.addTwo = 's-update';
+        this.titleTwo = '配置结构体参数';
+        this.openTwo = true;
+      },
+      delStructInfo(index) {
+        let that = this
+        this.$modal.confirm('是否确认删除该结构体参数？').then(function () {
+          that.form.structDetail.splice(index, 1)
+        }).then(() => {
+        }).catch(() => {
+          that.$modal.msgError("删除失败");
+        });
+      },
+      //点击开启高低位
+      changeStruct(value) {
+        if (value == '1') {
+          this.form.dataType = null;
+          this.form.structDetail = [];
+          this.showStruct = false;
+          this.$forceUpdate();
+        } else {
+          this.form.highDetail = [];
+          this.form.lowDetail = [];
+        }
+      },
+      //强制刷新
+      changeUpdate() {
+        this.$forceUpdate();
+      },
+      //是否显示枚举参数
+      getshowEnum(id) {
+        this.showEnum = false;
+        this.showStruct = false;
+        this.dataTypeList.forEach(item => {
+          if (item.value == id && item.label == 'enum(枚举型)') {
+            this.showEnum = true;
+            this.form.dataUnit = '';
+          }
+          if (item.value == id && item.label == 'struct(结构体)') {
+            this.form.highLow = '0';
+            this.form.highDetail = [];
+            this.form.lowDetail = [];
+            this.showStruct = true;
+            this.$forceUpdate();
+          }
+        })
+      },
+      //是否显示枚举参数
+      getshowEnumTwo(id) {
+        this.showEnumTwo = false;
+        this.dataTypeListTwo.forEach(item => {
+          if (item.value == id && item.label == 'enum(枚举型)') {
+            this.showEnumTwo = true;
+            this.formTwo.dataUnit = '';
+          }
+        })
+      },
+      //查询协议数据
+      getAgreement() {
+        this.subscribes = [];
+        // 判断是否是mqtt通讯协议
+        if (this.productAgreement == 1) {
+          getAgreeMentByProductId(this.productId).then(response => {
+            console.log(response)
+            if (response.code == 200) {
+              console.log(response.data.mqttAddress)
+              var array = response.data.mqttAddress.split(',');
+              for (let i = 0; i < array.length; i++) {
+                const element = array[i];
+                const option = {
+                  value: element,
+                  label: element
+                }
+                this.subscribes.push(option);
+              }
+            }
+            console.log(this.subscribes)
+          })
+        }
+      },
+      /** 数据类型 */
+      getDataTypeList() {
+        let param = {
+          dictType: 'data_item_type'
+        }
+        listIotType(param).then(response => {
+          this.dataTypeList = response.data;
+        });
+        listIotType(param).then(response => {
+          var list = []
+          response.data.forEach(item => {
+            if (item.label != 'struct(结构体)' && item.label != 'custom(自定义)') {
+              list.push(item)
+            }
+          })
+          this.dataTypeListTwo = list
+        });
+      },
+      /** 新增按钮操作 */
+      handleAdd() {
+        this.showEnum = false;
+        this.showStruct = false;
+        this.reset();
+        this.open = true;
+        this.title = "添加数据项";
+      },
+      handleAddFunction() {
+        this.productItemParamsList = []
+        this.resetFunction();
+        this.openFunction = true;
+        this.title = "添加数据项";
+      },
+      /** 修改按钮操作 */
+      handleUpdate(row) {
+        this.showEnum = false;
+        this.showStruct = false;
+        this.reset();
+        const id = row.id || this.ids
+        getProductItemData(id).then(response => {
+          if (response.data.enumDetail == null || response.data.enumDetail == undefined || response.data.enumDetail.length == 0) {
+            response.data.enumDetail = [{dataValue: null, info: null, type: '3'}]
+          } else {
+            this.showEnum = true;
+          }
+
+          if (response.data.highDetail == null || response.data.highDetail == undefined || response.data.highDetail.length == 0) {
+            response.data.highDetail = []
+          }
+          if (response.data.lowDetail == null || response.data.lowDetail == undefined || response.data.lowDetail.length == 0) {
+            response.data.lowDetail = []
+          }
+          if (response.data.structDetail == null || response.data.structDetail == undefined || response.data.structDetail.length == 0) {
+            response.data.structDetail = []
+          } else {
+            this.showStruct = true;
+          }
+          // response.data.sortNum = response.data.sortNum.toString(16)
+          this.form = response.data;
+          this.form.productName = this.productName
+          this.open = true;
+          this.title = "修改数据项";
+        });
+      },
+      handleUpdateFunction(row) {
+        this.resetFunction();
+        //数据项信息
+        this.showInt = false;
+        this.showSelect = false;
+        if (row.issuedType == '1') {
+          const itemDSataId = row.dataItem
+          getProductItemData(itemDSataId).then(response => {
+            this.productItemParamsList = []
+
+            if (response.data.highDetail != null && response.data.highDetail != undefined && response.data.highDetail.length > 0) {
+              response.data.highDetail.forEach(iteam => {
+                this.productItemParamsSelectList = []
+                let add = {
+                  functionId: this.formFunction.id,
+                  sendValue: null
+                };
+                add['itemDataId'] = iteam.id
+                add['dataItemNum'] = iteam.dataItemNum
+                add['name'] = iteam.name
+                add['binarySystem'] = iteam.binarySystem
+
+                let selectList = []
+                if (iteam.enumDetail != null && iteam.enumDetail != undefined && iteam.enumDetail.length > 0) {
+                  iteam.enumDetail.forEach(iteam1 => {
+                    let add1 = {}
+                    add1['name'] = iteam1.dataValue + ':' + iteam1.info
+                    add1['value'] = iteam1.dataValue
+                    add1['dataItem'] = iteam.dataItemNum
+                    selectList.push(add1)
+                  })
+                }
+                add['selectList'] = selectList
+
+                this.productItemParamsList.push(add)
+              })
+            }
+            if (response.data.lowDetail != null && response.data.lowDetail != undefined && response.data.lowDetail.length > 0) {
+              response.data.lowDetail.forEach(iteam => {
+                let add = {
+                  functionId: this.formFunction.id,
+                  sendValue: null
+                };
+                add['itemDataId'] = iteam.id
+                add['dataItemNum'] = iteam.dataItemNum
+                add['name'] = iteam.name
+                add['binarySystem'] = iteam.binarySystem
+
+                let selectList = []
+                if (iteam.enumDetail != null && iteam.enumDetail != undefined && iteam.enumDetail.length > 0) {
+                  iteam.enumDetail.forEach(iteam1 => {
+                    let add1 = {}
+                    add1['name'] = iteam1.dataValue + ':' + iteam1.info
+                    add1['value'] = iteam1.dataValue
+                    add1['dataItem'] = iteam.dataItemNum
+                    selectList.push(add1)
+                  })
+                }
+                add['selectList'] = selectList
+
+                this.productItemParamsList.push(add)
+              })
+            }
+            if (response.data.structDetail != null && response.data.structDetail != undefined && response.data.structDetail.length > 0) {
+              response.data.structDetail.forEach(iteam => {
+                let add = {
+                  functionId: this.formFunction.id,
+                  sendValue: null
+                };
+                add['itemDataId'] = iteam.id
+                add['dataItemNum'] = iteam.dataItemNum
+                add['name'] = iteam.name
+                add['binarySystem'] = iteam.binarySystem
+
+                let selectList = []
+                if (iteam.enumDetail != null && iteam.enumDetail != undefined && iteam.enumDetail.length > 0) {
+                  iteam.enumDetail.forEach(iteam1 => {
+                    let add1 = {}
+                    add1['name'] = iteam1.dataValue + ':' + iteam1.info
+                    add1['value'] = iteam1.dataValue
+                    add1['dataItem'] = iteam.dataItemNum
+                    selectList.push(add1)
+                  })
+                }
+                add['selectList'] = selectList
+
+                this.productItemParamsList.push(add)
+              })
+            }
+            this.productItemParamsSelect = []
+            if (response.data.enumDetail != null && response.data.enumDetail != undefined && response.data.enumDetail.length > 0) {
+              response.data.enumDetail.forEach(iteam => {
+                let add = {}
+                add['name'] = iteam.dataValue + ':' + iteam.info
+                add['value'] = iteam.dataValue
+                this.productItemParamsSelect.push(add)
+              })
+              this.showSelect = true;
+            } else {
+              this.showSelect = false;
+            }
+            if ((this.productItemParamsList == null || this.productItemParamsList == undefined || this.productItemParamsList.length == 0) &&
+              (this.productItemParamsSelect == null || this.productItemParamsSelect == undefined || this.productItemParamsSelect.length == 0)) {
+              this.showInt = true;
+            }
+            const id = row.id || this.ids
+            getProductFunction(id).then(response1 => {
+              this.formFunction = response1.data;
+              if (this.productItemParamsList.length > 0) {
+                //设置选定参数
+                this.productItemParamsList.forEach((item, index) => {
+                  if (item.selectList != null && item.selectList != undefined && item.selectList.length > 0) {
+                    item.selectList.forEach(iteam => {
+                      if (response1.data.paramsList != null && response1.data.paramsList != undefined && response1.data.paramsList.length > 0) {
+                        response1.data.paramsList.forEach(iteam1 => {
+                          if (item.itemDataId == iteam1.itemDataId && iteam.value == iteam1.sendValue) {
+                            item.sendValue = iteam1.sendValue;
+                            item['id'] = iteam1.id
+                          }
+                        })
+                      }
+                    })
+                  } else {
+                    if (response1.data.paramsList != null && response1.data.paramsList != undefined && response1.data.paramsList.length > 0) {
+                      response1.data.paramsList.forEach(iteam1 => {
+                        if (item.itemDataId == iteam1.itemDataId) {
+                          item.sendValue = iteam1.sendValue;
+                          item['id'] = iteam1.id
+                        }
+                      })
+                    }
+                  }
+                })
+              }
+              this.formFunction.productName = this.productName
+              this.openFunction = true;
+              this.title = "修改数据项";
+            });
+          })
+        } else {
+          const id = row.id || this.ids
+          getProductFunction(id).then(response1 => {
+            this.formFunction = response1.data;
+            this.formFunction.productName = this.productName
+            this.openFunction = true;
+            this.title = "修改数据项";
+          });
+        }
+
+      },
+      /** 提交按钮 */
+      submitForm() {
+        let isNull = false;
+        if (this.showEnum) {
+          if (this.form.enumDetail == null || this.form.enumDetail == undefined || this.form.enumDetail.length == 0) {
+            this.$modal.msgError("请配置枚举参数");
+            return;
+          }
+          this.form.enumDetail.forEach(item => {
+            if (item.dataValue == null || item.info == null) {
+              isNull = true;
+            }
+          })
+          if (isNull) {
+            this.$modal.msgError("请配置枚举参数");
+            return;
+          }
+        } else {
+          this.form.enumDetail = [];
+        }
+        if (this.form.highLow == '1') {
+          if (this.form.highDetail == null || this.form.highDetail == undefined || this.form.highDetail.length == 0) {
+            this.form.highDetail = [];
+          }
+          if (this.form.lowDetail == null || this.form.lowDetail == undefined || this.form.lowDetail.length == 0) {
+            this.form.lowDetail = [];
+          }
+        } else {
+          this.form.highDetail = [];
+          this.form.lowDetail = [];
+        }
+        if (this.showStruct) {
+          if (this.form.structDetail == null || this.form.structDetail == undefined || this.form.structDetail.length == 0) {
+            this.$modal.msgError("请配置结构体参数");
+            return;
+          }
+        } else {
+          this.form.structDetail = [];
+        }
+
+        this.$refs["form"].validate(valid => {
+          if (valid) {
+            //如果有高低位或者结构体参数，则直接清空  单位，是否报存，能源类型，小数点位置，比率
+            if ((this.form.highDetail != null && this.form.highDetail != undefined && this.form.highDetail.length >0 ) ||
+              (this.form.lowDetail != null && this.form.lowDetail != undefined && this.form.lowDetail.length >0 ) ||
+              (this.form.structDetail != null && this.form.structDetail != undefined && this.form.structDetail.length >0 )) {
+              this.form.preserveType = null;
+              this.form.radixPoint = null;
+              this.form.energyCode = null;
+              this.form.ratioSize = null;
+            }
+            if(this.form.structDetail != null && this.form.structDetail != undefined && this.form.structDetail.length >0){
+              this.form.dataUnit = null;
+            }
+            if (this.form.id != null) {
+              updateProductItemData(this.form).then(response => {
+                this.$modal.msgSuccess("修改成功");
+                this.open = false;
+                this.getList();
+              });
+            } else {
+              addProductItemData(this.form).then(response => {
+                this.$modal.msgSuccess("新增成功");
+                this.open = false;
+                this.getList();
+              });
+            }
+          }
+        });
+      },
+      submitFormTwo() {
+        //与数据项编号//标题//名称
+        if (this.form.dataItemNum == this.formTwo.dataItemNum || this.form.name == this.formTwo.name || this.form.dataItemMark == this.formTwo.dataItemMark) {
+          this.$modal.msgError("与数据项编号/标识/名称重复");
+          return;
+        }
+        if (this.form.highDetail.length > 0) {
+          this.form.highDetail.forEach(itemH => {
+            if (itemH.id != this.formTwo.id) {
+              if (itemH.dataItemNum == this.formTwo.dataItemNum || itemH.name == this.formTwo.name || itemH.dataItemMark == this.formTwo.dataItemMark) {
+                this.$modal.msgError("与高位参数编号/标识/名称重复");
+                return;
+              }
+            }
+          })
+        }
+        if (this.form.lowDetail.length > 0) {
+          this.form.lowDetail.forEach(itemL => {
+            if (itemL.id != this.formTwo.id) {
+              if (itemL.dataItemNum == this.formTwo.dataItemNum || itemL.name == this.formTwo.name || itemL.dataItemMark == this.formTwo.dataItemMark) {
+                this.$modal.msgError("与低位参数编号/标识/名称重复");
+                return;
+              }
+            }
+          })
+        }
+        if (this.form.structDetail.length > 0) {
+          this.form.structDetail.forEach(itemS => {
+            if (itemS.id != this.formTwo.id) {
+              if (itemS.dataItemNum == this.formTwo.dataItemNum || itemS.name == this.formTwo.name || itemS.dataItemMark == this.formTwo.dataItemMark) {
+                this.$modal.msgError("与结构体参数编号/标识/名称重复");
+                return;
+              }
+            }
+
+          })
+        }
+
+        this.$refs["formTwo"].validate(valid => {
+          if (valid) {
+            let add = JSON.parse(JSON.stringify(this.formTwo));
+            if (this.addTwo == 'h-add') {
+              //不是二进制只能添加一个参数
+              if (this.form.highDetail.length > 0) {
+                if (this.formTwo.binarySystem == '0') {
+                  this.$modal.msgError("非二进制参数只能添加一个");
+                  return;
+                }
+              }
+              this.form.highDetail.push(add)
+            } else if (this.addTwo == 'l-add') {
+              //不是二进制只能添加一个参数
+              if (this.form.lowDetail.length > 0) {
+                if (this.formTwo.binarySystem == '0') {
+                  this.$modal.msgError("非二进制参数只能添加一个");
+                  return;
+                }
+              }
+              this.form.lowDetail.push(add)
+            } else if (this.addTwo == 's-add') {
+              this.form.structDetail.push(add)
+            } else if (this.addTwo == 'h-update') {
+              //不是二进制只能添加一个参数
+              if (this.form.highDetail.length > 0) {
+                if (this.formTwo.binarySystem == '0' && this.form.lowDetail.length > 1) {
+                  this.$modal.msgError("非二进制参数只能添加一个");
+                  return;
+                }
+              }
+              this.form.highDetail.splice(this.updateTwo, 1, add)
+            } else if (this.addTwo == 'l-update') {
+              //不是二进制只能添加一个参数
+              if (this.form.lowDetail.length > 0) {
+                if (this.formTwo.binarySystem == '0' && this.form.lowDetail.length > 1) {
+                  this.$modal.msgError("非二进制参数只能添加一个");
+                  return;
+                }
+              }
+              this.form.lowDetail.splice(this.updateTwo, 1, add)
+            } else if (this.addTwo == 's-update') {
+              this.form.structDetail.splice(this.updateTwo, 1, add)
+            }
+            this.openTwo = false;
+          }
+        });
+      },
+      submitFormFunction() {
+        if (this.productItemParamsList != null && this.productItemParamsList != undefined && this.productItemParamsList.length > 0) {
+          this.formFunction.paramsList = this.productItemParamsList
+        }
+        this.$refs["formFunction"].validate(valid => {
+          if (valid) {
+            //采集清空参数
+            if (this.formFunction.type != null && this.formFunction.type != undefined && this.formFunction.type == '1') {
+              this.formFunction.paramsList = []
+              this.formFunction.itemValue = null
+            } else if (this.formFunction.type != null && this.formFunction.type != undefined && this.formFunction.type == '0') {
+              this.formFunction.registerNumber = null
+            }
+            //指令下发
+            if (this.formFunction.issuedType != null && this.formFunction.issuedType != undefined && this.formFunction.issuedType == '1') {
+              this.formFunction.instruct = null
+            } else if (this.formFunction.issuedType != null && this.formFunction.issuedType != undefined && this.formFunction.issuedType == '0') {
+              this.formFunction.paramsList = []
+              this.formFunction.dataItem = null
+            }
+            if (this.formFunction.id != null) {
+              updateProductFunction(this.formFunction).then(response => {
+                this.$modal.msgSuccess("修改成功");
+                this.openFunction = false;
+                this.getFunctionList();
+              });
+            } else {
+              addProductFunction(this.formFunction).then(response => {
+                this.$modal.msgSuccess("新增成功");
+                this.openFunction = false;
+                this.getFunctionList();
+              });
+            }
+          }
+        });
+      },
+      /** 删除按钮操作 */
+      handleDelete(row) {
+        const ids = row.id || this.ids;
+        this.$modal.confirm('是否确认删除产品定义编号为"' + ids + '"的数据项？').then(function () {
+          return delProductItemData(ids);
+        }).then(() => {
+          this.getList();
+          this.$modal.msgSuccess("删除成功");
+        }).catch(() => {
+        });
+      },
+      handleDeleteFunction(row) {
+        const ids = row.id || this.ids;
+        this.$modal.confirm('是否确认删除产品定义编号为"' + ids + '"的数据项？').then(function () {
+          return delProductFunction(ids);
+        }).then(() => {
+          this.getFunctionList();
+          this.$modal.msgSuccess("删除成功");
+        }).catch(() => {
+        });
+      },
+      /** 导出按钮操作 */
+      handleExport() {
+        this.download('baseData/product/exportItemData', {
+          ...this.queryParams
+        }, this.productName + `数据项_${new Date().getTime()}.xlsx`)
+      },
+      handleExportFunction() {
+        this.download('baseData/product/exportFunction', {
+          ...this.queryParamsFunction
+        }, this.productName + `功能_${new Date().getTime()}.xlsx`)
+      },
+      /** 查询能源类型列表 */
+      getEnergyList() {
+        listEnergy().then(response => {
+          this.energyList = response.data;
+        });
+      },
+      //查询数据项参数
+      getParamsListByItemDataId(id) {
+        //新增时切换数据项
+        this.showInt = false;
+        this.showSelect = false;
+        getProductItemData(id).then(response => {
+          this.productItemParamsList = []
+
+          if (response.data.highDetail != null && response.data.highDetail != undefined && response.data.highDetail.length > 0) {
+            response.data.highDetail.forEach(iteam => {
+              this.productItemParamsSelectList = []
+              let add = {
+                functionId: this.formFunction.id,
+                sendValue: null
+              };
+              add['itemDataId'] = iteam.id
+              add['dataItemNum'] = iteam.dataItemNum
+              add['name'] = iteam.name
+              add['binarySystem'] = iteam.binarySystem
+
+              let selectList = []
+              if (iteam.enumDetail != null && iteam.enumDetail != undefined && iteam.enumDetail.length > 0) {
+                iteam.enumDetail.forEach(iteam1 => {
+                  let add1 = {}
+                  add1['name'] = iteam1.dataValue + ':' + iteam1.info
+                  add1['value'] = iteam1.dataValue
+                  add1['dataItem'] = iteam.dataItemNum
+                  selectList.push(add1)
+                })
+              }
+              add['selectList'] = selectList
+
+              this.productItemParamsList.push(add)
+            })
+          }
+          if (response.data.lowDetail != null && response.data.lowDetail != undefined && response.data.lowDetail.length > 0) {
+            response.data.lowDetail.forEach(iteam => {
+              let add = {
+                functionId: this.formFunction.id,
+                sendValue: null
+              };
+              add['itemDataId'] = iteam.id
+              add['dataItemNum'] = iteam.dataItemNum
+              add['name'] = iteam.name
+              add['binarySystem'] = iteam.binarySystem
+
+              let selectList = []
+              if (iteam.enumDetail != null && iteam.enumDetail != undefined && iteam.enumDetail.length > 0) {
+                iteam.enumDetail.forEach(iteam1 => {
+                  let add1 = {}
+                  add1['name'] = iteam1.dataValue + ':' + iteam1.info
+                  add1['value'] = iteam1.dataValue
+                  add1['dataItem'] = iteam.dataItemNum
+                  selectList.push(add1)
+                })
+              }
+              add['selectList'] = selectList
+
+              this.productItemParamsList.push(add)
+            })
+          }
+          if (response.data.structDetail != null && response.data.structDetail != undefined && response.data.structDetail.length > 0) {
+            response.data.structDetail.forEach(iteam => {
+              let add = {
+                functionId: this.formFunction.id,
+                sendValue: null
+              };
+              add['itemDataId'] = iteam.id
+              add['dataItemNum'] = iteam.dataItemNum
+              add['name'] = iteam.name
+              add['binarySystem'] = iteam.binarySystem
+
+              let selectList = []
+              if (iteam.enumDetail != null && iteam.enumDetail != undefined && iteam.enumDetail.length > 0) {
+                iteam.enumDetail.forEach(iteam1 => {
+                  let add1 = {}
+                  add1['name'] = iteam1.dataValue + ':' + iteam1.info
+                  add1['value'] = iteam1.dataValue
+                  add1['dataItem'] = iteam.dataItemNum
+                  selectList.push(add1)
+                })
+              }
+              add['selectList'] = selectList
+
+              this.productItemParamsList.push(add)
+            })
+          }
+          this.productItemParamsSelect = []
+          if (response.data.enumDetail != null && response.data.enumDetail != undefined && response.data.enumDetail.length > 0) {
+            response.data.enumDetail.forEach(iteam => {
+              let add = {}
+              add['name'] = iteam.dataValue + ':' + iteam.info
+              add['value'] = iteam.dataValue
+              this.productItemParamsSelect.push(add)
+            })
+            this.showSelect = true;
+          } else {
+            this.showSelect = false;
+          }
+          if ((this.productItemParamsList == null || this.productItemParamsList == undefined || this.productItemParamsList.length == 0) &&
+            (this.productItemParamsSelect == null || this.productItemParamsSelect == undefined || this.productItemParamsSelect.length == 0)) {
+            this.showInt = true;
+          }
+
+          //修改
+          if (this.productItemParamsList.length > 0 && this.formFunction.paramsList.length > 0) {
+            //设置选定参数
+            this.productItemParamsList.forEach((item, index) => {
+              if (item.selectList != null && item.selectList != undefined && item.selectList.length > 0) {
+                item.selectList.forEach(iteam => {
+                  this.formFunction.paramsList.forEach(iteam1 => {
+                    if (item.itemDataId == iteam1.itemDataId && iteam.value == iteam1.sendValue) {
+                      item.sendValue = iteam1.sendValue;
+                    }
+                  })
+                })
+              } else {
+                this.formFunction.paramsList.forEach(iteam1 => {
+                  if (item.itemDataId == iteam1.itemDataId) {
+                    item.sendValue = iteam1.sendValue;
+                  }
+                })
+              }
+            })
+          }
+
+        })
+      },
+      changeIssuedType(value) {
+        if (value == '0') {
+          this.formFunction.itemValue = null
+        }
+        if (this.formFunction.dataItem != null && this.formFunction.dataItem != undefined && this.formFunction.dataItem != '') {
+          const id = this.formFunction.dataItem
+          this.getParamsListByItemDataId(id)
+        }
+      },
+      changeType(value){
+        if(value == '0'){
+          if (this.formFunction.dataItem != null && this.formFunction.dataItem != undefined && this.formFunction.dataItem != '') {
+            const id = this.formFunction.dataItem
+            this.getParamsListByItemDataId(id)
+          }
+        }
+      },
+      /** 查询产品数据项列表 */
+      getList() {
+        this.loading = true;
+        if (this.productName == null || this.productName == undefined) {
+          getProduct(this.productId).then(response => {
+            this.productName = response.data.name;
+            this.productCode = response.data.code;
+
+            this.productAgreement = response.data.communicationProtocol;
+            this.queryParams.productId = this.productId
+            listProductItemData(this.queryParams).then(response => {
+              this.productItemDataList = response.rows;
+              this.total = response.total;
+              this.loading = false;
+            });
+            this.getAgreement();
+
+          })
+
+        } else {
+          this.queryParams.productId = this.productId
+          listProductItemData(this.queryParams).then(response => {
+            this.productItemDataList = response.rows;
+            this.total = response.total;
+            this.loading = false;
+          });
+          this.getAgreement();
+
+        }
+      },
+      /** 查询产品功能列表 */
+      getFunctionList() {
+        this.loadingFunction = true;
+        this.queryParamsFunction.productId = this.productId
+        listProductFunction(this.queryParamsFunction).then(response => {
+          this.productFunctionList = response.rows;
+          this.totalFunction = response.total;
+          this.loadingFunction = false;
+        });
+      },
+      // 取消按钮
+      cancel() {
+        this.open = false;
+        this.reset();
+      },
+      cancelTwo() {
+        this.openTwo = false;
+        this.resetTwo();
+      },
+      cancelFunction() {
+        this.openFunction = false;
+        this.resetFunction();
+      },
+      // 表单重置
+      reset() {
+        this.form = {
+          id: null,
+          productName: this.productName,
+          sortNum: null,
+          productId: this.productId,
+          dataItemNum: null,
+          dataItemMark: null,
+          name: null,
+          dataType: null,
+          dataUnit: null,
+          readType: null,
+          preserveType: null,
+          remark: null,
+          createTime: null,
+          createName: null,
+          updateTime: null,
+          updateName: null,
+          functionCode: null,
+          writeFunctionCode: null,
+          energyCode: null,
+          enumDetail: [],
+          highDetail: [],
+          lowDetail: [],
+          structDetail: [],
+          byteLength: null,
+          highLow: null,
+          binarySystem: null,
+          ratioSize: '1',
+          radixPoint: '0',
+        };
+        this.resetForm("form");
+      },
+      resetTwo() {
+        this.formTwo = {
+          id: null,
+          productName: this.productName,
+          sortNum: null,
+          productId: this.productId,
+          dataItemNum: null,
+          dataItemMark: null,
+          name: null,
+          dataType: null,
+          dataUnit: null,
+          readType: null,
+          preserveType: null,
+          remark: null,
+          createTime: null,
+          createName: null,
+          updateTime: null,
+          updateName: null,
+          functionCode: null,
+          writeFunctionCode: null,
+          energyCode: null,
+          byteLength: null,
+          binarySystem: null,
+          paramsType: null,
+          ratioSize: '1',
+          radixPoint: '0',
+          enumDetail: [],
+          registerNumber: null,
+        };
+        this.resetForm("formTwo");
+      },
+      resetFunction() {
+        this.formFunction = {
+          id: null,
+          productName: this.productName,
+          productId: this.productId,
+          functionNum: null,
+          name: null,
+          type: null,
+          issuedType: null,
+          communicationMode: null,
+          instruct: null,
+          dataLen: null,
+          dataItem: null,
+          itemValue: null,
+          remark: null,
+          createTime: null,
+          createName: null,
+          updateTime: null,
+          updateName: null,
+          paramsList: [],
+        };
+        this.resetForm("formFunction");
+      },
+      /** 返回按钮操作 */
+      handleClose() {
+        const obj = {
+          name: 'product',
+        }
+        this.$tab.closeOpenPage(obj)
+      },
+      /** 查看数据项物模型 **/
+      handleItemDataLook() {
+        this.queryParams.productId = this.productId
+        listProductItemData(this.queryParams).then(response => {
+          let modelVOList = response.rows;
+          this.title = '数据项物模型'
+          this.jsonModel = ''
+          modelVOList.forEach(item => {
+            if (this.jsonModel == '') {
+              this.jsonModel = JSON.stringify(item, null, '\t')
+            } else {
+              this.jsonModel = this.jsonModel + ',\n' + JSON.stringify(item, null, '\t')
+            }
+          })
+          this.openModel = true
+        });
+      },
+      handleFunctionLook() {
+        this.queryParamsFunction.productId = this.productId
+        listProductFunction(this.queryParamsFunction).then(response => {
+          let modelVOList = response.rows;
+          this.title = '功能定义物模型'
+          this.jsonModel = ''
+          modelVOList.forEach(item => {
+            if (this.jsonModel == '') {
+              this.jsonModel = JSON.stringify(item, null, '\t')
+            } else {
+              this.jsonModel = this.jsonModel + ',\n' + JSON.stringify(item, null, '\t')
+            }
+          })
+          this.openModel = true
+        });
+      },
+    }
+  }
+</script>
+<style lang="scss" scoped>
+  .box {
+    // 必须有高度 overflow 为自动
+    overflow: auto;
+    height: 650px;
+    width: 500px;
+    padding: 0px 30px 11px 27px;
+
+    // 滚动条的样式,宽高分别对应横竖滚动条的尺寸
+    &::-webkit-scrollbar {
+      width: 3px;
+    }
+
+    // 滚动条里面默认的小方块,自定义样式
+    &::-webkit-scrollbar-thumb {
+      background: #BABABA;
+      border-radius: 2px;
+    }
+
+    // 滚动条里面的轨道
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+  }
+</style>

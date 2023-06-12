@@ -1,0 +1,390 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ruoyi.efounder.JEnterprise.mapper.EnergyDataMapper" >
+
+    <resultMap id="BesEnergyDataMap" type="BesEnergyData" >
+        <id column="F_ID" property="fId" jdbcType="VARCHAR" />
+        <result column="F_NYBH" property="fNybh" jdbcType="VARCHAR" />
+        <result column="F_YQBH" property="fYqbh" jdbcType="VARCHAR" />
+        <result column="F_CJSJ" property="fCjsj" jdbcType="TIMESTAMP" />
+        <result column="F_DATA" property="fData" jdbcType="VARCHAR" />
+        <result column="F_TYPE" property="fType" jdbcType="VARCHAR" />
+        <result column="F_ALL_MONEY" property="fAllMoney" jdbcType="VARCHAR" />
+        <result column="F_COAL_AMOUNT" property="fCoalAmount" jdbcType="VARCHAR" />
+        <result column="F_CO2" property="fCo2" jdbcType="VARCHAR" />
+        <result column="F_PERMAN_DATA" property="fPermanData" jdbcType="VARCHAR" />
+        <result column="F_PERMAN_MONEY" property="fPermanMoney" jdbcType="VARCHAR" />
+        <result column="F_UNITAREA_DATA" property="fUnitareaData" jdbcType="VARCHAR" />
+        <result column="F_UNITAREA_MONEY" property="fUnitareaMoney" jdbcType="VARCHAR" />
+        <result column="F_CRDATE" property="fCrdate" jdbcType="TIMESTAMP" />
+        <result column="F_CHDATE" property="fChdate" jdbcType="TIMESTAMP" />
+        <result column="rows" property="rows" />
+    </resultMap>
+
+	<!-- 查询总能源记录是否存在 -->
+	<select id="queryEnergyExists" parameterType="string" resultMap="BesEnergyDataMap" >
+		select COUNT(*) as `rows` from athena_bes_energy_data
+		where
+		F_NYBH=#{fNybh} and F_CJSJ=#{fCjsj} and F_TYPE=#{fType} and F_YQBH = #{fYqbh}
+	</select>
+
+    <!--查询大于当前采集时间的数据项-->
+    <select id="queryEnergyGtCjsj" resultType="java.lang.Integer">
+        select COUNT(1) as `rows` from athena_bes_energy_data
+		where
+		F_NYBH=#{fNybh} and F_ACCURATE_CJSJ>#{fCjsj} and F_TYPE=#{fType} and F_YQBH = #{fYqbh} LIMIT 1
+    </select>
+    <!--查询大于当前采集时间的支路数据项-->
+
+    <select id="queryBrancGtCjsj" resultType="java.lang.Integer">
+        select COUNT(1) as `rows` from athena_bes_branch_data
+		where
+		F_ZLBH=#{fZlbh} and F_DNBH=#{fDnbh} and F_ACCURATE_CJSJ>#{fCjsj} and F_TYPE=#{fType}  LIMIT 1
+    </select>
+        <!--    查询当前电表原始数据大于当前采集时间小时的操作-->
+    <select id="queryoriginalGtCjsj" resultType="java.lang.Integer">
+        select count(1) from  athena_bes_original_data where F_DNBH=#{dbbh} and F_CJSJ>#{cjsj} LIMIT 1
+--         LEFT(F_CJSJ,13)=LEFT(#{cjsj},13)
+    </select>
+<!--    判断是否有等于当前采集参数的-->
+    <select id="queryEnergyEqCjsj" resultType="java.lang.Integer">
+
+        select COUNT(1) as `rows` from athena_bes_energy_data
+		where
+		F_NYBH=#{fNybh} and F_CJSJ=#{fCjsj} and F_TYPE=#{fType} and F_YQBH = #{fYqbh} LIMIT
+    </select>
+    <select id="queryBrancEqCjsj" resultType="java.lang.Integer">
+
+         select COUNT(1) as `rows` from athena_bes_branch_data
+		where
+		F_ZLBH=#{fNybh} and F_DNBH=#{fDnbh} and F_CJSJ=#{fCjsj} and F_TYPE=#{fType}  LIMIT 1
+    </select>
+
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.String" >
+        delete from athena_bes_energy_data
+        where F_ID = #{fId,jdbcType=VARCHAR}
+    </delete>
+
+    <insert id="saveEnergyData" parameterType="BesEnergyData" >
+        insert into athena_bes_energy_data
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+            <if test="fId != null" >
+                F_ID,
+            </if>
+            <if test="fNybh != null" >
+                F_NYBH,
+            </if>
+            <if test="fYqbh != null" >
+                F_YQBH,
+            </if>
+            <if test="fCjsj != null" >
+                F_CJSJ,
+            </if>
+            <if test="fData != null" >
+                F_DATA,
+            </if>
+            <if test="fType != null" >
+                F_TYPE,
+            </if>
+            <if test="fAllMoney != null" >
+                F_ALL_MONEY,
+            </if>
+            <if test="fCoalAmount != null" >
+                F_COAL_AMOUNT,
+            </if>
+            <if test="fCo2 != null" >
+                F_CO2,
+            </if>
+            <if test="fPermanData != null" >
+                F_PERMAN_DATA,
+            </if>
+            <if test="fPermanMoney != null" >
+                F_PERMAN_MONEY,
+            </if>
+            <if test="fUnitareaData != null" >
+                F_UNITAREA_DATA,
+            </if>
+
+            <if test="fAccurateCjsj != null" >
+                F_ACCURATE_CJSJ,
+            </if>
+            <if test="fUnitareaMoney != null" >
+                F_UNITAREA_MONEY,
+            </if>
+                F_CRDATE,
+
+                F_CHDATE,
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides="," >
+            <if test="fId != null" >
+                #{fId,jdbcType=VARCHAR},
+            </if>
+            <if test="fNybh != null" >
+                #{fNybh,jdbcType=VARCHAR},
+            </if>
+            <if test="fYqbh != null" >
+                #{fYqbh,jdbcType=VARCHAR},
+            </if>
+            <if test="fCjsj != null" >
+                #{fCjsj},
+            </if>
+            <if test="fData != null" >
+                #{fData},
+            </if>
+            <if test="fType != null" >
+                #{fType,jdbcType=VARCHAR},
+            </if>
+            <if test="fAllMoney != null" >
+                #{fAllMoney,jdbcType=VARCHAR},
+            </if>
+            <if test="fCoalAmount != null" >
+                #{fCoalAmount,jdbcType=VARCHAR},
+            </if>
+            <if test="fCo2 != null" >
+                #{fCo2,jdbcType=VARCHAR},
+            </if>
+            <if test="fPermanData != null" >
+                #{fPermanData,jdbcType=VARCHAR},
+            </if>
+            <if test="fPermanMoney != null" >
+                #{fPermanMoney,jdbcType=VARCHAR},
+            </if>
+            <if test="fUnitareaData != null" >
+                #{fUnitareaData,jdbcType=VARCHAR},
+            </if>
+
+            <if test="fAccurateCjsj != null" >
+                #{fAccurateCjsj},
+            </if>
+            <if test="fUnitareaMoney != null" >
+                #{fUnitareaMoney,jdbcType=VARCHAR},
+            </if>
+                current_timestamp(),
+
+                current_timestamp(),
+        </trim>
+    </insert>
+
+    <update id="updateEnergy" parameterType="BesEnergyData" >
+        update athena_bes_energy_data
+        <set >
+            <if test="fData != null" >
+                F_DATA = #{fData,jdbcType=VARCHAR},
+            </if>
+            <if test="fAllMoney != null" >
+                F_ALL_MONEY = #{fAllMoney,jdbcType=VARCHAR},
+            </if>
+            <if test="fCoalAmount != null" >
+                F_COAL_AMOUNT = #{fCoalAmount,jdbcType=VARCHAR},
+            </if>
+            <if test="fCo2 != null" >
+                F_CO2 = #{fCo2,jdbcType=VARCHAR},
+            </if>
+            <if test="fPermanData != null" >
+                F_PERMAN_DATA = #{fPermanData,jdbcType=VARCHAR},
+            </if>
+            <if test="fPermanMoney != null" >
+                F_PERMAN_MONEY = #{fPermanMoney,jdbcType=VARCHAR},
+            </if>
+            <if test="fUnitareaData != null" >
+                F_UNITAREA_DATA = #{fUnitareaData,jdbcType=VARCHAR},
+            </if>
+            <if test="fUnitareaMoney != null" >
+                F_UNITAREA_MONEY = #{fUnitareaMoney,jdbcType=VARCHAR},
+            </if>
+            <if test="fCrdate != null" >
+                F_CRDATE = #{fCrdate,jdbcType=TIMESTAMP},
+            </if>
+                F_CHDATE = current_timestamp(),
+        </set>
+        where
+        		F_NYBH = #{fNybh,jdbcType=VARCHAR}
+        	and F_YQBH = #{fYqbh,jdbcType=VARCHAR}
+        	and F_CJSJ = #{fCjsj}
+        	and F_TYPE = #{fType,jdbcType=VARCHAR}
+    </update>
+
+    <update id="updateEnergyData" parameterType="BesEnergyData" >
+        update athena_bes_energy_data
+        <set >
+            <if test="fData != null" >
+                F_DATA = F_DATA + #{fData},
+            </if>
+            <if test="fAllMoney != null" >
+                F_ALL_MONEY = #{fAllMoney,jdbcType=VARCHAR},
+            </if>
+            <if test="fCoalAmount != null" >
+                F_COAL_AMOUNT = #{fCoalAmount,jdbcType=VARCHAR},
+            </if>
+            <if test="fCo2 != null" >
+                F_CO2 = #{fCo2,jdbcType=VARCHAR},
+            </if>
+            <if test="fPermanData != null" >
+                F_PERMAN_DATA = #{fPermanData,jdbcType=VARCHAR},
+            </if>
+            <if test="fPermanMoney != null" >
+                F_PERMAN_MONEY = #{fPermanMoney,jdbcType=VARCHAR},
+            </if>
+            <if test="fUnitareaData != null" >
+                F_UNITAREA_DATA = #{fUnitareaData,jdbcType=VARCHAR},
+            </if>
+            <if test="fUnitareaMoney != null" >
+                F_UNITAREA_MONEY = #{fUnitareaMoney,jdbcType=VARCHAR},
+            </if>
+            <if test="fAccurateCjsj != null" >
+                F_ACCURATE_CJSJ = #{fAccurateCjsj},
+            </if>
+
+            <if test="fCrdate != null" >
+                F_CRDATE = #{fCrdate,jdbcType=TIMESTAMP},
+            </if>
+                F_CHDATE = current_timestamp(),
+        </set>
+        where
+        		F_NYBH = #{fNybh,jdbcType=VARCHAR}
+        	and F_YQBH = #{fYqbh,jdbcType=VARCHAR}
+        	and F_CJSJ = #{fCjsj}
+        	and F_TYPE = #{fType,jdbcType=VARCHAR}
+    </update>
+
+    <!-- 更新支路统计数据 -->
+    <update id="updateBranchData" parameterType="BesBranchData">
+        update athena_bes_branch_data
+        <set>
+            <if test="fDnbh != null">
+                F_DNBH = #{fDnbh,jdbcType=VARCHAR},
+            </if>
+            <if test="fData != null">
+                F_DATA = F_DATA + #{fData},
+            </if>
+            <if test="fAllMoney != null">
+                F_ALL_MONEY = #{fAllMoney,jdbcType=VARCHAR},
+            </if>
+            <if test="fCoalAmount != null">
+                F_COAL_AMOUNT = #{fCoalAmount,jdbcType=VARCHAR},
+            </if>
+            <if test="fCo2 != null">
+                F_CO2 = #{fCo2,jdbcType=VARCHAR},
+            </if>
+            <if test="fPermanData != null">
+                F_PERMAN_DATA = #{fPermanData},
+            </if>
+            <if test="fPermanMoney != null">
+                F_PERMAN_MONEY = #{fPermanMoney},
+            </if>
+            <if test="fUnitareData != null">
+                F_UNITAREA_DATA = #{fUnitareData},
+            </if>
+            <if test="fAccurateCjsj != null">
+                F_ACCURATE_CJSJ = #{fAccurateCjsj},
+            </if>
+            <if test="fUnitareMoney != null">
+                F_UNITAREA_MONEY = #{fUnitareMoney},
+            </if>
+
+            F_CHDATE = current_timestamp(),
+        </set>
+        where F_ZLBH = #{fZlbh}
+        and F_CJSJ = #{fCjsj}
+        and F_TYPE = #{fType}
+    </update>
+
+    <!-- 保存支路统计数据 -->
+    <insert id="saveBranchData" parameterType="BesBranchData">
+        insert into athena_bes_branch_data
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="fId != null">
+                F_ID,
+            </if>
+            <if test="fZlbh != null">
+                F_ZLBH,
+            </if>
+            <if test="fDnbh != null">
+                F_DNBH,
+            </if>
+            <if test="fCjsj != null">
+                F_CJSJ,
+            </if>
+            <if test="fData != null">
+                F_DATA,
+            </if>
+            <if test="fType != null">
+                F_TYPE,
+            </if>
+            <if test="fAllMoney != null">
+                F_ALL_MONEY,
+            </if>
+            <if test="fCoalAmount != null">
+                F_COAL_AMOUNT,
+            </if>
+            <if test="fCo2 != null">
+                F_CO2,
+            </if>
+            <if test="fPermanData != null">
+                F_PERMAN_DATA,
+            </if>
+            <if test="fPermanMoney != null">
+                F_PERMAN_MONEY,
+            </if>
+            <if test="fUnitareData != null">
+                F_UNITAREA_DATA,
+            </if>
+            <if test="fUnitareMoney != null">
+                F_UNITAREA_MONEY,
+            </if>
+            <if test="fAccurateCjsj != null">
+                F_ACCURATE_CJSJ,
+            </if>
+            F_CRDATE,
+            F_CHDATE,
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="fId != null">
+                #{fId},
+            </if>
+            <if test="fZlbh != null">
+                #{fZlbh},
+            </if>
+            <if test="fDnbh != null">
+                #{fDnbh},
+            </if>
+            <if test="fCjsj != null">
+                #{fCjsj},
+            </if>
+            <if test="fData != null">
+                #{fData},
+            </if>
+            <if test="fType != null">
+                #{fType},
+            </if>
+            <if test="fAllMoney != null">
+                #{fAllMoney},
+            </if>
+            <if test="fCoalAmount != null">
+                #{fCoalAmount},
+            </if>
+            <if test="fCo2 != null">
+                #{fCo2},
+            </if>
+            <if test="fPermanData != null">
+                #{fPermanData},
+            </if>
+            <if test="fPermanMoney != null">
+                #{fPermanMoney},
+            </if>
+            <if test="fUnitareData != null">
+                #{fUnitareData},
+            </if>
+            <if test="fUnitareMoney != null">
+                #{fUnitareMoney},
+            </if>
+            <if test="fAccurateCjsj != null">
+                #{fAccurateCjsj},
+            </if>
+            current_timestamp(),
+
+            current_timestamp(),
+        </trim>
+    </insert>
+
+</mapper>

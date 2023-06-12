@@ -1,0 +1,141 @@
+package com.ruoyi.efounder.JEnterprise.controller.energyInfo;
+
+import java.util.List;
+import java.util.Map;
+import javax.servlet.http.HttpServletResponse;
+
+import com.ruoyi.efounder.JEnterprise.mapper.energyInfo.ParkMapper;
+import com.ruoyi.efounder.JEnterprise.service.energyInfo.IParkService;
+import com.ruoyi.efounder.JEnterprise.domain.energyInfo.Park;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import com.ruoyi.common.annotation.Log;
+import com.ruoyi.common.core.controller.BaseController;
+import com.ruoyi.common.core.domain.AjaxResult;
+import com.ruoyi.common.enums.BusinessType;
+import com.ruoyi.common.utils.poi.ExcelUtil;
+import com.ruoyi.common.core.page.TableDataInfo;
+
+/**
+ * 园区Controller
+ * 
+ * @author ruoyi
+ * @date 2022-09-08
+ */
+@RestController
+@RequestMapping("/basicData/parkInfo")
+public class ParkController extends BaseController
+{
+    @Autowired
+    private IParkService parkService;
+
+    @Autowired
+    private ParkMapper parkMapper;
+
+    /**
+     * 查询园区列表
+     */
+    @PreAuthorize("@ss.hasPermi('basicData:parkInfo:list')")
+    @GetMapping("/list")
+    public TableDataInfo list(Park park)
+    {
+        startPage();
+        List<Park> list = parkService.selectParkList(park);
+        return getDataTable(list);
+
+    }
+
+    /**
+     * 查询所有园区
+     */
+    @GetMapping("/parkList")
+    public List<Park> parkList()
+    {
+        List<Park> list = parkMapper.findAllPark();
+        return list;
+    }
+
+    /**
+     * 用户列表
+     */
+    @GetMapping(value = "/listUser")
+    public AjaxResult listUser()
+    {
+        List<Map<String,Object>> list = parkMapper.listUser();
+        return AjaxResult.success(list);
+    }
+
+    /**
+     * 组织机构列表
+     */
+    @GetMapping(value = "/listOrganization")
+    public AjaxResult listOrganization()
+    {
+        List<Map<String,Object>> list = parkMapper.listOrganization();
+        return AjaxResult.success(list);
+    }
+
+    /**
+     * 导出园区列表
+     */
+    @PreAuthorize("@ss.hasPermi('basicData:parkInfo:export')")
+    @Log(title = "园区", businessType = BusinessType.EXPORT)
+    @PostMapping("/export")
+    public void export(HttpServletResponse response, Park park)
+    {
+        List<Park> list = parkService.selectParkList(park);
+        ExcelUtil<Park> util = new ExcelUtil<>(Park.class);
+        util.exportExcel(response, list, "园区数据");
+    }
+
+    /**
+     * 获取园区详细信息
+     */
+    @PreAuthorize("@ss.hasPermi('basicData:parkInfo:query')")
+    @GetMapping(value = "/{code}")
+    public AjaxResult getInfo(@PathVariable("code") String code)
+    {
+        return AjaxResult.success(parkService.selectParkByCode(code));
+    }
+
+    /**
+     * 新增园区
+     */
+    @PreAuthorize("@ss.hasPermi('basicData:parkInfo:add')")
+    @Log(title = "园区", businessType = BusinessType.INSERT)
+    @PostMapping
+    public AjaxResult add(@RequestBody Park park)
+    {
+        return toAjax(parkService.insertPark(park));
+    }
+
+    /**
+     * 修改园区
+     */
+    @PreAuthorize("@ss.hasPermi('basicData:parkInfo:edit')")
+    @Log(title = "园区", businessType = BusinessType.UPDATE)
+    @PutMapping
+    public AjaxResult edit(@RequestBody Park park)
+    {
+        return toAjax(parkService.updatePark(park));
+    }
+
+    /**
+     * 删除园区
+     */
+    @PreAuthorize("@ss.hasPermi('basicData:parkInfo:remove')")
+    @Log(title = "园区", businessType = BusinessType.DELETE)
+	@DeleteMapping("/{codes}")
+    public AjaxResult remove(@PathVariable String[] codes)
+    {
+        return parkService.deleteParkByCodes(codes);
+    }
+}

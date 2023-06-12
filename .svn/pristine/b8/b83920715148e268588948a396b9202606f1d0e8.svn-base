@@ -1,0 +1,38 @@
+package com.ruoyi.efounder.JEnterprise.controller.energyAnalysis;
+
+import com.ruoyi.common.core.domain.AjaxResult;
+import com.ruoyi.efounder.JEnterprise.service.energyAnalysis.impl.RankingServiceImpl;
+import com.ruoyi.efounder.JEnterprise.domain.energyAnalysis.vo.RankingVO;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+
+
+/**
+ * 能耗排名
+ *
+ * @author qindehua
+ */
+@RestController
+@RequestMapping("/energyAnalysis/ranking")
+public class RankingController {
+
+    @Autowired
+    private RankingServiceImpl service;
+
+    /**
+     * 查询支路能耗
+     */
+    @PostMapping("/branch")
+    public AjaxResult selectRankingBranch(@RequestBody @Validated RankingVO rankingVO){
+        return service.selectDataByBranchIds(rankingVO);
+    }
+    /**
+     * 查询分户能耗
+     */
+    @PostMapping("/household")
+    public AjaxResult selectRankingHousehold(@RequestBody @Validated RankingVO rankingVO){
+        return service.selectDataByHouseholdIds(rankingVO);
+    }
+
+}

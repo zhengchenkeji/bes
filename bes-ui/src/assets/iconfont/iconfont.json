@@ -1,0 +1,170 @@
+{
+  "id": "",
+  "name": "",
+  "font_family": "iconfont",
+  "css_prefix_text": "icon-",
+  "description": "",
+  "glyphs": [
+    {
+      "icon_id": "383678",
+      "name": "空五角星",
+      "font_class": "kongwujiaoxing",
+      "unicode": "e62d",
+      "unicode_decimal": 58925
+    },
+    {
+      "icon_id": "577322",
+      "name": "圆形未选中",
+      "font_class": "yuanxingweixuanzhong",
+      "unicode": "e72f",
+      "unicode_decimal": 59183
+    },
+    {
+      "icon_id": "1766248",
+      "name": "图表-表格",
+      "font_class": "biaoge",
+      "unicode": "e66d",
+      "unicode_decimal": 58989
+    },
+    {
+      "icon_id": "1766470",
+      "name": "符号-按钮",
+      "font_class": "anniu",
+      "unicode": "e690",
+      "unicode_decimal": 59024
+    },
+    {
+      "icon_id": "2404406",
+      "name": "组合",
+      "font_class": "zuhe",
+      "unicode": "e647",
+      "unicode_decimal": 58951
+    },
+    {
+      "icon_id": "6420504",
+      "name": "吊灯",
+      "font_class": "diaodeng-",
+      "unicode": "e60d",
+      "unicode_decimal": 58893
+    },
+    {
+      "icon_id": "10047317",
+      "name": "上移一层",
+      "font_class": "ziyuan",
+      "unicode": "e60c",
+      "unicode_decimal": 58892
+    },
+    {
+      "icon_id": "10048835",
+      "name": "矩形",
+      "font_class": "juxing",
+      "unicode": "e620",
+      "unicode_decimal": 58912
+    },
+    {
+      "icon_id": "10352338",
+      "name": "下移一层",
+      "font_class": "xiayiyiceng",
+      "unicode": "e61c",
+      "unicode_decimal": 58908
+    },
+    {
+      "icon_id": "14220841",
+      "name": "文本",
+      "font_class": "wenben",
+      "unicode": "e652",
+      "unicode_decimal": 58962
+    },
+    {
+      "icon_id": "15162796",
+      "name": "shuaxin",
+      "font_class": "shuaxin",
+      "unicode": "e634",
+      "unicode_decimal": 58932
+    },
+    {
+      "icon_id": "15162836",
+      "name": "xingzhuang-sanjiaoxing",
+      "font_class": "xingzhuang-sanjiaoxing",
+      "unicode": "e643",
+      "unicode_decimal": 58947
+    },
+    {
+      "icon_id": "15162867",
+      "name": "zhongwen",
+      "font_class": "zhongwen",
+      "unicode": "e654",
+      "unicode_decimal": 58964
+    },
+    {
+      "icon_id": "17521049",
+      "name": "直线",
+      "font_class": "zhixian",
+      "unicode": "e602",
+      "unicode_decimal": 58882
+    },
+    {
+      "icon_id": "20323710",
+      "name": "icon_guanbi",
+      "font_class": "icon_guanbi",
+      "unicode": "e60e",
+      "unicode_decimal": 58894
+    },
+    {
+      "icon_id": "21585907",
+      "name": "关闭",
+      "font_class": "guanbi",
+      "unicode": "e6cc",
+      "unicode_decimal": 59084
+    },
+    {
+      "icon_id": "32475794",
+      "name": "图片",
+      "font_class": "tupian",
+      "unicode": "e72d",
+      "unicode_decimal": 59181
+    },
+    {
+      "icon_id": "35520856",
+      "name": "strip_lamp_open",
+      "font_class": "a-tiaodengkaiqi_huaban1",
+      "unicode": "e601",
+      "unicode_decimal": 58881
+    },
+    {
+      "icon_id": "35520857",
+      "name": "down_lamp_close",
+      "font_class": "a-tongdengguanbi_huaban1",
+      "unicode": "e603",
+      "unicode_decimal": 58883
+    },
+    {
+      "icon_id": "35520858",
+      "name": "down_lamp_fault",
+      "font_class": "a-tongdengguzhang_huaban1",
+      "unicode": "e604",
+      "unicode_decimal": 58884
+    },
+    {
+      "icon_id": "35520859",
+      "name": "down_lamp_open",
+      "font_class": "a-tongdengkaiqi_huaban1",
+      "unicode": "e605",
+      "unicode_decimal": 58885
+    },
+    {
+      "icon_id": "35520860",
+      "name": "strip_lamp_fault",
+      "font_class": "a-tiaodengguzhang_huaban1",
+      "unicode": "e606",
+      "unicode_decimal": 58886
+    },
+    {
+      "icon_id": "35520865",
+      "name": "strip_lamp_close",
+      "font_class": "a-tiaodengguanbi_huaban1",
+      "unicode": "e607",
+      "unicode_decimal": 58887
+    }
+  ]
+}

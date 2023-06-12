@@ -1,0 +1,162 @@
+package com.ruoyi.efounder.JEnterprise.controller.energyInfo;
+
+import com.ruoyi.common.annotation.Log;
+import com.ruoyi.common.core.controller.BaseController;
+import com.ruoyi.common.core.domain.AjaxResult;
+import com.ruoyi.common.core.page.TableDataInfo;
+import com.ruoyi.common.enums.BusinessType;
+import com.ruoyi.common.utils.poi.ExcelUtil;
+import com.ruoyi.efounder.JEnterprise.domain.energyInfo.EnergyType;
+import com.ruoyi.efounder.JEnterprise.domain.energyInfo.ManualEntryEnergy;
+import com.ruoyi.efounder.JEnterprise.domain.energyInfo.ManualentryenergyCollection;
+import com.ruoyi.efounder.JEnterprise.service.energyInfo.ManualEntryEnergyService;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import java.util.Collection;
+import java.util.List;
+
+
+/**
+ * description:手动录入能耗控制器
+ * author: sunshangeng
+ * date:2022/12/2 12:24
+ */
+@Controller
+@RequestMapping("/basicData/manualEntryEnergy")
+public class manualEntryEnergyController  extends BaseController {
+
+
+    @Resource
+    private ManualEntryEnergyService manualEntryEnergyService;
+
+
+    /**
+     * @description:添加能耗
+     * @author: sunshangeng
+     * @param: [manualentryenergy]
+     * @return: com.ruoyi.common.core.domain.AjaxResult
+     **/
+
+    @PostMapping
+    @ResponseBody
+    public AjaxResult insertManualentryenergy(@RequestBody ManualEntryEnergy manualentryenergy){
+//        return  AjaxResult.success();
+        return  manualEntryEnergyService.insertManualentryenergy(manualentryenergy);
+
+    }
+
+    /**
+     * @description:获取设备树结构
+     * @author: sunshangeng
+     * @param: [manualentryenergy]
+     * @return: com.ruoyi.common.core.domain.AjaxResult
+     **/
+    @RequestMapping("/treeSelect")
+    @ResponseBody
+    public AjaxResult treeSelect(){
+
+        return  manualEntryEnergyService.treeSelect();
+
+    }
+
+    /**
+     * @description:获取采集参数
+     * @author: sunshangeng
+     * @param: [manualentryenergy]
+     * @return: com.ruoyi.common.core.domain.AjaxResult
+     **/
+    @RequestMapping("/getElectricParams")
+    @ResponseBody
+    public AjaxResult getElectricParams(String meterid){
+        return  manualEntryEnergyService.getElectricParams(meterid);
+    }
+
+    /**
+     * @description:导入能耗
+     * @author: sunshangeng
+     * @param: [request, file, updateSupport]
+     * @return: com.ruoyi.common.core.domain.AjaxResult
+     **/
+
+    @PostMapping("/importData")
+    @ResponseBody
+    public AjaxResult importData(HttpServletRequest request, MultipartFile file, boolean updateSupport) throws Exception
+    {
+        AjaxResult ajaxResult = manualEntryEnergyService.impExcel(request,file);
+
+        return ajaxResult;
+    }
+
+
+    /**
+     * @description:获取采集参数
+     * @author: sunshangeng
+     * @param: [manualentryenergy]
+     * @return: com.ruoyi.common.core.domain.AjaxResult
+     **/
+    @RequestMapping("/getmanualEntryEnergyData")
+    @ResponseBody
+    public TableDataInfo getmanualEntryEnergyData( ManualEntryEnergy manualEntryEnergy){
+        startPage();
+        List<ManualEntryEnergy> entryEnergyList = manualEntryEnergyService.getmanualEntryEnergyData(manualEntryEnergy);
+        return getDataTable(entryEnergyList) ;
+    }
+
+
+
+    /**
+     * @description:根据能耗id获取能耗详情
+     * @author: sunshangeng
+     * @param: [manualEntryEnergy]
+     * @return: com.ruoyi.common.core.page.TableDataInfo
+     **/
+
+    @RequestMapping("/getEnergyDetailData")
+    @ResponseBody
+    public TableDataInfo getEnergyDetailData(String entryEnergyId){
+        startPage();
+        List<ManualentryenergyCollection> energyDetailData = manualEntryEnergyService.getEnergyDetailData(entryEnergyId);
+//        List<ManualEntryEnergy> entryEnergyList = (List<ManualEntryEnergy>) energyDetailData
+
+        return getDataTable(energyDetailData) ;
+    }
+
+    /**删除能耗信息*/
+    @Log(title = "手动录入能耗信息", businessType = BusinessType.DELETE)
+    @DeleteMapping("/{ids}")
+    @ResponseBody
+    public AjaxResult remove(@PathVariable Long[] ids) throws Exception {
+        return manualEntryEnergyService.deleteManualentryenergy(ids);
+    }
+
+    /**
+     * 导出告警策略列表
+     */
+    @PostMapping("/export")
+    public void export(HttpServletResponse response, ManualEntryEnergy manualentryenergy)
+    {
+        List<ManualEntryEnergy> entryEnergyList = manualEntryEnergyService.exportManualEntryEnergyData(manualentryenergy);
+        ExcelUtil<ManualEntryEnergy> util = new ExcelUtil<>(ManualEntryEnergy.class);
+        util.exportExcel(response, entryEnergyList, "手动输入能耗数据");
+    }
+
+    /**
+     * 查询所有能耗类型
+     *
+     * @return {@code List<EnergyType> }
+     * @Author sunshangeng
+     **/
+    @GetMapping("/allEnergyTypeList")
+    @ResponseBody
+    public AjaxResult allEnergyTypeList()
+    {
+        Collection<EnergyType> list = manualEntryEnergyService.allEnergyTypeList();
+        return AjaxResult.success(list);
+    }
+}

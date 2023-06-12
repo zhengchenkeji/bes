@@ -1,0 +1,8 @@
+const timer = {
+  timerTime:1000 * 60,//定时器常量时间
+  fiveSecondTimerTime:1000 * 5,//5秒定时器
+}
+
+export   {
+  timer
+}

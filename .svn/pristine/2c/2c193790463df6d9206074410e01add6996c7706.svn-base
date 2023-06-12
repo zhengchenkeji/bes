@@ -1,0 +1,313 @@
+package com.ruoyi.efounder.JEnterprise.service.designer.Impl;
+
+import com.ruoyi.common.config.RuoYiConfig;
+import com.ruoyi.common.core.domain.AjaxResult;
+import com.ruoyi.common.exception.file.InvalidExtensionException;
+import com.ruoyi.common.utils.DateUtils;
+import com.ruoyi.common.utils.file.FileUploadUtils;
+import com.ruoyi.common.utils.file.MimeTypeUtils;
+import com.ruoyi.efounder.JEnterprise.domain.DesignerArea;
+import com.ruoyi.efounder.JEnterprise.domain.DesignerAreaPage;
+import com.ruoyi.efounder.JEnterprise.mapper.designer.DesignerAreaMapper;
+import com.ruoyi.efounder.JEnterprise.service.designer.DesignerAreaService;
+import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.multipart.MultipartFile;
+
+import javax.annotation.Resource;
+import java.io.IOException;
+import java.util.List;
+
+import static com.ruoyi.common.utils.SecurityUtils.getUsername;
+
+/**
+ * @Author: wanghongjie
+ * @Description:
+ * @Date: Created in 8:37 2022/10/20
+ * @Modified By:
+ */
+@Service
+public class DesignerAreaServiceImpl implements DesignerAreaService {
+
+    @Resource
+    private DesignerAreaMapper designerAreaMapper;
+
+    /**
+     *
+     * @Description: 获取所有的区域信息
+     *
+     * @auther: wanghongjie
+     * @date: 9:03 2022/10/20
+     * @param: [DesignerArea]
+     * @return: com.ruoyi.common.core.domain.AjaxResult
+     *
+     */
+    @Override
+    public AjaxResult listInfo(DesignerArea designerArea) {
+        List<DesignerArea> designerAreaList = designerAreaMapper.listInfo(designerArea);
+
+        if (designerAreaList.size() > 0) {
+            return AjaxResult.success("获取区域信息成功",designerAreaList);
+        }
+        return AjaxResult.error("获取区域信息失败");
+    }
+
+    /**
+     *
+     * @Description: 添加区域
+     *
+     * @auther: wanghongjie
+     * @date: 9:19 2022/10/20
+     * @param: [designerArea]
+     * @return: com.ruoyi.common.core.domain.AjaxResult
+     *
+     */
+    @Override
+    public AjaxResult addDesignerArea(DesignerArea designerArea) {
+
+        designerArea.setCreateBy(getUsername());
+        designerArea.setCreateTime(DateUtils.getNowDate());
+        int addDesignerArea = designerAreaMapper.addDesignerArea(designerArea);
+
+        if (addDesignerArea > 0) {
+            return AjaxResult.success("添加成功",designerArea);
+        }
+        return AjaxResult.error("添加失败");
+    }
+
+    /**
+     *
+     * @Description: 修改区域
+     *
+     * @auther: wanghongjie
+     * @date: 8:55 2022/10/22
+     * @param: [designerArea]
+     * @return: com.ruoyi.common.core.domain.AjaxResult
+     *
+     */
+    @Override
+    public AjaxResult updateDesignerArea(DesignerArea designerArea) {
+
+        Long id = designerArea.getId();
+        String name = designerArea.getName();
+
+        designerArea.setUpdateBy(getUsername());
+        designerArea.setUpdateTime(DateUtils.getNowDate());
+
+        if (id == null || name == null || name.isEmpty()) {
+            return AjaxResult.error("参数错误");
+        }
+        int addDesignerArea = designerAreaMapper.updateDesignerArea(designerArea);
+
+        if (addDesignerArea > 0) {
+            return AjaxResult.success("修改成功",designerArea);
+        }
+        return AjaxResult.error("修改失败");
+    }
+
+    /**
+     *
+     * @Description: 删除设计器区域节点
+     *
+     * @auther: wanghongjie
+     * @date: 9:00 2022/10/22
+     * @param: [id]
+     * @return: com.ruoyi.common.core.domain.AjaxResult
+     *
+     * @param id
+     */
+    @Override
+    public AjaxResult deleteDesignerArea(Long[] id) {
+
+
+        if (id == null || id.length == 0) {
+            return AjaxResult.error("参数错误");
+        }
+        for (int i = 0; i < id.length; i++) {
+            int addDesignerArea = designerAreaMapper.deleteDesignerArea(id[i]);
+            if (addDesignerArea > 0) {
+                //删除区域关联的页面
+                designerAreaMapper.deleteDesignerAreaPageByAreaId(id[i]);
+
+            }
+        }
+        return AjaxResult.success("删除成功");
+    }
+
+    /**
+     *
+     * @Description: 根据区域id获取设计器页面信息
+     *
+     * @auther: wanghongjie
+     * @date: 9:35 2022/10/22
+     * @param: [designerAreaPage]
+     * @return: com.ruoyi.common.core.domain.AjaxResult
+     *
+     */
+    @Override
+    public AjaxResult seleteDesignerAreaPage(DesignerAreaPage designerAreaPage) {
+        Long areaId = designerAreaPage.getAreaId();
+        if (areaId == null) {
+            return AjaxResult.error("获取设计器页面信息失败!");
+        }
+
+        List<DesignerAreaPage> areaPage = designerAreaMapper.seleteDesignerAreaPage(designerAreaPage);
+
+        return AjaxResult.success("获取设计器页面信息成功",areaPage);
+    }
+
+
+    /**
+     *
+     * @Description: 保存设计器区域信息(根据区域id)
+     *
+     * @auther: wanghongjie
+     * @date: 8:55 2022/10/22
+     * @param: [designerAreaPage]
+     * @return: com.ruoyi.common.core.domain.AjaxResult
+     *
+     */
+    @Override
+    public AjaxResult addDesignerAreaPage(@RequestBody  DesignerAreaPage designerAreaPage) {
+
+        Long areaId = designerAreaPage.getAreaId();
+        String name = designerAreaPage.getName();
+        String canvasData = designerAreaPage.getCanvasData();
+        String canvasStyle = designerAreaPage.getCanvasStyle();
+
+        designerAreaPage.setCreateBy(getUsername());
+        designerAreaPage.setCreateTime(DateUtils.getNowDate());
+
+        if (areaId == null) {
+            return AjaxResult.error("保存失败,区域节点id不存在,请检查!");
+        }
+        if (name == null || name.isEmpty() ) {
+            return AjaxResult.error("修改失败,名称不存在,请检查!");
+        }
+
+//        if (canvasData == null || canvasData.isEmpty() ||
+//                canvasStyle == null || canvasStyle.isEmpty()) {
+//            return AjaxResult.error("保存失败,页面信息不存在,请检查!");
+//        }
+
+        designerAreaPage.setCreateBy(getUsername());
+        designerAreaPage.setCreateTime(DateUtils.getNowDate());
+
+        int addDesignerAreaPage = designerAreaMapper.addDesignerAreaPage(designerAreaPage);
+
+        if (addDesignerAreaPage > 0) {
+            return AjaxResult.success("保存成功",designerAreaPage);
+        }
+
+        return AjaxResult.error("保存失败");
+    }
+
+    /**
+     *
+     * @Description: 修改设计器区域信息(根据区域id和页面id)
+     *
+     * @auther: wanghongjie
+     * @date: 11:47 2022/10/22
+     * @param: [designerAreaPage]
+     * @return: com.ruoyi.common.core.domain.AjaxResult
+     *
+     */
+    @Override
+    public AjaxResult updateDesignerAreaPage(DesignerAreaPage designerAreaPage) {
+        Long id = designerAreaPage.getId();
+        Long areaId = designerAreaPage.getAreaId();
+        String name = designerAreaPage.getName();
+        String canvasData = designerAreaPage.getCanvasData();
+        String canvasStyle = designerAreaPage.getCanvasStyle();
+
+        if (areaId == null || id == null) {
+            return AjaxResult.error("修改失败,请检查!");
+        }
+        if (name == null || name.isEmpty() ) {
+            return AjaxResult.error("修改失败,名称不存在,请检查!");
+        }
+
+//        if (canvasData == null || canvasData.isEmpty() ||
+//                canvasStyle == null || canvasStyle.isEmpty()) {
+//            return AjaxResult.error("修改失败,页面信息不存在,请检查!");
+//        }
+
+        designerAreaPage.setUpdateBy(getUsername());
+        designerAreaPage.setUpdateTime(DateUtils.getNowDate());
+
+        int addDesignerAreaPage = designerAreaMapper.updateDesignerAreaPage(designerAreaPage);
+
+        if (addDesignerAreaPage > 0) {
+            return AjaxResult.success("修改成功",designerAreaPage);
+        }
+
+        return AjaxResult.error("修改失败");
+    }
+
+    /**
+     *
+     * @Description: 设计器截图上传
+     *
+     * @auther: wanghongjie
+     * @date: 10:00 2022/10/29
+     * @param: [file, areaId, pageId]
+     * @return: com.ruoyi.common.core.domain.AjaxResult
+     *
+     */
+    @Override
+    public AjaxResult uploadDesignerScreenshot(MultipartFile file, String vue_app_base_api, Long areaId, Long pageId) throws IOException, InvalidExtensionException {
+
+
+        DesignerAreaPage designerAreaPage = new DesignerAreaPage();
+
+        if (areaId == null ||
+        pageId == null ) {
+            return AjaxResult.error("上传图片异常，请联系管理员");
+        }
+        designerAreaPage.setAreaId(areaId);
+        designerAreaPage.setId(pageId);
+
+        String designerPicture = FileUploadUtils.upload(RuoYiConfig.getDesignerPicturePath(), file, MimeTypeUtils.IMAGE_EXTENSION);
+
+        String filePath = vue_app_base_api + designerPicture;
+
+        designerAreaPage.setUploadDesignerScreenshot(filePath);
+
+        designerAreaPage.setUpdateBy(getUsername());
+        designerAreaPage.setUpdateTime(DateUtils.getNowDate());
+
+        int addDesignerAreaPage = designerAreaMapper.updateDesignerAreaPage(designerAreaPage);
+
+        if (addDesignerAreaPage > 0) {
+            return AjaxResult.success("上传成功",designerAreaPage);
+        }
+
+        return AjaxResult.error("上传图片异常，请联系管理员");
+    }
+
+    /**
+     *
+     * @Description: 删除设计器页面信息(根据区域id和页面id)
+     *
+     * @auther: wanghongjie
+     * @date: 9:10 2022/11/2
+     * @param: [designerAreaPage]
+     * @return: com.ruoyi.common.core.domain.AjaxResult
+     *
+     */
+    @Override
+    public AjaxResult deleteDesignerAreaPage(DesignerAreaPage designerAreaPage) {
+        Long id = designerAreaPage.getId();
+        Long areaId = designerAreaPage.getAreaId();
+
+        if (id == null || areaId == null) {
+            return AjaxResult.error("参数错误,请检查!");
+        }
+        int delete = designerAreaMapper.deleteDesignerAreaPage(designerAreaPage);
+
+        if (delete > 0) {
+            return AjaxResult.success("删除成功");
+        }
+        return AjaxResult.error("删除失败");
+    }
+}

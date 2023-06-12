@@ -1,0 +1,51 @@
+package com.zc.iot.domain;
+
+/**
+ * 设备统计
+ * 
+ * @author Athena-xiepufeng
+ * @date 2021-11-04
+ */
+public class IotDeviceStatistics
+{
+    private static final long serialVersionUID = 1L;
+
+    /**
+     * 设备总数
+     */
+    private Integer deviceCount;
+
+    /**
+     * 当前在线数
+     */
+    private Integer onlineCount;
+
+    /**
+     * 激活设备
+     */
+    private Integer enabledCount;
+
+    public Integer getDeviceCount() {
+        return deviceCount;
+    }
+
+    public void setDeviceCount(Integer deviceCount) {
+        this.deviceCount = deviceCount;
+    }
+
+    public Integer getOnlineCount() {
+        return onlineCount;
+    }
+
+    public void setOnlineCount(Integer onlineCount) {
+        this.onlineCount = onlineCount;
+    }
+
+    public Integer getEnabledCount() {
+        return enabledCount;
+    }
+
+    public void setEnabledCount(Integer enabledCount) {
+        this.enabledCount = enabledCount;
+    }
+}

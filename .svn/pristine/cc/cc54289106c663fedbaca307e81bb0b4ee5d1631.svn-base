@@ -1,0 +1,75 @@
+<template>
+  <section class="app-main" :style="topNav && is_breadcrumb == 'true'?'top:-18px':''">
+    <transition name="fade-transform" mode="out-in">
+      <keep-alive :include="cachedViews">
+        <router-view :key="key" />
+      </keep-alive>
+    </transition>
+  </section>
+</template>
+
+<script>
+import TopNav from '@/components/TopNav'
+export default {
+  name: 'AppMain',
+  components: {
+    TopNav
+  },
+  data() {
+    return{
+      is_breadcrumb:null,
+    }
+  },
+  computed: {
+    cachedViews() {
+      return this.$store.state.tagsView.cachedViews
+    },
+    key() {
+      return this.$route.path
+    },
+    topNav: {
+      get() {
+        return this.$store.state.settings.topNav
+      }
+    },
+  },
+  mounted() {
+    this.is_breadcrumb = systemConfig.navBarShow(systemConfig.systemType)['breadcrumb'];
+  },
+}
+</script>
+
+<style lang="scss" scoped>
+.app-main {
+  /* 50= navbar  50  */
+  min-height: calc(100vh - 105px);
+  width: 100%;
+  position: relative;
+  // 顶部
+  // overflow: hidden;
+}
+
+.fixed-header+.app-main {
+  padding-top: 50px;
+}
+
+.hasTagsView {
+  .app-main {
+    /* 84 = navbar + tags-view = 50 + 34 */
+    min-height: calc(100vh - 104px);
+  }
+
+  .fixed-header+.app-main {
+    padding-top: 84px;
+  }
+}
+</style>
+
+<style lang="scss">
+// fix css style bug in open el-dialog
+.el-popup-parent--hidden {
+  .fixed-header {
+    padding-right: 17px;
+  }
+}
+</style>

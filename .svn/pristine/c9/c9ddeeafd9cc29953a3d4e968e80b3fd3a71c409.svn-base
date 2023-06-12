@@ -1,0 +1,94 @@
+package com.zc.iot.mapper;
+
+import java.util.List;
+import com.zc.iot.domain.IotDevice;
+
+/**
+ * 设备Mapper接口
+ * 
+ * @author Athena-xiepufeng
+ * @date 2021-11-04
+ */
+public interface IotDeviceMapper 
+{
+    /**
+     * 查询设备
+     * 
+     * @param id 设备主键
+     * @return 设备
+     */
+    IotDevice selectIotDeviceById(Long id);
+    /**
+     * 查询设备
+     *
+     * @param deviceCode 设备编号
+     * @return 设备
+     */
+    IotDevice selectIotDeviceByCode(String deviceCode);
+
+    /**
+     * 查询设备数量
+     * @return
+     */
+    int selectIotDeviceCount();
+
+    /**
+     * 查询设备在线数量
+     * @return
+     */
+    int selectIotDeviceOnlineCount();
+
+    /**
+     * 查询设备已启用的数量
+     * @return
+     */
+    int selectIotDeviceEnabledCount();
+
+    /**
+     * 查询设备列表
+     * 
+     * @param iotDevice 设备
+     * @return 设备集合
+     */
+    List<IotDevice> selectIotDeviceList(IotDevice iotDevice);
+
+    /**
+     * 查询网关设备列表
+     *
+     * @param iotDevice 设备
+     * @return 设备集合
+     */
+    List<IotDevice> selectIotDeviceGatewayList(IotDevice iotDevice);
+
+    /**
+     * 新增设备
+     * 
+     * @param iotDevice 设备
+     * @return 结果
+     */
+    int insertIotDevice(IotDevice iotDevice);
+
+    /**
+     * 修改设备
+     * 
+     * @param iotDevice 设备
+     * @return 结果
+     */
+    int updateIotDevice(IotDevice iotDevice);
+
+    /**
+     * 删除设备
+     * 
+     * @param id 设备主键
+     * @return 结果
+     */
+    int deleteIotDeviceById(Long id);
+
+    /**
+     * 批量删除设备
+     * 
+     * @param ids 需要删除的数据主键集合
+     * @return 结果
+     */
+    int deleteIotDeviceByIds(Long[] ids);
+}

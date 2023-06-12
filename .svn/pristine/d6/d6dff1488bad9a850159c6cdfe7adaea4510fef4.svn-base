@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zc.efounder.JEnterprise.mapper.modulePoint.ModulePointMapper">
+
+
+    <resultMap type="ModulePoint" id="ModulePointResult">
+        <result property="id"    column="id"    />
+        <result property="modulePoint"    column="module_point"    />
+        <result property="description"    column="description"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectModulePointVo">
+        select id, module_point, description, create_time, update_time from athena_bes_module_point
+    </sql>
+
+    <!--查询模块点类型定义列表-->
+    <select id="selectModulePointList" parameterType="ModulePoint" resultMap="ModulePointResult">
+        <include refid="selectModulePointVo"/>
+        <where>
+            <if test="modulePoint != null  and modulePoint != ''"> and module_point like concat('%', #{modulePoint}, '%') </if>
+            <if test="description != null  and description != ''"> and description like concat('%', #{description}, '%') </if>
+        </where>
+    </select>
+
+    <!--查询所有点类型-->
+    <select id="selectAllModulePointList" resultType="java.util.Map">
+        select cast(id as char) id, module_point value, description, create_time, update_time from athena_bes_module_point
+    </select>
+
+    <!--获取模块点类型定义详细信息-->
+    <select id="selectModulePointById" parameterType="Long" resultMap="ModulePointResult">
+        <include refid="selectModulePointVo"/>
+        where id = #{id}
+    </select>
+
+    <select id="selectModulePointCheck" parameterType="ModulePoint" resultMap="ModulePointResult">
+        <include refid="selectModulePointVo"/>
+        <where>
+            module_point = #{modulePoint}
+            <if test="id != null  and id != ''">and id != #{id}</if>
+        </where>
+    </select>
+
+    <!--新增模块点类型定义-->
+    <insert id="insertModulePoint" parameterType="ModulePoint">
+        insert into athena_bes_module_point
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">id,</if>
+            <if test="modulePoint != null and modulePoint != ''">module_point,</if>
+            <if test="description != null">description,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">#{id},</if>
+            <if test="modulePoint != null and modulePoint != ''">#{modulePoint},</if>
+            <if test="description != null">#{description},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+        </trim>
+    </insert>
+
+    <!--修改模块点类型定义-->
+    <update id="updateModulePoint" parameterType="ModulePoint">
+        update athena_bes_module_point
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="modulePoint != null and modulePoint != ''">module_point = #{modulePoint},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <!--删除模块点类型定义-->
+    <delete id="deleteModulePointById" parameterType="Long">
+        delete from athena_bes_module_point where id = #{id}
+    </delete>
+
+    <!--删除模块点类型定义-->
+    <delete id="deleteModulePointByIds" parameterType="String">
+        delete from athena_bes_module_point where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

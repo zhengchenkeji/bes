@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.efounder.JEnterprise.mapper.energyInfo.ParkMapper">
+    
+    <resultMap type="Park" id="ParkResult">
+        <result property="code"    column="code"    />
+        <result property="userName"    column="user_name"    />
+        <result property="organizationId"    column="organization_id"    />
+        <result property="name"    column="name"    />
+        <result property="nodeCode"    column="node_code"    />
+        <result property="allArea"    column="all_area"    />
+        <result property="monitorArea"    column="monitor_area"    />
+        <result property="heatArea"    column="heat_area"    />
+        <result property="personNums"    column="person_nums"    />
+        <result property="buildTime"    column="build_time"    />
+        <result property="equipmentRuntime"    column="equipment_runtime"    />
+        <result property="contactName"    column="contact_name"    />
+        <result property="contactPhone"    column="contact_phone"    />
+        <result property="contactEmail"    column="contact_email"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="longitude"    column="longitude"    />
+        <result property="latitude"    column="latitude"    />
+    </resultMap>
+
+    <sql id="selectParkVo">
+        select code, user_name, organization_id, name, node_code, all_area, monitor_area, heat_area, person_nums, build_time, equipment_runtime, contact_name, contact_phone, contact_email, create_time, update_time, longitude, latitude from athena_bes_park
+    </sql>
+
+    <select id="selectParkList" parameterType="Park" resultMap="ParkResult">
+        <include refid="selectParkVo"/>
+        <where>  
+            <if test="userName != null  and userName != ''"> and user_name like concat('%', #{userName}, '%')</if>
+            <if test="organizationId != null  and organizationId != ''"> and organization_id = #{organizationId}</if>
+            <if test="name != null  and name != ''"> and name like concat('%', #{name}, '%')</if>
+            <if test="code != null  and code != ''"> and code like concat('%', #{code}, '%')</if>
+            <if test="nodeCode != null  and nodeCode != ''"> and node_code = #{nodeCode}</if>
+            <if test="allArea != null  and allArea != ''"> and all_area = #{allArea}</if>
+            <if test="monitorArea != null  and monitorArea != ''"> and monitor_area = #{monitorArea}</if>
+            <if test="heatArea != null  and heatArea != ''"> and heat_area = #{heatArea}</if>
+            <if test="personNums != null  and personNums != ''"> and person_nums = #{personNums}</if>
+            <if test="buildTime != null "> and build_time = #{buildTime}</if>
+            <if test="equipmentRuntime != null "> and equipment_runtime = #{equipmentRuntime}</if>
+            <if test="contactName != null  and contactName != ''"> and contact_name like concat('%', #{contactName}, '%')</if>
+            <if test="contactPhone != null  and contactPhone != ''"> and contact_phone = #{contactPhone}</if>
+            <if test="contactEmail != null  and contactEmail != ''"> and contact_email = #{contactEmail}</if>
+            <if test="longitude != null  and longitude != ''"> and longitude = #{longitude}</if>
+            <if test="latitude != null  and latitude != ''"> and latitude = #{latitude}</if>
+        </where>
+    </select>
+    
+    <select id="selectParkByCode" parameterType="String" resultMap="ParkResult">
+        <include refid="selectParkVo"/>
+        where code = #{code}
+    </select>
+
+    <select id="listUser" resultType="java.util.Map">
+        SELECT user_id id,user_name Uname,nick_name name FROM sys_user where del_flag = 0 and status = 0
+    </select>
+
+    <select id="listOrganization" resultType="java.util.Map">
+        SELECT dept_id id,dept_name name FROM sys_dept where del_flag = 0 and status = 0;
+    </select>
+
+    <select id="findAllPark" parameterType="string" resultMap="ParkResult">
+        <include refid="selectParkVo"/> ORDER BY code
+    </select>
+
+    <select id="findMaxYqbh"  parameterType="string" resultType="string">
+		select MAX(code) from athena_bes_park
+	</select>
+        
+    <insert id="insertPark" parameterType="Park">
+        insert into athena_bes_park
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="code != null">code,</if>
+            <if test="userName != null">user_name,</if>
+            <if test="organizationId != null">organization_id,</if>
+            <if test="name != null">name,</if>
+            <if test="nodeCode != null">node_code,</if>
+            <if test="allArea != null">all_area,</if>
+            <if test="monitorArea != null">monitor_area,</if>
+            <if test="heatArea != null">heat_area,</if>
+            <if test="personNums != null">person_nums,</if>
+            <if test="buildTime != null">build_time,</if>
+            <if test="equipmentRuntime != null">equipment_runtime,</if>
+            <if test="contactName != null">contact_name,</if>
+            <if test="contactPhone != null">contact_phone,</if>
+            <if test="contactEmail != null">contact_email,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="longitude != null">longitude,</if>
+            <if test="latitude != null">latitude,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="code != null">#{code},</if>
+            <if test="userName != null">#{userName},</if>
+            <if test="organizationId != null">#{organizationId},</if>
+            <if test="name != null">#{name},</if>
+            <if test="nodeCode != null">#{nodeCode},</if>
+            <if test="allArea != null">#{allArea},</if>
+            <if test="monitorArea != null">#{monitorArea},</if>
+            <if test="heatArea != null">#{heatArea},</if>
+            <if test="personNums != null">#{personNums},</if>
+            <if test="buildTime != null">#{buildTime},</if>
+            <if test="equipmentRuntime != null">#{equipmentRuntime},</if>
+            <if test="contactName != null">#{contactName},</if>
+            <if test="contactPhone != null">#{contactPhone},</if>
+            <if test="contactEmail != null">#{contactEmail},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="longitude != null">#{longitude},</if>
+            <if test="latitude != null">#{latitude},</if>
+         </trim>
+    </insert>
+
+    <update id="updatePark" parameterType="Park">
+        update athena_bes_park
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="userName != null">user_name = #{userName},</if>
+            <if test="organizationId != null">organization_id = #{organizationId},</if>
+            <if test="name != null">name = #{name},</if>
+            <if test="nodeCode != null">node_code = #{nodeCode},</if>
+            <if test="allArea != null">all_area = #{allArea},</if>
+            <if test="monitorArea != null">monitor_area = #{monitorArea},</if>
+            <if test="heatArea != null">heat_area = #{heatArea},</if>
+            <if test="personNums != null">person_nums = #{personNums},</if>
+            <if test="buildTime != null">build_time = #{buildTime},</if>
+            <if test="equipmentRuntime != null">equipment_runtime = #{equipmentRuntime},</if>
+            <if test="contactName != null">contact_name = #{contactName},</if>
+            <if test="contactPhone != null">contact_phone = #{contactPhone},</if>
+            <if test="contactEmail != null">contact_email = #{contactEmail},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="longitude != null">longitude = #{longitude},</if>
+            <if test="latitude != null">latitude = #{latitude},</if>
+        </trim>
+        where code = #{code}
+    </update>
+
+    <delete id="deleteParkByCode" parameterType="String">
+        delete from athena_bes_park where code = #{code}
+    </delete>
+
+    <delete id="deleteParkByCodes" parameterType="String">
+        delete from athena_bes_park where code in
+        <foreach item="code" collection="array" open="(" separator="," close=")">
+            #{code}
+        </foreach>
+    </delete>
+</mapper>

@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zc.iot.mapper.IotServiceSubMapper">
+    
+    <resultMap type="IotServiceSub" id="IotServiceSubResult">
+        <result property="id"    column="id"    />
+        <result property="productKey"    column="product_key"    />
+        <result property="consumptionType"    column="consumption_type"    />
+        <result property="consumerGroupKey"    column="consumer_group_key"    />
+        <result property="pushMessageType"    column="push_message_type"    />
+        <result property="description"    column="description"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectIotServiceSubVo">
+        select id, product_key, consumption_type, consumer_group_key, push_message_type, description, create_time, update_time from athena_iot_service_sub
+    </sql>
+
+    <select id="selectIotServiceSubList" parameterType="IotServiceSub" resultMap="IotServiceSubResult">
+        <include refid="selectIotServiceSubVo"/>
+        <where>  
+            <if test="productKey != null "> and product_key = #{productKey}</if>
+            <if test="consumptionType != null "> and consumption_type = #{consumptionType}</if>
+            <if test="consumerGroupKey != null "> and consumer_group_key = #{consumerGroupKey}</if>
+            <if test="pushMessageType != null "> and push_message_type = #{pushMessageType}</if>
+            <if test="description != null  and description != ''"> and description = #{description}</if>
+            <if test="createTime != null "> and create_time = #{createTime}</if>
+            <if test="updateTime != null "> and update_time = #{updateTime}</if>
+        </where>
+    </select>
+    
+    <select id="selectIotServiceSubById" parameterType="Long" resultMap="IotServiceSubResult">
+        <include refid="selectIotServiceSubVo"/>
+        where id = #{id}
+    </select>
+        
+    <insert id="insertIotServiceSub" parameterType="IotServiceSub">
+        insert into athena_iot_service_sub
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">id,</if>
+            <if test="productKey != null">product_key,</if>
+            <if test="consumptionType != null">consumption_type,</if>
+            <if test="consumerGroupKey != null">consumer_group_key,</if>
+            <if test="pushMessageType != null">push_message_type,</if>
+            <if test="description != null">description,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">#{id},</if>
+            <if test="productKey != null">#{productKey},</if>
+            <if test="consumptionType != null">#{consumptionType},</if>
+            <if test="consumerGroupKey != null">#{consumerGroupKey},</if>
+            <if test="pushMessageType != null">#{pushMessageType},</if>
+            <if test="description != null">#{description},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateIotServiceSub" parameterType="IotServiceSub">
+        update athena_iot_service_sub
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="productKey != null">product_key = #{productKey},</if>
+            <if test="consumptionType != null">consumption_type = #{consumptionType},</if>
+            <if test="consumerGroupKey != null">consumer_group_key = #{consumerGroupKey},</if>
+            <if test="pushMessageType != null">push_message_type = #{pushMessageType},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteIotServiceSubById" parameterType="Long">
+        delete from athena_iot_service_sub where id = #{id}
+    </delete>
+
+    <delete id="deleteIotServiceSubByIds" parameterType="String">
+        delete from athena_iot_service_sub where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

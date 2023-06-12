@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.datareported.mapper.DataUploadRecordMapper">
+
+    <resultMap type="DataUploadRecord" id="DataUploadRecordResult">
+        <result property="id"    column="id"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="downloadCount"    column="download_count"    />
+        <result property="filePath"    column="file_path"    />
+        <result property="fileName"    column="file_name"    />
+    </resultMap>
+
+    <sql id="selectDataUploadRecordVo">
+        select id, create_time, update_time, download_count, file_path, file_name from athena_bes_data_upload_record
+    </sql>
+
+    <select id="selectDataUploadRecordList" parameterType="DataUploadRecord" resultMap="DataUploadRecordResult">
+        <include refid="selectDataUploadRecordVo"/>
+        <where>
+            <if test="downloadCount != null "> and download_count = #{downloadCount}</if>
+            <if test="filePath != null  and filePath != ''"> and file_path = #{filePath}</if>
+            <if test="fileName != null  and fileName != ''"> and file_name like concat('%', #{fileName}, '%')</if>
+        </where>
+    </select>
+
+    <select id="selectDataUploadRecordById" parameterType="Long" resultMap="DataUploadRecordResult">
+        <include refid="selectDataUploadRecordVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertDataUploadRecord" parameterType="DataUploadRecord" useGeneratedKeys="true" keyProperty="id">
+        insert into athena_bes_data_upload_record
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="downloadCount != null">download_count,</if>
+            <if test="filePath != null and filePath != ''">file_path,</if>
+            <if test="fileName != null and fileName != ''">file_name,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="downloadCount != null">#{downloadCount},</if>
+            <if test="filePath != null and filePath != ''">#{filePath},</if>
+            <if test="fileName != null and fileName != ''">#{fileName},</if>
+         </trim>
+    </insert>
+
+    <update id="updateDataUploadRecord" parameterType="DataUploadRecord">
+        update athena_bes_data_upload_record
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="downloadCount != null">download_count = #{downloadCount},</if>
+            <if test="filePath != null and filePath != ''">file_path = #{filePath},</if>
+            <if test="fileName != null and fileName != ''">file_name = #{fileName},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteDataUploadRecordById" parameterType="Long">
+        delete from athena_bes_data_upload_record where id = #{id}
+    </delete>
+
+    <delete id="deleteDataUploadRecordByIds" parameterType="String">
+        delete from athena_bes_data_upload_record where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.deviceSynchronization.mapper.AthenaBesTimeTaskSyncMapper">
+
+    <resultMap type="AthenaBesTimeTaskSync" id="AthenaBesTimeTaskSyncResult">
+        <result property="id"    column="id"    />
+        <result property="jobName"    column="job_name"    />
+        <result property="jobGroup"    column="job_group"    />
+        <result property="equipmentName"    column="equipment_name"    />
+        <result property="invokeTarget"    column="invoke_target"    />
+        <result property="misfirePolicy"    column="misfire_policy"    />
+        <result property="concurrent"    column="concurrent"    />
+        <result property="cron"    column="cron"    />
+        <result property="status"    column="status"    />
+        <result property="remark"    column="remark"    />
+        <result property="jobId"    column="job_id"    />
+    </resultMap>
+
+    <sql id="selectAthenaBesTimeTaskSyncVo">
+        select id, job_name, equipment_name, cron, status, remark, job_id,job_group,invoke_target,misfire_policy,concurrent from athena_bes_time_task_sync
+    </sql>
+
+    <select id="selectAthenaBesTimeTaskSyncList" parameterType="AthenaBesTimeTaskSync" resultMap="AthenaBesTimeTaskSyncResult">
+        <include refid="selectAthenaBesTimeTaskSyncVo"/>
+        <where>
+            <if test="jobName != null  and jobName != ''"> and job_name like concat('%', #{jobName}, '%')</if>
+            <if test="equipmentName != null  and equipmentName != ''"> and equipment_name like concat('%', #{equipmentName}, '%')</if>
+            <if test="cron != null  and cron != ''"> and cron = #{cron}</if>
+            <if test="status != null  and status != ''"> and status = #{status}</if>
+            <if test="jobId != null  and jobId != ''"> and job_id = #{jobId}</if>
+        </where>
+    </select>
+
+    <select id="selectAthenaBesTimeTaskSyncById" parameterType="String" resultMap="AthenaBesTimeTaskSyncResult">
+        <include refid="selectAthenaBesTimeTaskSyncVo"/>
+        where id = #{id}
+    </select>
+    <select id="selectSyncMaxId" resultType="java.lang.String">
+        SELECT  max(CAST(id as SIGNED)) as maxId  FROM  athena_bes_time_task_sync
+    </select>
+
+    <insert id="insertAthenaBesTimeTaskSync" parameterType="AthenaBesTimeTaskSync">
+        insert into athena_bes_time_task_sync
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">id,</if>
+            <if test="jobName != null">job_name,</if>
+            <if test="equipmentName != null">equipment_name,</if>
+            <if test="cron != null">cron,</if>
+            <if test="status != null">status,</if>
+            <if test="remark != null">remark,</if>
+            <if test="jobId != null">job_id,</if>
+            <if test="jobGroup != null">job_group,</if>
+            <if test="invokeTarget != null">invoke_target,</if>
+            <if test="misfirePolicy != null">misfire_policy,</if>
+            <if test="concurrent != null">concurrent,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">#{id},</if>
+            <if test="jobName != null">#{jobName},</if>
+            <if test="equipmentName != null">#{equipmentName},</if>
+            <if test="cron != null">#{cron},</if>
+            <if test="status != null">#{status},</if>
+            <if test="remark != null">#{remark},</if>
+            <if test="jobId != null">#{jobId},</if>
+            <if test="jobGroup != null">#{jobGroup},</if>
+            <if test="invokeTarget != null">#{invokeTarget},</if>
+            <if test="misfirePolicy != null">#{misfirePolicy},</if>
+            <if test="concurrent != null">#{concurrent},</if>
+         </trim>
+    </insert>
+
+    <update id="updateAthenaBesTimeTaskSync" parameterType="AthenaBesTimeTaskSync">
+        update athena_bes_time_task_sync
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="jobName != null">job_name = #{jobName},</if>
+            <if test="equipmentName != null">equipment_name = #{equipmentName},</if>
+            <if test="cron != null">cron = #{cron},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="jobId != null">job_id = #{jobId},</if>
+            <if test="jobGroup != null">job_group=#{jobGroup},</if>
+            <if test="invokeTarget != null">invoke_target=#{invokeTarget},</if>
+            <if test="misfirePolicy != null">misfire_policy=#{misfirePolicy},</if>
+            <if test="concurrent != null">concurrent=#{concurrent},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteAthenaBesTimeTaskSyncById" parameterType="String">
+        delete from athena_bes_time_task_sync where id = #{id}
+    </delete>
+
+    <delete id="deleteAthenaBesTimeTaskSyncByIds" parameterType="String">
+        delete from athena_bes_time_task_sync where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

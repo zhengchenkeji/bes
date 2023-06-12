@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zc.efounder.JEnterprise.mapper.safetyWarning.AlarmWorkOrderMapper">
+    
+    <resultMap type="AlarmWorkOrder" id="AlarmWorkOrderResult">
+        <result property="id"    column="id"    />
+        <result property="alarmTacticsId"    column="alarm_tactics_id"    />
+        <result property="alarmValue"    column="alarm_value"    />
+        <result property="firstTime"    column="first_time"    />
+        <result property="lastTime"    column="last_time"    />
+        <result property="amount"    column="amount"    />
+        <result property="confirmState"    column="confirm_state"    />
+        <result property="azwz"    column="azwz"    />
+        <result property="alarmName"    column="alarm_name"    />
+        <result property="planVal"    column="plan_val"    />
+        <result property="promptMsg"    column="prompt_msg"    />
+        <result property="level"    column="level"    />
+        <result property="alarmTypeId"    column="alarm_type_id"    />
+        <result property="userId"    column="user_id"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="updateCode"    column="update_code"    />
+        <result property="updateName"    column="update_name"    />
+        <result property="status"    column="status"    />
+    </resultMap>
+
+    <sql id="selectAlarmWorkOrderVo">
+        select id, alarm_tactics_id, alarm_value, first_time, last_time, amount, confirm_state, azwz, alarm_name, plan_val, prompt_msg, level, alarm_type_id, user_id, create_time, update_time, update_code, update_name, status from athena_bes_alarm_word_order
+    </sql>
+
+    <select id="selectAlarmWorkOrderList" parameterType="AlarmWorkOrder" resultMap="AlarmWorkOrderResult">
+        <include refid="selectAlarmWorkOrderVo"/>
+        <where>  
+            <if test="alarmTacticsId != null "> and alarm_tactics_id = #{alarmTacticsId}</if>
+            <if test="alarmValue != null "> and alarm_value = #{alarmValue}</if>
+            <if test="firstTime != null "> and first_time = #{firstTime}</if>
+            <if test="lastTime != null "> and last_time = #{lastTime}</if>
+            <if test="amount != null "> and amount = #{amount}</if>
+            <if test="confirmState != null "> and confirm_state = #{confirmState}</if>
+            <if test="azwz != null  and azwz != ''"> and azwz = #{azwz}</if>
+            <if test="alarmName != null  and alarmName != ''"> and alarm_name like concat('%', #{alarmName}, '%')</if>
+            <if test="planVal != null "> and plan_val = #{planVal}</if>
+            <if test="promptMsg != null  and promptMsg != ''"> and prompt_msg = #{promptMsg}</if>
+            <if test="level != null  and level != ''"> and level = #{level}</if>
+            <if test="alarmTypeId != null  and alarmTypeId != ''"> and alarm_type_id = #{alarmTypeId}</if>
+            <if test="userId != null  and userId != ''"> and user_id = #{userId}</if>
+            <if test="updateCode != null  and updateCode != ''"> and update_code = #{updateCode}</if>
+            <if test="updateName != null  and updateName != ''"> and update_name like concat('%', #{updateName}, '%')</if>
+            <if test="status != null  and status != ''"> and status = #{status}</if>
+        </where>
+    </select>
+    
+    <select id="selectAlarmWorkOrderById" parameterType="Long" resultMap="AlarmWorkOrderResult">
+        <include refid="selectAlarmWorkOrderVo"/>
+        where id = #{id}
+    </select>
+        
+    <insert id="insertAlarmWorkOrder" parameterType="AlarmWorkOrder" useGeneratedKeys="true" keyProperty="id">
+        insert into athena_bes_alarm_word_order
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="alarmTacticsId != null">alarm_tactics_id,</if>
+            <if test="alarmValue != null">alarm_value,</if>
+            <if test="firstTime != null">first_time,</if>
+            <if test="lastTime != null">last_time,</if>
+            <if test="amount != null">amount,</if>
+            <if test="confirmState != null">confirm_state,</if>
+            <if test="azwz != null and azwz != ''">azwz,</if>
+            <if test="alarmName != null and alarmName != ''">alarm_name,</if>
+            <if test="planVal != null">plan_val,</if>
+            <if test="promptMsg != null and promptMsg != ''">prompt_msg,</if>
+            <if test="level != null and level != ''">level,</if>
+            <if test="alarmTypeId != null and alarmTypeId != ''">alarm_type_id,</if>
+            <if test="userId != null">user_id,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="updateCode != null">update_code,</if>
+            <if test="updateName != null">update_name,</if>
+            <if test="status != null">status,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="alarmTacticsId != null">#{alarmTacticsId},</if>
+            <if test="alarmValue != null">#{alarmValue},</if>
+            <if test="firstTime != null">#{firstTime},</if>
+            <if test="lastTime != null">#{lastTime},</if>
+            <if test="amount != null">#{amount},</if>
+            <if test="confirmState != null">#{confirmState},</if>
+            <if test="azwz != null and azwz != ''">#{azwz},</if>
+            <if test="alarmName != null and alarmName != ''">#{alarmName},</if>
+            <if test="planVal != null">#{planVal},</if>
+            <if test="promptMsg != null and promptMsg != ''">#{promptMsg},</if>
+            <if test="level != null and level != ''">#{level},</if>
+            <if test="alarmTypeId != null and alarmTypeId != ''">#{alarmTypeId},</if>
+            <if test="userId != null">#{userId},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="updateCode != null">#{updateCode},</if>
+            <if test="updateName != null">#{updateName},</if>
+            <if test="status != null">#{status},</if>
+         </trim>
+    </insert>
+
+    <update id="updateAlarmWorkOrder" parameterType="AlarmWorkOrder">
+        update athena_bes_alarm_word_order
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="alarmTacticsId != null">alarm_tactics_id = #{alarmTacticsId},</if>
+            <if test="alarmValue != null">alarm_value = #{alarmValue},</if>
+            <if test="firstTime != null">first_time = #{firstTime},</if>
+            <if test="lastTime != null">last_time = #{lastTime},</if>
+            <if test="amount != null">amount = #{amount},</if>
+            <if test="confirmState != null">confirm_state = #{confirmState},</if>
+            <if test="azwz != null and azwz != ''">azwz = #{azwz},</if>
+            <if test="alarmName != null and alarmName != ''">alarm_name = #{alarmName},</if>
+            <if test="planVal != null">plan_val = #{planVal},</if>
+            <if test="promptMsg != null and promptMsg != ''">prompt_msg = #{promptMsg},</if>
+            <if test="level != null and level != ''">level = #{level},</if>
+            <if test="alarmTypeId != null and alarmTypeId != ''">alarm_type_id = #{alarmTypeId},</if>
+            <if test="userId != null">user_id = #{userId},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="updateCode != null">update_code = #{updateCode},</if>
+            <if test="updateName != null">update_name = #{updateName},</if>
+            <if test="status != null">status = #{status},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteAlarmWorkOrderById" parameterType="Long">
+        delete from athena_bes_alarm_word_order where id = #{id}
+    </delete>
+
+    <delete id="deleteAlarmWorkOrderByIds" parameterType="String">
+        delete from athena_bes_alarm_word_order where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

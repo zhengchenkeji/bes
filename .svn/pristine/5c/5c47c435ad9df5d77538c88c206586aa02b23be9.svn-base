@@ -1,0 +1,65 @@
+package com.ruoyi.systemSetting.parameterConfiguration.domain;
+
+import com.ruoyi.common.annotation.Excel;
+import com.ruoyi.common.core.domain.BaseEntity;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
+
+import javax.validation.constraints.NotNull;
+
+/**
+ * 采集参数关联对象
+ * 
+ * @author gaojikun
+ * @date 2022-11-30
+ */
+public class  ParamsConfiguration extends BaseEntity
+{
+    private static final long serialVersionUID = 1L;
+
+    private Long id;
+
+    /** 采集参数ID */
+    @NotNull(message = "采集参数ID不能为空")
+    private Long paramId;
+
+    /** 采集参数分项ID */
+    @NotNull(message = "采集参数分项ID不能为空")
+    private Long paramsId;
+
+    private String keywords;
+
+    public void setId(Long id) 
+    {
+        this.id = id;
+    }
+
+    public Long getId() 
+    {
+        return id;
+    }
+
+    public Long getParamId() {
+        return paramId;
+    }
+
+    public void setParamId(Long paramId) {
+        this.paramId = paramId;
+    }
+
+    public Long getParamsId() {
+        return paramsId;
+    }
+
+    public void setParamsId(Long paramsId) {
+        this.paramsId = paramsId;
+    }
+
+    public String getKeywords() {
+        return keywords;
+    }
+
+    public void setKeywords(String keywords) {
+        this.keywords = keywords;
+    }
+}

@@ -1,0 +1,148 @@
+package com.ruoyi.safetyWarning.alarmNotifier.service.impl;
+
+import java.util.List;
+
+import com.ruoyi.common.exception.ServiceException;
+import com.ruoyi.common.utils.DateUtils;
+import com.ruoyi.safetyWarning.alarmTactics.mapper.AlarmTacticsAlarmNotifierLinkMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import com.ruoyi.safetyWarning.alarmNotifier.mapper.AlarmNotifierMapper;
+import com.ruoyi.safetyWarning.alarmNotifier.domain.AlarmNotifier;
+import com.ruoyi.safetyWarning.alarmNotifier.service.AlarmNotifierService;
+import org.springframework.transaction.annotation.Transactional;
+
+import javax.annotation.Resource;
+
+/**
+ * 告警接收组Service业务层处理
+ *
+ * @author sunshangeng
+ * @date 2022-09-15
+ */
+@Service
+public class AlarmNotifierServiceImpl implements AlarmNotifierService
+{
+    @Resource
+    private AlarmNotifierMapper alarmNotifierMapper;
+
+    @Resource
+    private AlarmTacticsAlarmNotifierLinkMapper tacticsAlarmNotifierLinkMapper;
+    /**
+     * 查询告警接收组
+     *
+     * @param id 告警接收组主键
+     * @return 告警接收组
+     */
+    @Override
+    public AlarmNotifier selectAlarmNotifierById(Long id)
+    {
+        return alarmNotifierMapper.selectAlarmNotifierById(id);
+    }
+
+   /**
+    * @description:查询告警接收组列表
+    * @author: sunshangeng
+    * @date: 2022/9/22 17:32
+    * @param: [alarmNotifier]
+    * @return: java.util.List<com.ruoyi.safetyWarning.alarmNotifier.domain.AlarmNotifier>
+    **/
+    @Override
+    public List<AlarmNotifier> selectAlarmNotifierList(AlarmNotifier alarmNotifier)
+    {
+        if(alarmNotifier.getIslink()!=null){
+            if(alarmNotifier.getIslink()==0){
+                /**查询未关联 告警策略的告警接收组*/
+                return alarmNotifierMapper.selectTacticsNotifierNotLinkList(alarmNotifier);
+            }
+            /**查询已关联 告警策略的告警接收组*/
+            return alarmNotifierMapper.selectTacticsNotifierLinkList(alarmNotifier);
+        }
+        /**查询所有告警接收组*/
+        return alarmNotifierMapper.selectAlarmNotifierList(alarmNotifier);
+
+    }
+    /**
+     * 新增告警接收组
+     *
+     * @param alarmNotifier 告警接收组
+     * @return 结果
+     */
+    @Override
+    public int insertAlarmNotifier(AlarmNotifier alarmNotifier)
+    {
+        /**去重*/
+        int num=alarmNotifierMapper.getNotifierByName(alarmNotifier);
+        if(num!=0){
+            throw new ServiceException("姓名重复无法保存");
+        }
+        num=alarmNotifierMapper.getNotifierByPhone(alarmNotifier);
+        if(num!=0){
+            throw new ServiceException("联系电话重复无法保存");
+        }
+        num=alarmNotifierMapper.getNotifierByEmail(alarmNotifier);
+        if(num!=0){
+            throw new ServiceException("邮箱重复无法保存");
+        }
+
+        alarmNotifier.setCreateTime(DateUtils.getNowDate());
+        return alarmNotifierMapper.insertAlarmNotifier(alarmNotifier);
+    }
+
+    /**
+     * 修改告警接收组
+     *
+     * @param alarmNotifier 告警接收组
+     * @return 结果
+     */
+    @Override
+    public int updateAlarmNotifier(AlarmNotifier alarmNotifier)
+    {
+        /**去重*/
+        int num=alarmNotifierMapper.getNotifierByName(alarmNotifier);
+        if(num!=0){
+            throw new ServiceException("姓名重复无法保存");
+        }
+        num=alarmNotifierMapper.getNotifierByPhone(alarmNotifier);
+        if(num!=0){
+            throw new ServiceException("联系电话重复无法保存");
+        }
+        num=alarmNotifierMapper.getNotifierByEmail(alarmNotifier);
+        if(num!=0){
+            throw new ServiceException("邮箱重复无法保存");
+        }
+        alarmNotifier.setUpdateTime(DateUtils.getNowDate());
+        return alarmNotifierMapper.updateAlarmNotifier(alarmNotifier);
+    }
+
+    /**
+     * @description:批量删除告警接收组 并删除关联关系
+     * @author: sunshangeng
+     * @date: 2022/9/22 17:56
+     * @param: [ids]
+     * @return: int
+     **/
+    @Override
+    @Transactional
+    public int deleteAlarmNotifierByIds(Long[] ids)
+    {
+        tacticsAlarmNotifierLinkMapper.deleteByAlarmNotifierIdsBoolean(ids);
+        return alarmNotifierMapper.deleteAlarmNotifierByIds(ids);
+    }
+
+    /**
+     * @description:删除告警接收组信息并删除关联关系
+     * @author: sunshangeng
+     * @date: 2022/9/22 17:55
+     * @param: [id]
+     * @return: int
+     **/
+    @Override
+    @Transactional
+    public int deleteAlarmNotifierById(Long id)
+    {
+        Long[] ids={id};
+        tacticsAlarmNotifierLinkMapper.deleteByAlarmNotifierIdsBoolean(ids);
+        return alarmNotifierMapper.deleteAlarmNotifierById(id);
+    }
+}

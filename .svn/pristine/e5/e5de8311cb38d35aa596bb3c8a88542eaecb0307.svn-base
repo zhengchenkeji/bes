@@ -1,0 +1,124 @@
+package com.zc.efounder.JEnterprise.domain.sceneLink;
+
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
+import com.ruoyi.common.annotation.Excel;
+import com.ruoyi.common.core.domain.BaseEntity;
+
+/**
+ * 场景联动-场景触发器对象 athena_bes_scene_trigger
+ *
+ * @author ruoyi
+ * @date 2023-02-28
+ */
+public class SceneTrigger extends BaseEntity {
+    private static final long serialVersionUID = 1L;
+
+    /**
+     * id
+     */
+    private Long id;
+
+    /**
+     * 场景id
+     */
+    @Excel(name = "场景id")
+    private Long sceneId;
+
+    /**
+     * 触发类型code
+     */
+    @Excel(name = "触发类型code")
+    private String triggerModeCode;
+
+    /**
+     *任务id
+     **/
+    private Long jobid;
+
+    /**
+     * cron表达式
+     */
+    @Excel(name = "cron表达式")
+    private String cronExpression;
+
+    /**
+     * 场景触发id
+     */
+    @Excel(name = "场景触发id")
+    private Long triggerSceneId;
+
+    /**场景状态*/
+    private Integer sceneStatus;
+
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setSceneId(Long sceneId) {
+        this.sceneId = sceneId;
+    }
+
+    public Long getSceneId() {
+        return sceneId;
+    }
+
+    public void setTriggerModeCode(String triggerModeCode) {
+        this.triggerModeCode = triggerModeCode;
+    }
+
+    public String getTriggerModeCode() {
+        return triggerModeCode;
+    }
+
+    public void setCronExpression(String cronExpression) {
+        this.cronExpression = cronExpression;
+    }
+
+    public String getCronExpression() {
+        return cronExpression;
+    }
+
+    public void setTriggerSceneId(Long triggerSceneId) {
+        this.triggerSceneId = triggerSceneId;
+    }
+
+    public Long getTriggerSceneId() {
+        return triggerSceneId;
+    }
+
+    public Integer getSceneStatus() {
+        return sceneStatus;
+    }
+
+    public void setSceneStatus(Integer sceneStatus) {
+        this.sceneStatus = sceneStatus;
+    }
+
+    public Long getJobid() {
+        return jobid;
+    }
+
+    public void setJobid(Long jobid) {
+        this.jobid = jobid;
+    }
+
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this, ToStringStyle.MULTI_LINE_STYLE)
+                .append("id", getId())
+                .append("sceneId", getSceneId())
+                .append("triggerModeCode", getTriggerModeCode())
+                .append("cronExpression", getCronExpression())
+                .append("triggerSceneId", getTriggerSceneId())
+                .append("createTime", getCreateTime())
+                .append("updateTime", getUpdateTime())
+                .append("sceneStatus", getSceneStatus())
+                .toString();
+    }
+}

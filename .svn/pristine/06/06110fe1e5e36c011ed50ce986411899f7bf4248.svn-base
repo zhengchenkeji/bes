@@ -1,0 +1,77 @@
+package com.zc.iot.mapper;
+
+import java.util.List;
+import com.zc.iot.domain.IotCategory;
+
+/**
+ * 品类Mapper接口
+ * 
+ * @author xiepufeng
+ * @date 2022-05-28
+ */
+public interface IotCategoryMapper
+{
+    /**
+     * 查询品类
+     * 
+     * @param id 品类主键
+     * @return 品类
+     */
+    IotCategory selectIotCategoryById(Long id);
+
+    /**
+     * 查询品类根据父品类id
+     *
+     * @param parentId 父id
+     * @return 品类
+     */
+    IotCategory selectIotCategoryByParentId(Long parentId);
+
+    /**
+     * 查询品类根据品类标识
+     *
+     * @param categoryMark 品类标识
+     * @return 品类
+     */
+    IotCategory selectIotCategoryByMark(String categoryMark);
+
+    /**
+     * 查询品类列表
+     * 
+     * @param iotCategory 品类
+     * @return 品类集合
+     */
+    List<IotCategory> selectIotCategoryList(IotCategory iotCategory);
+
+    /**
+     * 新增品类
+     * 
+     * @param iotCategory 品类
+     * @return 结果
+     */
+    int insertIotCategory(IotCategory iotCategory);
+
+    /**
+     * 修改品类
+     * 
+     * @param iotCategory 品类
+     * @return 结果
+     */
+    int updateIotCategory(IotCategory iotCategory);
+
+    /**
+     * 删除品类
+     * 
+     * @param id 品类主键
+     * @return 结果
+     */
+    int deleteIotCategoryById(Long id);
+
+    /**
+     * 批量删除品类
+     * 
+     * @param ids 需要删除的数据主键集合
+     * @return 结果
+     */
+    int deleteIotCategoryByIds(Long[] ids);
+}

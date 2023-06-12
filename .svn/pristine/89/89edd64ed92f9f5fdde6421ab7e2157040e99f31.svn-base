@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zc.iot.mapper.IotConsumerMapper">
+    
+    <resultMap type="IotConsumer" id="IotConsumerResult">
+        <result property="id"    column="id"    />
+        <result property="name"    column="name"    />
+        <result property="url"    column="url"    />
+        <result property="description"    column="description"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="consumerGroupKey"    column="consumer_group_key"    />
+    </resultMap>
+
+    <sql id="selectIotConsumerVo">
+        select id, name, url, description, create_time, update_time, consumer_group_key from athena_iot_consumer
+    </sql>
+
+    <select id="selectIotConsumerList" parameterType="IotConsumer" resultMap="IotConsumerResult">
+        <include refid="selectIotConsumerVo"/>
+        <where>  
+            <if test="name != null  and name != ''"> and name like concat('%', #{name}, '%')</if>
+            <if test="url != null  and url != ''"> and url = #{url}</if>
+            <if test="description != null  and description != ''"> and description = #{description}</if>
+            <if test="consumerGroupKey != null "> and consumer_group_key = #{consumerGroupKey}</if>
+        </where>
+    </select>
+    
+    <select id="selectIotConsumerById" parameterType="Long" resultMap="IotConsumerResult">
+        <include refid="selectIotConsumerVo"/>
+        where id = #{id}
+    </select>
+        
+    <insert id="insertIotConsumer" parameterType="IotConsumer">
+        insert into athena_iot_consumer
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">id,</if>
+            <if test="name != null and name != ''">name,</if>
+            <if test="url != null and url != ''">url,</if>
+            <if test="description != null">description,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="consumerGroupKey != null">consumer_group_key,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">#{id},</if>
+            <if test="name != null and name != ''">#{name},</if>
+            <if test="url != null and url != ''">#{url},</if>
+            <if test="description != null">#{description},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="consumerGroupKey != null">#{consumerGroupKey},</if>
+         </trim>
+    </insert>
+
+    <update id="updateIotConsumer" parameterType="IotConsumer">
+        update athena_iot_consumer
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="name != null and name != ''">name = #{name},</if>
+            <if test="url != null and url != ''">url = #{url},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="consumerGroupKey != null">consumer_group_key = #{consumerGroupKey},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteIotConsumerById" parameterType="Long">
+        delete from athena_iot_consumer where id = #{id}
+    </delete>
+
+    <delete id="deleteIotConsumerByIds" parameterType="String">
+        delete from athena_iot_consumer where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

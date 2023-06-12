@@ -1,0 +1,123 @@
+package com.ruoyi.efounder.JEnterprise.domain.electricPowerTranscription;
+
+import com.ruoyi.common.core.domain.BaseEntity;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
+
+/**
+ * @Author:gaojikun
+ * @Date:2022-11-25 14:57
+ * @Description: 能耗趋势实体类
+ */
+public class PowerData extends BaseEntity {
+
+    private static final long serialVersionUID = 1L;
+
+    /** 支路编号 */
+    private String branchId;
+
+    /** 电表编号 */
+    private String meterId;
+
+    /** 电表类型 */
+    private String meterType;
+
+    /** 电表系统名称 */
+    private String sysName;
+
+    /** 参数编号 */
+    private String paramsId;
+
+    /** 参数分项编号 */
+    private String paramsItemId;
+
+    /** 参数分项编号 */
+    private String paramsIdStr;
+
+    /** 开始日期 */
+    private String startTime;
+
+    /** 结束日期 */
+    private String endTime;
+
+    public String getBranchId() {
+        return branchId;
+    }
+
+    public void setBranchId(String branchId) {
+        this.branchId = branchId;
+    }
+
+    public String getMeterId() {
+        return meterId;
+    }
+
+    public void setMeterId(String meterId) {
+        this.meterId = meterId;
+    }
+
+    public String getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(String startTime) {
+        this.startTime = startTime;
+    }
+
+    public String getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(String endTime) {
+        this.endTime = endTime;
+    }
+
+    public String getParamsId() {
+        return paramsId;
+    }
+
+    public void setParamsId(String paramsId) {
+        this.paramsId = paramsId;
+    }
+
+    public String getSysName() {
+        return sysName;
+    }
+
+    public void setSysName(String sysName) {
+        this.sysName = sysName;
+    }
+
+    public String getParamsIdStr() {
+        return paramsIdStr;
+    }
+
+    public void setParamsIdStr(String paramsIdStr) {
+        this.paramsIdStr = paramsIdStr;
+    }
+
+    public String getParamsItemId() {
+        return paramsItemId;
+    }
+
+    public void setParamsItemId(String paramsItemId) {
+        this.paramsItemId = paramsItemId;
+    }
+
+    public String getMeterType() {
+        return meterType;
+    }
+
+    public void setMeterType(String meterType) {
+        this.meterType = meterType;
+    }
+
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this, ToStringStyle.MULTI_LINE_STYLE)
+                .append("branchId", getBranchId())
+                .append("meterId", getMeterId())
+                .append("paramsId", getParamsId())
+                .toString();
+    }
+}

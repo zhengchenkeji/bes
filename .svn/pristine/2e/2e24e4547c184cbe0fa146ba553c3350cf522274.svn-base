@@ -1,0 +1,54 @@
+package com.zc.connect.analysis;
+
+/**
+ * @author Athena-YangChao
+ * @description 解析类型枚举--超过1个字节需要高低转换
+ * @date 2021/12/8/008
+ * @apiNote
+ */
+
+public enum AnalysisTypeEnum {
+    /**
+     * 16进制
+     */
+    AnalysisStrategy16("AnalysisStrategy16","16进制"),
+    /**
+     * 16转10
+     */
+    AnalysisStrategy16to10("AnalysisStrategy16to10","16转10"),
+    /**
+     * 16转10
+     * 十进制精度10
+     * /10
+     */
+    AnalysisStrategy16to10precision10("AnalysisStrategy16to10precision10","16转10，精度10"),
+    /**
+     * 16进制转2进制
+     * 补足8位
+     */
+    AnalysisStrategy16to2repair8("AnalysisStrategy16to2repair8","16进制转2进制，补足8位"),
+    /**
+     * 16进制转float
+     */
+    AnalysisStrategy16toFloat("AnalysisStrategy16toFloat","16进制转float"),
+    ;
+
+    private String code;
+
+    private String desc;
+
+    public String getCode() {
+        return code;
+    }
+
+    public String getDesc() {
+        return desc;
+    }
+
+    AnalysisTypeEnum(String code, String desc) {
+        this.code = code;
+        this.desc = desc;
+    }
+
+
+}

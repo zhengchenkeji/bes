@@ -1,0 +1,762 @@
+<template>
+  <div class="app-container">
+    <el-row :gutter="20" class="mb20">
+      <!-- 分组数据 -->
+      <el-col :span="6" :xs="24">
+
+        <div class="head-container">
+          <el-card class="wait-task-user-box-card" style="max-height: 85vh">
+            <div style="max-height: 80vh;overflow-y: auto;width: 100%;min-width: 160px;">
+              <el-tree
+                node-key="id"
+                class="filter-tree"
+                :data="priceOptions"
+                :props="defaultProps"
+                :expand-on-click-node="false"
+                :filter-node-method="filterNode"
+                :default-expanded-keys="defaultExpandedKeys"
+                ref="priceTree"
+                default-expand-all
+                @node-click="handleNodeClick"
+                highlight-current
+              >
+                <span slot-scope="{ node, data }">
+                  <span class="tooltip">
+                    <span style="padding-left: 10px">{{ data.name }}</span>
+                  </span>
+                <div v-if="node.isCurrent === true"
+                     class="operation-view">
+
+                  <el-dropdown @command="priceOperation">
+                    <span class="el-dropdown-link">
+                      操作<i class="el-icon-arrow-down el-icon--right"></i>
+                    </span>
+                    <el-dropdown-menu slot="dropdown" v-if="data.id == 0">
+                       <el-dropdown-item
+                         v-for="(item, index) in priceButton"
+                         :icon="item.icon"
+                         :command="item.type">{{item.name}}</el-dropdown-item>
+                    </el-dropdown-menu>
+                    <el-dropdown-menu slot="dropdown" v-if="data.id != 0">
+                       <el-dropdown-item
+                         v-for="(item, index) in priceButtonTwo"
+                         :icon="item.icon"
+                         :command="item.type">{{item.name}}</el-dropdown-item>
+                    </el-dropdown-menu>
+                  </el-dropdown>
+                </div>
+                </span>
+              </el-tree>
+            </div>
+          </el-card>
+        </div>
+
+        <!-- 添加或修改区域对话框 -->
+        <el-dialog :title="title" :visible.sync="priceOpen" width="500px">
+          <el-form ref="priceForm" :model="priceForm" :rules="priceRules" label-width="80px">
+            <el-form-item label="名称" prop="name">
+              <el-input v-model="priceForm.name" placeholder="请输入电价规则名称"/>
+            </el-form-item>
+            <el-form-item label="备注" prop="remark">
+              <el-input v-model="priceForm.remark" placeholder="请输入备注"/>
+            </el-form-item>
+          </el-form>
+          <div slot="footer" class="dialog-footer">
+            <el-button type="primary" @click="submitPriceForm">确 定</el-button>
+            <el-button @click="priceCancel">取 消</el-button>
+          </div>
+        </el-dialog>
+      </el-col>
+
+      <!-- 右侧列表 -->
+      <el-col :span="18" :xs="24">
+        <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch"
+                 label-width="68px">
+          <el-form-item label="开始时间" prop="startTime">
+            <el-time-picker clearable
+                            v-model="queryParams.startTime"
+                            value-format="yyyy-MM-dd  HH:mm:ss"
+                            placeholder="请选择开始时间">
+            </el-time-picker>
+          </el-form-item>
+          <el-form-item label="结束时间" prop="endTime">
+            <el-time-picker clearable
+                            v-model="queryParams.endTime"
+                            value-format="yyyy-MM-dd  HH:mm:ss"
+                            placeholder="请选择结束时间">
+            </el-time-picker>
+          </el-form-item>
+          <el-form-item label="单价" prop="price">
+            <el-input
+              type="number"
+              v-model="queryParams.price"
+              placeholder="请输入单价"
+              clearable
+              @keyup.enter.native="handleQuery"
+            />
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
+            <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
+          </el-form-item>
+        </el-form>
+
+        <el-row :gutter="10" class="mb8">
+          <el-col :span="1.5">
+            <el-button
+              type="primary"
+              plain
+              icon="el-icon-plus"
+              size="mini"
+              @click="handleAdd"
+              v-hasPermi="['system:setting:add']"
+            >新增
+            </el-button>
+          </el-col>
+          <el-col :span="1.5">
+            <el-button
+              type="success"
+              plain
+              icon="el-icon-edit"
+              size="mini"
+              :disabled="single"
+              @click="handleUpdate"
+              v-hasPermi="['system:setting:edit']"
+            >修改
+            </el-button>
+          </el-col>
+          <el-col :span="1.5">
+            <el-button
+              type="danger"
+              plain
+              icon="el-icon-delete"
+              size="mini"
+              :disabled="multiple"
+              @click="handleDelete"
+              v-hasPermi="['system:setting:remove']"
+            >删除
+            </el-button>
+          </el-col>
+          <el-col :span="1.5">
+            <el-button
+              type="warning"
+              plain
+              icon="el-icon-download"
+              size="mini"
+              @click="handleExport"
+              v-hasPermi="['system:setting:export']"
+            >导出
+            </el-button>
+          </el-col>
+          <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
+        </el-row>
+
+        <el-table v-loading="loading" :data="settingList" @selection-change="handleSelectionChange">
+          <el-table-column type="selection" width="55" align="center"/>
+          <el-table-column label="开始时间" align="center" prop="startTime" width="180">
+            <template slot-scope="scope">
+              <span>{{ parseTime(scope.row.startTime, '{h}:{i}:{s}') }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="结束时间" align="center" prop="endTime" width="180">
+            <template slot-scope="scope">
+              <span>{{ parseTime(scope.row.endTime, '{h}:{i}:{s}') }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="单价" align="center" prop="price"/>
+          <el-table-column label="创建人" align="center" prop="createBy"/>
+          <el-table-column label="修改人" align="center" prop="upadteBy"/>
+          <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
+            <template slot-scope="scope">
+              <el-button
+                size="mini"
+                type="text"
+                icon="el-icon-edit"
+                @click="handleUpdate(scope.row)"
+                v-hasPermi="['system:setting:edit']"
+              >修改
+              </el-button>
+              <el-button
+                size="mini"
+                type="text"
+                icon="el-icon-delete"
+                @click="handleDelete(scope.row)"
+                v-hasPermi="['system:setting:remove']"
+              >删除
+              </el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+
+        <pagination
+          v-show="total>0"
+          :total="total"
+          :page.sync="queryParams.pageNum"
+          :limit.sync="queryParams.pageSize"
+          @pagination="getList"
+        />
+
+        <!-- 添加或修改电价设置对话框 -->
+        <el-dialog :title="title" :visible.sync="open" width="500px" append-to-body>
+          <el-form ref="form" :model="form" :rules="rules" label-width="80px">
+            <!--<el-form-item label="开始时间" prop="startTime">
+              <el-date-picker clearable
+                              v-model="form.startTime"
+                              type="date"
+                              value-format="yyyy-MM-dd"
+                              placeholder="请选择开始时间">
+              </el-date-picker>
+            </el-form-item>
+            <el-form-item label="结束时间" prop="endTime">
+              <el-date-picker clearable
+                              v-model="form.endTime"
+                              type="date"
+                              value-format="yyyy-MM-dd"
+                              placeholder="请选择结束时间">
+              </el-date-picker>
+            </el-form-item>-->
+            <el-form-item label="时间段" prop="startTime">
+              <el-time-picker
+                is-range
+                v-model="startEndTime"
+                value-format="yyyy-MM-dd HH:mm:ss"
+                range-separator="至"
+                start-placeholder="开始时间"
+                end-placeholder="结束时间"
+                placeholder="选择时间范围">
+              </el-time-picker>
+            </el-form-item>
+            <el-form-item label="单价" prop="price">
+              <el-input type="number" v-model="form.price" placeholder="请输入单价"/>
+            </el-form-item>
+            <el-form-item label="备注" prop="remark">
+              <el-input v-model="form.remark" placeholder="请输入备注"/>
+            </el-form-item>
+          </el-form>
+          <div slot="footer" class="dialog-footer">
+            <el-button type="primary" @click="submitForm">确 定</el-button>
+            <el-button @click="cancel">取 消</el-button>
+          </div>
+        </el-dialog>
+      </el-col>
+    </el-row>
+  </div>
+</template>
+
+<script>
+  import {
+    listSetting,
+    getSetting,
+    delSetting,
+    addSetting,
+    updateSetting,
+    periceConfigListInfo,
+    deletepriceConfig,
+    updatePriceConfig,
+    addPriceConfig
+  } from "@/api/systemSetting/electricityPriceSetting/electricityPriceSetting";
+  import Treeselect from '@riophae/vue-treeselect'
+  import '@riophae/vue-treeselect/dist/vue-treeselect.css'
+
+  export default {
+    name: "index",
+    components: {Treeselect},
+    data() {
+      return {
+        priceOptions: undefined,
+        defaultExpandedKeys: [0],//默认展开的数组
+        defaultProps: {
+          children: 'children',
+          label: 'name'
+        },
+        priceButton: [
+          {type: 'addArea', icon: 'el-icon-circle-plus', name: '新增规则'},
+        ],
+        priceButtonTwo: [
+          {type: 'updateArea', icon: 'el-icon-edit', name: '修改规则'},
+          {type: 'deleteArea', icon: 'el-icon-remove', name: '删除规则'}
+        ],
+        priceId: null,//电价配置id
+        treeNodeData: {},//树节点信息
+        priceOpen: false,//新增/修改电价规则页面
+        priceForm: {
+          id: null,
+          name: null,
+          remark: null,
+          parentId: null
+        },
+        priceRules: {// 表单校验
+          name: [
+            {required: true, message: '电价规则名称不能为空', trigger: 'change'}
+          ]
+        },
+
+        startEndTime: [new Date().getFullYear().toString() + '-' + (new Date().getMonth() < 10 ? ('0' + (new Date().getMonth() + 1)) : (new Date().getMonth() + 1)).toString() + '-' + (new Date().getDate() < 10 ? ('0' + new Date().getDate()) : new Date().getDate()).toString() + ' ' + (new Date().getHours() >= 10 ? new Date().getHours() : ('0' + new Date().getHours())) + ':' + (new Date().getMinutes() >= 10 ? new Date().getMinutes() : ('0' + new Date().getMinutes())) + ':' + (new Date().getSeconds() >= 10 ? new Date().getSeconds() : ('0' + new Date().getSeconds()))
+          , new Date().getFullYear().toString() + '-' + (new Date().getMonth() < 10 ? ('0' + (new Date().getMonth() + 1)) : (new Date().getMonth() + 1)).toString() + '-' + (new Date().getDate() < 10 ? ('0' + new Date().getDate()) : new Date().getDate()).toString() + ' ' + (new Date().getHours() >= 10 ? new Date().getHours() : ('0' + new Date().getHours())) + ':' + (new Date().getMinutes() >= 10 ? new Date().getMinutes() : ('0' + new Date().getMinutes())) + ':' + (new Date().getSeconds() >= 10 ? new Date().getSeconds() : ('0' + new Date().getSeconds()))],//时间选择
+        // 遮罩层
+        loading: false,
+        // 选中数组
+        ids: [],
+        // 非单个禁用
+        single: true,
+        // 非多个禁用
+        multiple: true,
+        // 显示搜索条件
+        showSearch: true,
+        // 总条数
+        total: 0,
+        // 电价设置表格数据
+        settingList: [],
+        // 弹出层标题
+        title: "",
+        // 是否显示弹出层
+        open: false,
+        // 查询参数
+        queryParams: {
+          pageNum: 1,
+          pageSize: 10,
+          startTime: null,
+          endTime: null,
+          price: null,
+          upadteBy: null,
+        },
+        // 表单参数
+        form: {},
+        // 表单校验
+        rules: {
+          price: [
+            {required: true, message: '单价称不能为空', trigger: 'blur'},
+            {
+              pattern: /^([1-9][\d]*|0)(\.[\d]+)?$/,
+              message: '请输入正确的单价'
+            }
+          ],
+          // startTime: [ {required: true, message: '请选择时间段', trigger: 'change'},]
+        }
+      };
+    },
+    created() {
+      //获取单价设置树节点信息
+      this.getScenarioConfigAreaList()
+    },
+    methods: {
+      /************************************************************** 左侧树 **************************************************************/
+      //获取单价设置树节点信息
+      getScenarioConfigAreaList() {
+        const that = this
+        periceConfigListInfo().then(response => {
+          if (response.code == 200) {
+            if (typeof response.data != 'undefined') {
+              if (response.data.length > 0) {
+                this.priceOptions = []
+                const data = {id: 0, name: '电价规则', children: []}
+                data.children = this.handleTree(response.data, 'id', 'parentId')
+                that.priceOptions.push(data)
+                that.$nextTick(() => {
+                  that.priceId = that.priceOptions[0].children[0].id.toString()
+                  that.$refs.priceTree.setCurrentKey(that.priceId)
+
+                  this.treeNodeData = that.$refs.priceTree.getCurrentNode()
+                  this.queryParams.ruleId = that.priceId
+                  //获取当前点击节点的所有的电价配置
+                  this.getList()
+                })
+              }
+            } else {
+              this.priceOptions = []
+              const data = {id: 0, name: '电价规则', children: []}
+              that.priceOptions.push(data)
+            }
+          }
+        })
+      },
+      // 筛选节点
+      filterNode(value, data) {
+        if (!value) return true
+        return data.label.indexOf(value) !== -1
+      },
+      //节点单击事件
+      handleNodeClick(data) {
+        //赋值node信息
+        // debugger
+        if (this.treeNodeData.id != data.id) {
+          this.treeNodeData = data
+          this.queryParams.ruleId = data.id
+          //查询右侧场景table
+          this.getList()
+        }
+        return
+      },
+      //区域按钮操作
+      priceOperation(command) {
+        const that = this
+        if (command == 'addArea') {//新增区域
+          this.title = '新增电价规则'
+          this.priceOpen = true
+          this.priceForm.parentId = this.treeNodeData.id
+        } else if (command == 'updateArea') {//修改区域
+          this.title = '修改电价规则'
+          this.priceForm.id = this.treeNodeData.id
+          this.priceForm.name = this.treeNodeData.name
+          this.priceForm.remark = this.treeNodeData.remark
+          this.priceOpen = true
+
+        } else if (command == 'deleteArea') {//删除区域
+          this.$confirm('确认删除当前树节点 ' + this.treeNodeData.name + ' 吗?', '提示', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning'
+          }).then(() => {
+            if (this.treeNodeData.id == 0) {
+              this.$modal.msgWarning('当前节点不可删除')
+              return
+            }
+            this.ids.push(this.treeNodeData.id)
+            this.getChildrenIdList(this.treeNodeData)
+            deletepriceConfig(this.ids).then(response => {
+              if (response.code == 200) {
+                that.ids.length = 0
+                that.$modal.msgSuccess(response.msg)
+                that.$refs.priceTree.remove(
+                  that.treeNodeData
+                )
+              } else {
+                that.$modal.msgWarning(response.msg)
+              }
+            })
+          })
+        }
+      },
+      //获取当前节点下子节点的id数组
+      getChildrenIdList(data) {
+        if (typeof data.children != 'undefined' && data.children != null) {
+          data.children.forEach(val => {
+            this.ids.push(val.id)
+            this.getChildrenIdList(val)
+          })
+
+        }
+      },
+      //区域新增/修改
+      submitPriceForm() {
+        const that = this
+        this.$refs['priceForm'].validate(valid => {
+          if (valid) {
+            if (this.priceForm.id != null) {
+              updatePriceConfig(this.priceForm).then(response => {
+                if (response.code == 200) {
+                  this.$refs.priceTree.getNode(this.treeNodeData.id).data.name = this.priceForm.name
+                  this.$refs.priceTree.getNode(this.treeNodeData.id).data.remark = this.priceForm.remark
+                  this.$modal.msgSuccess(response.msg)
+                  this.priceOpen = false
+                  this.priceReset()
+                } else {
+                  this.$modal.msgWarning(response.msg)
+                }
+              })
+            } else {
+              addPriceConfig(this.priceForm).then(response => {
+                if (response.code == 200) {
+                  let nodeData = {}
+                  nodeData.id = response.data.id
+                  nodeData.name = response.data.name
+                  this.$refs.priceTree.append(
+                    nodeData,
+                    this.treeNodeData
+                  )
+                  this.$modal.msgSuccess(response.msg)
+                  this.priceOpen = false
+                  this.priceReset()
+                } else {
+                  this.$modal.msgWarning(response.msg)
+                }
+              })
+            }
+          }
+        })
+      },
+      // 取消按钮
+      priceCancel() {
+        this.priceOpen = false
+        this.priceReset()
+      },
+      // 表单重置
+      priceReset() {
+        this.priceForm = {
+          id: null,
+          name: null,
+          remark: null,
+          parentId: null
+        }
+        this.resetForm('priceForm')
+      },
+      /************************************************************** 右侧列表 **************************************************************/
+      /** 查询电价设置列表 */
+      getList() {
+        this.loading = true;
+        listSetting(this.queryParams).then(response => {
+          this.settingList = response.rows;
+          this.total = response.total;
+          this.loading = false;
+        });
+      },
+      // 取消按钮
+      cancel() {
+        this.open = false;
+        this.reset();
+      },
+      // 表单重置
+      reset() {
+        this.form = {
+          id: null,
+          startTime: null,
+          endTime: null,
+          price: null,
+          remark: null,
+          createBy: null,
+          createTime: null,
+          upadteBy: null,
+          updateTime: null
+        };
+        this.resetForm("form");
+      },
+      /** 搜索按钮操作 */
+      handleQuery() {
+        this.queryParams.pageNum = 1;
+        this.getList();
+      },
+      /** 重置按钮操作 */
+      resetQuery() {
+        this.resetForm("queryForm");
+        this.handleQuery();
+      },
+      // 多选框选中数据
+      handleSelectionChange(selection) {
+        this.ids = selection.map(item => item.id)
+        this.single = selection.length !== 1
+        this.multiple = !selection.length
+      },
+      /** 新增按钮操作 */
+      handleAdd() {
+        this.reset();
+        this.open = true;
+        this.title = "添加电价设置";
+      },
+      /** 修改按钮操作 */
+      handleUpdate(row) {
+        this.reset();
+        const id = row.id || this.ids
+        getSetting(id).then(response => {
+          this.form = response.data;
+          this.open = true;
+          this.title = "修改电价设置";
+        });
+      },
+      /** 提交按钮 */
+      submitForm() {
+        if (this.startEndTime.length != 2) {
+          this.$modal.msgWarning("请选择时间段");
+          this.open = true;
+          return
+        }
+        this.form.startTime = this.startEndTime[0]
+        this.form.endTime = this.startEndTime[1]
+        this.form.ruleId = this.treeNodeData.id
+        this.$refs["form"].validate(valid => {
+          if (valid) {
+            if (this.form.id != null) {
+              updateSetting(this.form).then(response => {
+                this.$modal.msgSuccess("修改成功");
+                this.open = false;
+                this.getList();
+              });
+            } else {
+              addSetting(this.form).then(response => {
+                this.$modal.msgSuccess("新增成功");
+                this.open = false;
+                this.getList();
+              });
+            }
+          }
+        });
+      },
+      /** 删除按钮操作 */
+      handleDelete(row) {
+        const ids = row.id || this.ids;
+        this.$modal.confirm('是否确认删除电价设置编号为"' + ids + '"的数据项？').then(function () {
+          return delSetting(ids);
+        }).then(() => {
+          this.getList();
+          this.$modal.msgSuccess("删除成功");
+        }).catch(() => {
+        });
+      },
+      /** 导出按钮操作 */
+      handleExport() {
+        this.download('system/setting/export', {
+          ...this.queryParams
+        }, `setting_${new Date().getTime()}.xlsx`)
+      }
+    }
+  };
+</script>
+<style lang="scss" scoped>
+  .el-dropdown-link {
+    cursor: pointer;
+    color: #409EFF;
+  }
+
+  .el-icon-arrow-down {
+    font-size: 12px;
+  }
+
+  .el-tree {
+    display: inline-block;
+    min-width: 100%;
+
+  }
+
+  .tooltip {
+    margin-right: 5px;
+    font-size: 13px;
+    border-radius: 4px;
+    box-sizing: border-box;
+    white-space: nowrap;
+    padding: 4px;
+  }
+
+  .operation-view {
+    display: inline-block;
+    padding: 0px 5px;
+    margin-left: 5px;
+    color: #777777;
+  }
+
+  .time {
+    font-size: 13px;
+    color: #999;
+  }
+
+  .bottom {
+    margin-top: 13px;
+    line-height: 12px;
+  }
+
+  .button {
+    padding: 0;
+    float: right;
+  }
+
+  .image {
+    width: 100%;
+    display: block;
+  }
+
+  .clearfix:before,
+  .clearfix:after {
+    display: table;
+    content: "";
+  }
+
+  .clearfix:after {
+    clear: both
+  }
+
+  .wait-task-user-box-card {
+    height: calc(96vh - 60px - 10px);
+  }
+
+  #pane-1 .el-descriptions {
+    margin-bottom: 25px;
+  }
+
+  .el-scrollbar__wrap {
+    overflow-x: hidden;
+  }
+
+  .el-drawer__wrapper > > > .el-descriptions-item__cell {
+    width: 50%;
+  }
+
+  .el-drawer__wrapper > > > .input-with-select .el-input__inner {
+    width: 100%;
+  }
+
+  .el-drawer__wrapper > > > .input-with-select .el-input-group__append {
+    width: 25%;
+  }
+
+  .theme-blue {
+    .tooltip {
+      margin-right: 5px;
+      font-size: 13px;
+      border-radius: 4px;
+      box-sizing: border-box;
+      white-space: nowrap;
+      padding: 4px;
+      color: white;
+    }
+  }
+
+  .theme-white {
+    .tooltip {
+      margin-right: 5px;
+      font-size: 13px;
+      border-radius: 4px;
+      box-sizing: border-box;
+      white-space: nowrap;
+      padding: 4px;
+      color: #999;
+    }
+  }
+
+  .theme-blue .text_white {
+    color: white;
+  }
+
+  .theme-white .text_white {
+    color: #999;
+  }
+
+  .input-with-select_title {
+    margin: 15px 0;
+    color: #000;
+  }
+
+  .addDom {
+    width: 61%;
+  }
+
+  .attributeDropdown {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 3.35vh;
+  }
+
+  .theme-blue .addDom .el-icon-question {
+    color: white;
+  }
+
+  .theme-light, .theme-dark .addDom .el-icon-question {
+    color: rgb(204, 204, 204);
+  }
+
+  .attributeDropdown {
+    width: 20%;
+    float: left;
+  }
+
+  .attribute {
+    width: 80%;
+    float: left;
+  }
+
+  .cusNumber {
+    padding: 0 15px;
+    color: #4cbdff;
+    font-size: 17px;
+    font-weight: bold;
+  }
+</style>
+

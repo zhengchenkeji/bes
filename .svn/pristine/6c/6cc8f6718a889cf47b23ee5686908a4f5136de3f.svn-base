@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.energyDataReport.buildBaseInfo.mapper.BuildBaseInfoMapper">
+
+    <resultMap type="BuildBaseInfo" id="BuildBaseInfoResult">
+        <result property="id"    column="id"    />
+        <result property="dataCenterId"    column="data_center_id"    />
+        <result property="buildGroupId"    column="build_group_id"    />
+        <result property="buildName"    column="build_name"    />
+        <result property="aliasName"    column="alias_name"    />
+        <result property="buildOwner"    column="build_owner"    />
+        <result property="state"    column="state"    />
+        <result property="districtCode"    column="district_code"    />
+        <result property="buildAddr"    column="build_addr"    />
+        <result property="buildLong"    column="build_long"    />
+        <result property="buildLat"    column="build_lat"    />
+        <result property="buildYear"    column="build_year"    />
+        <result property="upFloor"    column="up_floor"    />
+        <result property="downFloor"    column="down_floor"    />
+        <result property="buildFunc"    column="build_func"    />
+        <result property="totalArea"    column="total_area"    />
+        <result property="airArea"    column="air_area"    />
+        <result property="heatArea"    column="heat_area"    />
+        <result property="airType"    column="air_type"    />
+        <result property="heatType"    column="heat_type"    />
+        <result property="bodyCoef"    column="body_coef"    />
+        <result property="struType"    column="stru_type"    />
+        <result property="wallMatType"    column="wall_mat_type"    />
+        <result property="wallWarmType"    column="wall_warm_type"    />
+        <result property="wallWinType"    column="wall_win_type"    />
+        <result property="glassType"    column="glass_type"    />
+        <result property="winFrameType"    column="win_frame_type"    />
+        <result property="isStandard"    column="is_standard"    />
+        <result property="designDept"    column="design_dept"    />
+        <result property="workDept"    column="work_dept"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="createUser"    column="create_user"    />
+        <result property="monitorDate"    column="monitor_date"    />
+        <result property="acceptDate"    column="accept_date"    />
+        <result property="parkId"    column="park_id"    />
+    </resultMap>
+
+    <sql id="selectBuildBaseInfoVo">
+        select id, data_center_id, build_group_id, build_name, alias_name, build_owner, state, district_code, build_addr, build_long, build_lat, build_year, up_floor, down_floor, build_func, total_area, air_area, heat_area, air_type, heat_type, body_coef, stru_type, wall_mat_type, wall_warm_type, wall_win_type, glass_type, win_frame_type, is_standard, design_dept, work_dept, create_time, create_user, monitor_date, accept_date, park_id from athena_bes_build_base_info
+    </sql>
+
+    <select id="selectBuildBaseInfoList" parameterType="BuildBaseInfo" resultMap="BuildBaseInfoResult">
+        <include refid="selectBuildBaseInfoVo"/>
+        <where>
+            <if test="dataCenterId != null "> and data_center_id = #{dataCenterId}</if>
+            <if test="buildGroupId != null "> and build_group_id = #{buildGroupId}</if>
+            <if test="buildName != null  and buildName != ''"> and build_name like concat('%', #{buildName}, '%')</if>
+            <if test="parkId != null  and parkId != ''"> and park_id = #{parkId}</if>
+        </where>
+    </select>
+
+    <select id="selectBuildBaseInfoById" parameterType="Long" resultMap="BuildBaseInfoResult">
+        <include refid="selectBuildBaseInfoVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertBuildBaseInfo" parameterType="BuildBaseInfo">
+        insert into athena_bes_build_base_info
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">id,</if>
+            <if test="dataCenterId != null">data_center_id,</if>
+            <if test="buildGroupId != null">build_group_id,</if>
+            <if test="buildName != null and buildName != ''">build_name,</if>
+            <if test="aliasName != null and aliasName != ''">alias_name,</if>
+            <if test="buildOwner != null and buildOwner != ''">build_owner,</if>
+            <if test="state != null">state,</if>
+            <if test="districtCode != null and districtCode != ''">district_code,</if>
+            <if test="buildAddr != null and buildAddr != ''">build_addr,</if>
+            <if test="buildLong != null and buildLong != ''">build_long,</if>
+            <if test="buildLat != null and buildLat != ''">build_lat,</if>
+            <if test="buildYear != null">build_year,</if>
+            <if test="upFloor != null">up_floor,</if>
+            <if test="downFloor != null">down_floor,</if>
+            <if test="buildFunc != null and buildFunc != ''">build_func,</if>
+            <if test="totalArea != null and totalArea != ''">total_area,</if>
+            <if test="airArea != null and airArea != ''">air_area,</if>
+            <if test="heatArea != null and heatArea != ''">heat_area,</if>
+            <if test="airType != null and airType != ''">air_type,</if>
+            <if test="heatType != null and heatType != ''">heat_type,</if>
+            <if test="bodyCoef != null">body_coef,</if>
+            <if test="struType != null and struType != ''">stru_type,</if>
+            <if test="wallMatType != null and wallMatType != ''">wall_mat_type,</if>
+            <if test="wallWarmType != null and wallWarmType != ''">wall_warm_type,</if>
+            <if test="wallWinType != null and wallWinType != ''">wall_win_type,</if>
+            <if test="glassType != null and glassType != ''">glass_type,</if>
+            <if test="winFrameType != null and winFrameType != ''">win_frame_type,</if>
+            <if test="isStandard != null and isStandard != ''">is_standard,</if>
+            <if test="designDept != null and designDept != ''">design_dept,</if>
+            <if test="workDept != null and workDept != ''">work_dept,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="createUser != null">create_user,</if>
+            <if test="monitorDate != null">monitor_date,</if>
+            <if test="acceptDate != null">accept_date,</if>
+            <if test="parkId != null and parkId != ''">park_id,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">#{id},</if>
+            <if test="dataCenterId != null">#{dataCenterId},</if>
+            <if test="buildGroupId != null">#{buildGroupId},</if>
+            <if test="buildName != null and buildName != ''">#{buildName},</if>
+            <if test="aliasName != null and aliasName != ''">#{aliasName},</if>
+            <if test="buildOwner != null and buildOwner != ''">#{buildOwner},</if>
+            <if test="state != null">#{state},</if>
+            <if test="districtCode != null and districtCode != ''">#{districtCode},</if>
+            <if test="buildAddr != null and buildAddr != ''">#{buildAddr},</if>
+            <if test="buildLong != null and buildLong != ''">#{buildLong},</if>
+            <if test="buildLat != null and buildLat != ''">#{buildLat},</if>
+            <if test="buildYear != null">#{buildYear},</if>
+            <if test="upFloor != null">#{upFloor},</if>
+            <if test="downFloor != null">#{downFloor},</if>
+            <if test="buildFunc != null and buildFunc != ''">#{buildFunc},</if>
+            <if test="totalArea != null and totalArea != ''">#{totalArea},</if>
+            <if test="airArea != null and airArea != ''">#{airArea},</if>
+            <if test="heatArea != null and heatArea != ''">#{heatArea},</if>
+            <if test="airType != null and airType != ''">#{airType},</if>
+            <if test="heatType != null and heatType != ''">#{heatType},</if>
+            <if test="bodyCoef != null">#{bodyCoef},</if>
+            <if test="struType != null and struType != ''">#{struType},</if>
+            <if test="wallMatType != null and wallMatType != ''">#{wallMatType},</if>
+            <if test="wallWarmType != null and wallWarmType != ''">#{wallWarmType},</if>
+            <if test="wallWinType != null and wallWinType != ''">#{wallWinType},</if>
+            <if test="glassType != null and glassType != ''">#{glassType},</if>
+            <if test="winFrameType != null and winFrameType != ''">#{winFrameType},</if>
+            <if test="isStandard != null and isStandard != ''">#{isStandard},</if>
+            <if test="designDept != null and designDept != ''">#{designDept},</if>
+            <if test="workDept != null and workDept != ''">#{workDept},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="createUser != null">#{createUser},</if>
+            <if test="monitorDate != null">#{monitorDate},</if>
+            <if test="acceptDate != null">#{acceptDate},</if>
+            <if test="parkId != null and parkId != ''">#{parkId},</if>
+         </trim>
+    </insert>
+
+    <update id="updateBuildBaseInfo" parameterType="BuildBaseInfo">
+        update athena_bes_build_base_info
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="dataCenterId != null">data_center_id = #{dataCenterId},</if>
+            <if test="buildGroupId != null">build_group_id = #{buildGroupId},</if>
+            <if test="buildName != null and buildName != ''">build_name = #{buildName},</if>
+            <if test="aliasName != null and aliasName != ''">alias_name = #{aliasName},</if>
+            <if test="buildOwner != null and buildOwner != ''">build_owner = #{buildOwner},</if>
+            <if test="state != null">state = #{state},</if>
+            <if test="districtCode != null and districtCode != ''">district_code = #{districtCode},</if>
+            <if test="buildAddr != null and buildAddr != ''">build_addr = #{buildAddr},</if>
+            <if test="buildLong != null and buildLong != ''">build_long = #{buildLong},</if>
+            <if test="buildLat != null and buildLat != ''">build_lat = #{buildLat},</if>
+            <if test="buildYear != null">build_year = #{buildYear},</if>
+            <if test="upFloor != null">up_floor = #{upFloor},</if>
+            <if test="downFloor != null">down_floor = #{downFloor},</if>
+            <if test="buildFunc != null and buildFunc != ''">build_func = #{buildFunc},</if>
+            <if test="totalArea != null and totalArea != ''">total_area = #{totalArea},</if>
+            <if test="airArea != null and airArea != ''">air_area = #{airArea},</if>
+            <if test="heatArea != null and heatArea != ''">heat_area = #{heatArea},</if>
+            <if test="airType != null and airType != ''">air_type = #{airType},</if>
+            <if test="heatType != null and heatType != ''">heat_type = #{heatType},</if>
+            <if test="bodyCoef != null">body_coef = #{bodyCoef},</if>
+            <if test="struType != null and struType != ''">stru_type = #{struType},</if>
+            <if test="wallMatType != null and wallMatType != ''">wall_mat_type = #{wallMatType},</if>
+            <if test="wallWarmType != null and wallWarmType != ''">wall_warm_type = #{wallWarmType},</if>
+            <if test="wallWinType != null and wallWinType != ''">wall_win_type = #{wallWinType},</if>
+            <if test="glassType != null and glassType != ''">glass_type = #{glassType},</if>
+            <if test="winFrameType != null and winFrameType != ''">win_frame_type = #{winFrameType},</if>
+            <if test="isStandard != null and isStandard != ''">is_standard = #{isStandard},</if>
+            <if test="designDept != null and designDept != ''">design_dept = #{designDept},</if>
+            <if test="workDept != null and workDept != ''">work_dept = #{workDept},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="createUser != null">create_user = #{createUser},</if>
+            <if test="monitorDate != null">monitor_date = #{monitorDate},</if>
+            <if test="acceptDate != null">accept_date = #{acceptDate},</if>
+            <if test="parkId != null and parkId != ''">park_id = #{parkId},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteBuildBaseInfoById" parameterType="Long">
+        delete from athena_bes_build_base_info where id = #{id}
+    </delete>
+
+    <delete id="deleteBuildBaseInfoByIds" parameterType="String">
+        delete from athena_bes_build_base_info where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <select id="getAllDataCenterBaseInfo" resultType="java.util.Map">
+        select id,data_center_name dataCenterName from athena_bes_data_center_base_info
+    </select>
+
+    <select id="getAllBuildGroup" resultType="java.util.Map">
+        select id,build_group_name buildGroupName from athena_bes_build_group_info
+    </select>
+
+    <select id="getAllPark" resultType="java.util.Map">
+        select code,name from athena_bes_park
+    </select>
+    <select id="selectBuildBaseInfoListByCenterId" resultMap="BuildBaseInfoResult">
+        <include refid="selectBuildBaseInfoVo"></include>
+        WHERE data_center_id=#{id}
+    </select>
+
+    <select id="selectAllInfo" resultType="BuildBaseInfo" >
+        select t1.id, t1.data_center_id dataCenterId, t1.build_group_id buildGroupId, t1.build_name buildName,
+        t1.alias_name aliasName, t1.build_owner buildOwner, t1.state, t1.district_code districtCode,
+        t1.build_addr buildAddr, t1.build_long buildLong, t1.build_lat buildLat, t1.build_year buildYear,
+        t1.up_floor upFloor, t1.down_floor downFloor,t1.build_func buildFunc, t1.total_area totalArea,
+        t1.air_area airArea, t1.heat_area heatArea, t1.air_type airType, t1.heat_type heatType, t1.body_coef bodyCoef,
+        t1.stru_type struType,t1.wall_mat_type wallMatType, t1.wall_warm_type wallWarmType, t1.wall_win_type wallWinType,
+        t1.glass_type glassType, t1.win_frame_type winFrameType, t1.is_standard isStandard,t1.design_dept designDept,
+        t1.work_dept workDept, t1.create_time createTime, t1.create_user createUser, t1.monitor_date monitorDate,
+        t1.accept_date acceptDate, t1.park_id parkId, t2.data_center_name dataCenterName, t3.build_group_name buildGroupName
+        from athena_bes_build_base_info t1
+        left join athena_bes_data_center_base_info t2 on t1.data_center_id = t2.id
+        left join athena_bes_build_group_info t3 on t1.build_group_id = t3.id
+        <where>
+            <if test="dataCenterId != null "> and t1.data_center_id = #{dataCenterId}</if>
+            <if test="buildGroupId != null "> and t1.build_group_id = #{buildGroupId}</if>
+            <if test="buildName != null  and buildName != ''"> and t1.build_name like concat('%', #{buildName}, '%')</if>
+            <if test="parkId != null  and parkId != ''"> and t1.park_id = #{parkId}</if>
+        </where>
+    </select>
+</mapper>

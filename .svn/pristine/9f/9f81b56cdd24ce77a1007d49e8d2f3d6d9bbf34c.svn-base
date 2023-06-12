@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zc.efounder.JEnterprise.mapper.noticeManage.NoticeTemplateMapper">
+
+    <resultMap type="NoticeTemplate" id="NoticeTemplateResult">
+        <result property="id"    column="id"    />
+        <result property="templatename"    column="templateName"    />
+        <result property="noticetype"    column="noticeType"    />
+        <result property="servicefactory"    column="serviceFactory"    />
+        <result property="templatecode"    column="templateCode"    />
+        <result property="templatesign"    column="templateSign"    />
+        <result property="filePath"    column="filePath"    />
+        <result property="title"    column="title"    />
+        <result property="content"    column="content"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectNoticeTemplateVo">
+        select id, templateName, noticeType, filePath,title,serviceFactory, templateCode, templateSign, content, create_time, update_time from athena_bes_notice_template
+    </sql>
+
+    <select id="selectNoticeTemplateList" parameterType="NoticeTemplate" resultMap="NoticeTemplateResult">
+        <include refid="selectNoticeTemplateVo"/>
+        <where>
+            <if test="templatename != null  and templatename != ''"> and templateName like concat('%', #{templatename}, '%')</if>
+            <if test="noticetype != null  and noticetype != ''"> and noticeType = #{noticetype}</if>
+        </where>
+    </select>
+
+    <select id="selectNoticeTemplateById" parameterType="Long" resultMap="NoticeTemplateResult">
+        <include refid="selectNoticeTemplateVo"/>
+        where id = #{id}
+    </select>
+    <select id="getNoticeTemplatebyConfig"
+            resultType="com.zc.efounder.JEnterprise.domain.noticeManage.NoticeTemplate">
+        <include refid="selectNoticeTemplateVo"/>
+        where noticeType=#{noticeType} and serviceFactory=#{serviceFactory}
+        order by create_time desc
+    </select>
+
+    <insert id="insertNoticeTemplate" parameterType="NoticeTemplate">
+        insert into athena_bes_notice_template
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">id,</if>
+            <if test="templatename != null">templateName,</if>
+            <if test="noticetype != null and noticetype != ''">noticeType,</if>
+            <if test="servicefactory != null and servicefactory != ''">serviceFactory,</if>
+            <if test="templatecode != null">templateCode,</if>
+            <if test="templatesign != null">templateSign,</if>
+            <if test="filePath != null">filePath,</if>
+
+            <if test="title != null">title,</if>
+            <if test="content != null">content,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">#{id},</if>
+            <if test="templatename != null">#{templatename},</if>
+            <if test="noticetype != null and noticetype != ''">#{noticetype},</if>
+            <if test="servicefactory != null and servicefactory != ''">#{servicefactory},</if>
+            <if test="templatecode != null">#{templatecode},</if>
+            <if test="templatesign != null">#{templatesign},</if>
+            <if test="filePath != null">#{filePath},</if>
+            <if test="title != null">#{title},</if>
+            <if test="content != null">#{content},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateNoticeTemplate" parameterType="NoticeTemplate">
+        update athena_bes_notice_template
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="templatename != null">templateName = #{templatename},</if>
+            <if test="noticetype != null and noticetype != ''">noticeType = #{noticetype},</if>
+            <if test="servicefactory != null and servicefactory != ''">serviceFactory = #{servicefactory},</if>
+            <if test="templatecode != null">templateCode = #{templatecode},</if>
+            <if test="templatesign != null">templateSign = #{templatesign},</if>
+            <if test="filePath != null">filePath = #{filePath},</if>
+            <if test="title != null">title = #{title},</if>
+            <if test="content != null">content = #{content},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteNoticeTemplateById" parameterType="Long">
+        delete from athena_bes_notice_template where id = #{id}
+    </delete>
+
+    <delete id="deleteNoticeTemplateByIds" parameterType="String">
+        delete from athena_bes_notice_template where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

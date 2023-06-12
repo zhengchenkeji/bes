@@ -1,0 +1,1546 @@
+<template>
+</template>
+
+<script>
+  import {mapState} from 'vuex'
+  import {Cmd} from '../store/modules/Cmd'
+  import pubsub from '@/store/modules/PubSub'
+
+  export default {
+    name: 'Websocket',
+    data() {
+      return {
+        Cmd: Cmd,
+        resultEnum: {
+          SUCCEED: 0,// 成功
+          ERR_CRC: 2, // crc 校验错误
+          ERR_PARAM: 3, // 参数错误
+          ERR_UNKNOWN: 4 // 未知错误
+        }
+      }
+    },
+    computed: {
+      ...mapState({
+        token: state => state.user.token,
+        websocket: state => state.user.websocket
+      })
+    },
+    watch: {
+      websocket({ password, path, port, interval }) {
+        // console.log(this.token)
+        // 建立 websocket 连接
+        this.socket.initialize({
+          url: 'ws://' + location.hostname + ':' + port + path,
+          password: password,
+          tokenSN: this.token,
+          heartRate: interval
+        })
+
+        this.socket.onmessage = (message) => {
+
+          message = JSON.parse(message)
+          const method = message.method
+
+          if (method !== 'event') {
+            return
+          }
+
+          const params = message.params
+          const subEvent = params.subEvent
+          const content = params.content
+
+          switch (subEvent) {
+            // 支付
+            case 'payment_webSocket_send':
+              this.$store.commit('PAYMENT', content)
+              break
+            // 设备实时数据
+            case 'iotDeviceRealtimeData':
+              this.$store.commit('IOT_DEVICE_REALTIME_DATA', content)
+              break
+            case 'EDC':
+              this.edcDataHandle(content)
+              break
+            case 'DDC':
+
+              this.ddcDataHandle(content)
+              break
+            case 'LDC':
+              this.ldcDataHandle(content)
+              break
+            case 'ALARM':
+              this.alarmDataHandle(content)
+              break
+            case 'ALARMLIST':
+              this.alarmListDataHandle(content)
+              break
+            case 'DEVICE_STATE': // 设备状态信息
+              this.deviceStateHandle(content)
+              break
+            case 'ALARMMSG':
+              this.alarmMsgHandle(content)
+              break
+            // case 'RemoteUpgrade': // 远程升级
+            //   this.RemoteUpgrade(content)
+            //   break
+
+
+
+
+
+            case 'MODBUS_SERVER_STATE':
+              this.modbusServerStateHandle(content)
+              break;
+            case 'MODBUS_DEVICE':
+              this.modbusDeviceHandle(content)
+              break;
+            default:
+          }
+        }
+      }
+    },
+    created() {
+    },
+    methods: {
+      changeModelStatus() {
+
+      },
+      // 处理能耗采集器数据
+      edcDataHandle(response) {
+        if (null == response) {
+          return
+        }
+        /** qindehua */
+        var index = response.index
+        var result = response.code
+        var data = response.data
+        var state = false
+        /** qindehua */
+        switch (index) {
+          //新增一个控制器
+          case Cmd.CONTROLLER_ADD :
+
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: '新增控制器同步成功！',
+                type: 'success'
+              })
+              state = true
+            } else {
+              this.$notify({
+                message: '新增控制器同步失败！',
+                type: 'warning'
+              })
+              state = false
+            }
+
+            this.$store.commit('CONTROLLER_ADD', state)
+            break
+
+          //设置一个控制器
+          case Cmd.CONTROLLER_PARAM_SET :
+
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: '设置控制器同步成功！',
+                type: 'success'
+              })
+              state = true
+            } else {
+              this.$notify({
+                message: '设置控制器同步失败！',
+                type: 'warning'
+              })
+              state = false
+            }
+            this.$store.commit('CONTROLLER_PARAM_SET', state)
+            break
+
+          // 删除一个控制器，并删除和它相关的模块和点
+          case Cmd.CONTROLLER_DELETE :
+
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: '删除控制器同步成功',
+                type: 'success'
+              })
+            } else {
+              this.$notify({
+                message: '删除控制器同步失败',
+                type: 'warning'
+              })
+            }
+            break
+
+          //获取控制器的所有配置参数
+          case Cmd.CONTROLLER_PARAM_GET :
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: '获取控制器参数成功',
+                type: 'success'
+              })
+
+            } else {
+              this.$notify({
+                message: '获取控制器参数失败',
+                type: 'warning'
+              })
+
+            }
+            this.$store.commit('CONTROLLER_PARAM_GET', data)
+            break
+
+          //远程升级
+          case Cmd.REMOTE_UPGRADE :
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: '控制器同步成功',
+                type: 'success'
+              })
+            } else {
+              this.$notify({
+                message: '控制器同步失败',
+                type: 'warning'
+              })
+            }
+            break
+
+          //设置控制器的时间
+          case Cmd.CONTROLLER_TIME_SET :
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: '设置控制器时间同步成功',
+                type: 'success'
+              })
+            } else {
+              this.$notify({
+                message: '设置控制器时间同步失败',
+                type: 'warning'
+              })
+            }
+
+            break
+
+          //获取控制器的时间
+          case Cmd.CONTROLLER_TIME_GET :
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: '获取控制器时间同步成功',
+                type: 'success'
+              })
+
+            } else {
+              this.$notify({
+                message: '获取控制器时间同步失败',
+                type: 'warning'
+              })
+
+            }
+            this.$store.commit('CONTROLLER_TIME_GET', data)
+            break
+
+          //重启控制器，相当于重启复位
+          case Cmd.CONTROLLER_RESTART :
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: '重启控制器同步成功',
+                type: 'success'
+              })
+
+            } else {
+              this.$notify({
+                message: '重启控制器同步失败',
+                type: 'warning'
+              })
+
+            }
+            break
+
+          // 重置控制器，恢复出厂设置，并重启
+          case Cmd.CONTROLLER_RESET :
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: '重置控制器同步成功',
+                type: 'success'
+              })
+              this.$store.commit('CONTROLLER_RESET', false)
+            } else {
+              this.$notify({
+                message: '重置控制器同步失败',
+                type: 'warning'
+              })
+            }
+            break
+
+          //新增加一个电表信息
+          case Cmd.AMMETER_ADD:
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: '新增电表成功',
+                type: 'success'
+              })
+              state = true
+
+            } else {
+              this.$notify({
+                message: '新增电表失败',
+                type: 'warning'
+              })
+              state = false
+
+            }
+
+            // 生成 uuid
+            let s = [];
+            let hexDigits = "0123456789abcdef";
+            for (let i = 0; i < 36; i++) {
+              s[i] = hexDigits.substr(Math.floor(Math.random() * 0x10), 1);
+            }
+            s[14] = "4"; // bits 12-15 of the time_hi_and_version field to 0010
+            s[19] = hexDigits.substr((s[19] & 0x3) | 0x8, 1); // bits 6-7 of the clock_seq_hi_and_reserved to 01
+            s[8] = s[13] = s[18] = s[23] = "-";
+
+            let ammeter = "ammeter_add" + "-" + s.join("");
+
+            let msg = {};
+            msg.status = state;
+            msg.uuid = ammeter;
+            this.$store.commit('AMMETER_ADD', msg)
+            break
+
+          //删除一个电表
+          case Cmd.AMMETER_DELETE:
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: '删除电表成功',
+                type: 'success'
+              })
+
+            } else {
+              this.$notify({
+                message: '删除电表失败',
+                type: 'warning'
+              })
+
+            }
+            this.$store.commit('AMMETER_DELETE', data)
+            break
+
+          //获取一个电表的所有配置信息
+          case Cmd.AMMETER_GET:
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: '获取电表的配置信息成功',
+                type: 'success'
+              })
+
+            } else {
+              this.$notify({
+                message: '获取电表的配置信息失败',
+                type: 'warning'
+              })
+
+            }
+            this.$store.commit('AMMETER_GET', data)
+            break
+
+          //电表获取实时数据
+          case Cmd.AMMETER_REALTIME_DATA_GET:
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: '电表实时数据获取成功',
+                type: 'success'
+              })
+
+            } else {
+              this.$notify({
+                message: '电表实时数据获取失败',
+                type: 'warning'
+              })
+
+            }
+            this.$store.commit('AMMETER_REALTIME_DATA_GET', data)
+            break
+
+          //电表获取历史数据
+          case Cmd.AMMETER_HISTORY_DATA_GET:
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: '电表历史数据获取成功',
+                type: 'success'
+              })
+
+            } else {
+              this.$notify({
+                message: '电表历史数据获取失败',
+                type: 'warning'
+              })
+
+            }
+            this.$store.commit('AMMETER_HISTORY_DATA_GET', data)
+            break
+        }
+
+      },
+
+      // 分发ddc数据
+      ddcDataHandle(response) {
+
+        if (null == response) {
+          return
+        }
+        /** qindehua */
+        let index = response.index
+        let result = response.code
+        var data = response.data
+        var state = false
+        /** qindehua */
+        switch (index) {
+          //新增一个DDC
+          case Cmd.CONTROLLER_ADD_DDC :
+
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: '新增控制器同步成功！',
+                type: 'success'
+              })
+              state = true
+            } else {
+              this.$notify({
+                message: '新增控制器同步失败！',
+                type: 'warning'
+              })
+              state = false
+            }
+            this.$store.commit('CONTROLLER_ADD_DDC', state)
+            break
+
+          //设置一个DDC
+          case Cmd.CONTROLLER_PARAM_SET_DDC :
+
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: '设置控制器同步成功！',
+                type: 'success'
+              })
+              state = true
+            } else {
+              this.$notify({
+                message: '设置控制器同步失败！',
+                type: 'warning'
+              })
+              state = false
+            }
+            this.$store.commit('CONTROLLER_PARAM_SET_DDC', state)
+            break
+
+          // 删除一个控制器，并删除和它相关的模块和点
+          case Cmd.CONTROLLER_DELETE_DDC :
+
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: '删除控制器同步成功',
+                type: 'success'
+              })
+
+            } else {
+              this.$notify({
+                message: '删除控制器同步失败',
+                type: 'warning'
+              })
+
+            }
+            break
+
+          //获取控制器的所有配置参数DDC
+          case Cmd.CONTROLLER_PARAM_GET_DDC :
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: '获取控制器参数成功',
+                type: 'success'
+              })
+
+            } else {
+              this.$notify({
+                message: '获取控制器参数失败',
+                type: 'warning'
+              })
+
+            }
+            this.$store.commit('CONTROLLER_PARAM_GET_DDC', data)
+            break
+
+          //远程升级
+          case Cmd.REMOTE_UPGRADE_DDC :
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: '远程升级控制器成功',
+                type: 'success'
+              })
+            } else {
+              this.$notify({
+                message: '远程升级控制器失败',
+                type: 'warning'
+              })
+            }
+
+            break
+
+          //设置控制器的时间
+          case Cmd.CONTROLLER_TIME_SET_DDC :
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: '设置控制器时间成功',
+                type: 'success'
+              })
+
+            } else {
+              this.$notify({
+                message: '设置控制器时间失败',
+                type: 'warning'
+              })
+
+            }
+            break
+
+          //获取控制器的时间
+          case Cmd.CONTROLLER_TIME_GET_DDC :
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: '获取控制器时间成功',
+                type: 'success'
+              })
+
+            } else {
+              this.$notify({
+                message: '获取控制器时间失败',
+                type: 'warning'
+              })
+
+            }
+            this.$store.commit('CONTROLLER_TIME_GET_DDC', data)
+            break
+
+          //重启控制器，相当于重启复位
+          case Cmd.CONTROLLER_RESTART_DDC :
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: '重启控制器成功',
+                type: 'success'
+              })
+
+            } else {
+              this.$notify({
+                message: '重启控制器失败',
+                type: 'warning'
+              })
+
+            }
+            break
+
+          // 重置控制器，恢复出厂设置，并重启
+          case Cmd.CONTROLLER_RESET_DDC :
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: '重置控制器成功',
+                type: 'success'
+              })
+              this.$store.commit('CONTROLLER_RESET_DDC', false)
+
+            } else {
+              this.$notify({
+                message: '重置控制器失败',
+                type: 'warning'
+              })
+
+            }
+            break
+          // 新增加一个模块
+          case Cmd.MODULE_ADD :
+
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: 'DDC模块同步成功',
+                type: 'success'
+              })
+              data = true + '-' + Date()
+            } else {
+              this.$notify({
+                message: 'DDC模块同步失败',
+                type: 'warning'
+              })
+              data = false + '-' + Date()
+            }
+
+            this.$store.commit('MODULE_ADD', data)
+            break
+          // 设置一个模块的所有参数
+          case Cmd.MODULE_PARAM_SET :
+
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: 'DDC模块同步成功',
+                type: 'success'
+              })
+              data = true + '-' + Date()
+            } else {
+              this.$notify({
+                message: 'DDC模块同步失败',
+                type: 'warning'
+              })
+              data = false + '-' + Date()
+            }
+
+            this.$store.commit('MODULE_ADD', data)
+            break
+          // 删除一个模块，并删除和模块相关的点
+          case Cmd.MODULE_DELETE :
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: 'DDC模块删除成功',
+                type: 'success'
+              })
+            } else {
+              this.$notify({
+                message: 'DDC模块删除失败',
+                type: 'warning'
+              })
+            }
+
+            break
+          // 获取一个模块的所有配置信息
+          case Cmd.MODULE_PARAM_GET :
+
+            if (result === this.resultEnum.SUCCEED) {
+
+              this.$store.commit('MODULE_PARAM_GET', data)
+
+              this.$notify({
+                message: '获取DDC模块配置参数成功',
+                type: 'success'
+              })
+            } else {
+              this.$notify({
+                message: '获取DDC模块配置参数失败',
+                type: 'warning'
+              })
+            }
+            break
+          // 接收实点信息
+          case Cmd.REAL_POINT_DATA_RECEIVE :
+
+            let list = response.data || []
+
+            list.forEach((item) => {
+
+              let name = item.name
+
+              //赋值给表单和设备树
+              // this.$store.commit('POINT_VALUE_SET', data)
+              pubsub.trigger(item.id, item)
+
+            })
+
+            break
+          // 获取一个模块的错误代码
+          case Cmd.MODULE_ERROR_CODE_GET :
+            // 更新设备树状态
+            // this.changeModelStatus(data)
+            // this.$notify({
+            //   message: '获取到模块的错误代码',
+            //   type: 'erroe'
+            // })
+
+            break
+
+          // 批量获取模块的错误代码
+          case Cmd.MODULE_ERROR_CODE_GET_ALL :
+            // 更新设备树状态
+            this.changeModelStatus(data)
+            // this.$notify({
+            //   message: '批量获取到模块的错误代码',
+            //   type: 'erroe'
+            // })
+
+            break
+
+          // 新增加一个逻辑点
+          case Cmd.POINT_ADD :
+
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: '同步成功',
+                type: 'success'
+              })
+              data = true + '-' + Date()
+            } else {
+              this.$notify({
+                message: '同步失败',
+                type: 'warning'
+              })
+              data = false + '-' + Date()
+            }
+            // 设置页面未同步
+            this.$store.commit('POINT_ADD', data)
+
+            break
+          // 设置一个逻辑点的所有参数
+          case Cmd.POINT_PARAM_SET :
+
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: '同步成功',
+                type: 'success'
+              })
+              data = true + '-' + Date()
+            } else {
+              this.$notify({
+                message: '同步失败',
+                type: 'warning'
+              })
+              data = false + '-' + Date()
+            }
+
+            this.$store.commit('POINT_ADD', data)
+
+            break
+          // 设置一个逻辑点的值
+          case Cmd.POINT_VALUE_SET :
+
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: '设置成功',
+                type: 'success'
+              })
+            } else {
+              this.$notify({
+                message: '设置失败',
+                type: 'warning'
+              })
+            }
+            break
+          // 设置逻辑点的值，根据点的名字
+          case Cmd.POINT_VALUE_BY_NAME_SET :
+
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: '设置成功',
+                type: 'success'
+              })
+            } else {
+              this.$notify({
+                message: '设置失败',
+                type: 'warning'
+              })
+            }
+            break
+          // 删除一个逻辑点
+          case Cmd.POINT_DELETE :
+
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: '删除成功',
+                type: 'success'
+              })
+            } else {
+              this.$notify({
+                message: '删除失败,请重置当前DDC控制器',
+                type: 'warning'
+              })
+            }
+            break
+          // 获取一个逻辑点的所有配置参数
+          case Cmd.POINT_PARAM_GET :
+
+            if (result === this.resultEnum.SUCCEED) {
+
+              this.$store.commit('POINT_PARAM_GET', data)
+
+              this.$notify({
+                message: '获取点位配置参数成功',
+                type: 'success'
+              })
+            } else {
+              this.$notify({
+                message: '获取点位配置参数失败',
+                type: 'warning'
+              })
+            }
+            break
+          // 获取一个逻辑点的报警信息
+          case Cmd.POINT_ALARM_DATA_GET :
+
+            break
+          // 接收DDC的全部点信息
+          case Cmd.POINT_DATA_ALL_RECEIVE :
+
+            let listPoint = response.data || []
+
+            listPoint.forEach((item) => {
+
+              var name = item.name
+
+              pubsub.trigger(item.id, item)
+            })
+            break
+          // 接收虚点信息
+          case Cmd.VIRTUAL_POINT_DATA_RECEIVE :
+
+            let listVPoint = response.data || []
+
+            listVPoint.forEach((item) => {
+
+              let name = item.name
+
+              pubsub.trigger(item.id, item)
+            })
+
+            break;
+
+          //增加一个场景
+          case Cmd.SCENE_ADD :
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: '新增场景成功',
+                type: 'success'
+              })
+            } else {
+              this.$notify({
+                message: '新增场景失败',
+                type: 'warning'
+              })
+            }
+            break;
+          //设置一个场景的所有参数
+          case Cmd.SCENE_PARAM_SET :
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: '同步成功',
+                type: 'success'
+              })
+            } else {
+              this.$notify({
+                message: '同步失败',
+                type: 'warning'
+              })
+            }
+            break;
+          //删除一个场景
+          case  Cmd.SCENE_DELETE :
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: '删除场景成功',
+                type: 'success'
+              })
+            } else {
+              this.$notify({
+                message: '删除场景失败',
+                type: 'warning'
+              })
+            }
+            break;
+          //获取场景下的单个模式信息
+          case Cmd.SCENE_MODE_PARAM_GET_DDC :
+            if (result === this.resultEnum.SUCCEED) {
+              this.$store.commit('SCENE_MODE_PARAM_GET_DDC', data)
+
+              this.$notify({
+                message: '获取场景模式参数成功',
+                type: 'success'
+              })
+            } else {
+              this.$notify({
+                message: '获取场景模式参数失败',
+                type: 'warning'
+              })
+            }
+            break;
+          //删除场景下的单个模式信息
+          case Cmd.SCENE_MODE_PARAM_DELETE_DDC :
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: '删除场景模式信息成功',
+                type: 'success'
+              })
+            } else {
+              this.$notify({
+                message: '删除失败,请重置当前DDC控制器',
+                type: 'warning'
+              })
+            }
+            break;
+          //新增一条计划
+          case Cmd.PLAN_ADD :
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: '新增计划成功',
+                type: 'success'
+              })
+            } else {
+              this.$notify({
+                message: '新增计划失败',
+                type: 'warning'
+              })
+            }
+            break;
+
+          //删除一条计划
+          case Cmd.PLAN_DELETE :
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: '删除计划成功',
+                type: 'success'
+              })
+              data = true + '-' + Date()
+              this.$store.commit('PLAN_DELETE', data)
+
+            } else {
+              this.$notify({
+                message: '删除计划失败,撤回删除信息',
+                type: 'warning'
+              })
+            }
+            break;
+
+          //修改一条计划
+          case Cmd.PLAN_PARAM_SET :
+            if (result === this.resultEnum.SUCCEED) {
+
+              this.$notify({
+                message: '同步计划成功',
+                type: 'success'
+              })
+            } else {
+              this.$notify({
+                message: '同步计划失败',
+                type: 'warning'
+              })
+            }
+            break;
+
+          //获取一条计划所有参数
+          case Cmd.PLAN_PARAM_GET :
+            if (result === this.resultEnum.SUCCEED) {
+
+              this.$store.commit('PLAN_PARAM_GET', data)
+
+              this.$notify({
+                message: '获取计划信息成功',
+                type: 'success'
+              })
+            } else {
+              this.$notify({
+                message: '获取计划信息失败',
+                type: 'warning'
+              })
+            }
+            break
+        }
+      },
+
+      // 分发ldc数据
+      ldcDataHandle(response) {
+        if (null == response) {
+          return
+        }
+        /** qindehua */
+        var data = response.data
+        var index = response.index
+        var result = response.code
+        var state = false
+        /** qindehua */
+        switch (index) {
+          //新增一个IP路由器
+          case Cmd.CONTROLLER_ADD_LDC :
+
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: '新增控制器同步成功！',
+                type: 'success'
+              })
+              state = true
+            } else {
+              this.$notify({
+                message: '新增控制器同步失败！',
+                type: 'warning'
+              })
+              state = true
+            }
+            this.$store.commit('CONTROLLER_ADD_LDC', state)
+            break
+
+          //设置一个LDC
+          case Cmd.CONTROLLER_PARAM_SET_LDC :
+
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: '设置控制器同步成功！',
+                type: 'success'
+              })
+              state = true
+
+            } else {
+              this.$notify({
+                message: '设置控制器同步失败！',
+                type: 'warning'
+              })
+              state = false
+
+            }
+            // PubSub.subscribe(name, item)
+            this.$store.commit('CONTROLLER_PARAM_SET_LDC', state)
+            break
+
+          // 删除一个控制器，并删除和它相关的模块和点
+          case Cmd.CONTROLLER_DELETE_LDC :
+
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: '删除控制器同步成功',
+                type: 'success'
+              })
+            } else {
+              this.$notify({
+                message: '删除控制器同步失败',
+                type: 'warning'
+              })
+            }
+            break
+
+          //获取控制器的所有配置参数LDC
+          case Cmd.CONTROLLER_PARAM_GET_LDC :
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: '获取控制器参数成功',
+                type: 'success'
+              })
+            } else {
+              this.$notify({
+                message: '获取控制器参数失败',
+                type: 'warning'
+              })
+
+            }
+            this.$store.commit('CONTROLLER_PARAM_GET_LDC', data)
+            break
+
+          //远程升级
+          case Cmd.REMOTE_UPGRADE_LDC :
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: '远程升级控制器成功',
+                type: 'success'
+              })
+
+            } else {
+              this.$notify({
+                message: '远程升级控制器失败',
+                type: 'warning'
+              })
+
+            }
+            break
+
+          //设置控制器的时间
+          case Cmd.CONTROLLER_TIME_SET_LDC :
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: '设置控制器时间成功',
+                type: 'success'
+              })
+
+            } else {
+              this.$notify({
+                message: '设置控制器时间失败',
+                type: 'warning'
+              })
+
+            }
+            break
+
+          //获取控制器的时间
+          case Cmd.CONTROLLER_TIME_GET_LDC :
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: '获取控制器时间成功',
+                type: 'success'
+              })
+
+            } else {
+              this.$notify({
+                message: '获取控制器时间失败',
+                type: 'warning'
+              })
+
+            }
+            this.$store.commit('CONTROLLER_TIME_GET_LDC', data)
+            break
+
+          //重启控制器，相当于重启复位
+          case Cmd.CONTROLLER_RESTART_LDC :
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: '重启控制器成功',
+                type: 'success'
+              })
+
+            } else {
+              this.$notify({
+                message: '重启控制器失败',
+                type: 'warning'
+              })
+
+            }
+            break
+
+          // 重置控制器，恢复出厂设置，并重启
+          case Cmd.CONTROLLER_RESET_LDC :
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: '重置控制器成功',
+                type: 'success'
+              })
+              this.$store.commit('CONTROLLER_RESET_LDC', false)
+            } else {
+              this.$notify({
+                message: '重置控制器失败',
+                type: 'warning'
+              })
+            }
+            break
+          // 新增加一个模块
+          case Cmd.MODULE_ADD_LDC :
+
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: 'DDC模块同步成功',
+                type: 'success'
+              })
+              state = true
+            } else {
+              this.$notify({
+                message: 'DDC模块同步失败',
+                type: 'warning'
+              })
+              state = true
+            }
+
+            this.$store.commit('MODULE_ADD_LDC', state)
+            break
+          // 设置一个模块的所有参数
+          case Cmd.MODULE_PARAM_SET_LDC :
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: 'LDC模块同步成功',
+                type: 'success'
+              })
+              state = true
+            } else {
+              this.$notify({
+                message: 'LDC模块同步失败',
+                type: 'warning'
+              })
+              state = false
+            }
+
+            this.$store.commit('MODULE_PARAM_SET_LDC', state)
+            break
+          // 删除一个模块，并删除和模块相关的点
+          case Cmd.MODULE_DELETE_LDC :
+
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: 'LDC模块删除成功',
+                type: 'success'
+              })
+            } else {
+              this.$notify({
+                message: 'LDC模块删除失败',
+                type: 'warning'
+              })
+            }
+
+            break
+          // 获取一个模块的所有配置信息
+          case Cmd.MODULE_PARAM_GET_LDC :
+
+            if (result === this.resultEnum.SUCCEED) {
+
+              this.$notify({
+                message: '获取LDC模块配置参数成功',
+                type: 'success'
+              })
+            } else {
+              this.$notify({
+                message: '获取LDC模块配置参数失败',
+                type: 'warning'
+              })
+            }
+            this.$store.commit('MODULE_PARAM_GET_LDC', data)
+            break
+
+
+          // 新增加一个逻辑点
+          case Cmd.POINT_ADD_LDC :
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: '同步成功',
+                type: 'success'
+              })
+              state = true
+            } else {
+              this.$notify({
+                message: '同步失败',
+                type: 'warning'
+              })
+              state = false
+            }
+
+            this.$store.commit('POINT_ADD_LDC', state)
+            break
+          // 设置一个逻辑点的所有参数
+          case Cmd.POINT_PARAM_SET_LDC :
+
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: '同步成功',
+                type: 'success'
+              })
+              state = true
+            } else {
+              this.$notify({
+                message: '同步失败',
+                type: 'warning'
+              })
+              state = false
+            }
+
+            this.$store.commit('POINT_PARAM_SET_LDC', state)
+            break
+          // 设置一个逻辑点的值
+          case Cmd.POINT_VALUE_SET_LDC :
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: '设置成功',
+                type: 'success'
+              })
+            } else {
+              this.$notify({
+                message: '设置失败',
+                type: 'warning'
+              })
+            }
+            break
+
+
+          // 删除一个逻辑点
+          case Cmd.POINT_DELETE_LDC :
+
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: '删除成功',
+                type: 'success'
+              })
+            } else {
+              this.$notify({
+                message: '删除失败,请重置当前DDC控制器',
+                type: 'warning'
+              })
+            }
+            break
+          // 获取一个逻辑点的所有配置参数
+          case Cmd.POINT_PARAM_GET_LDC :
+
+            if (result === this.resultEnum.SUCCEED) {
+
+              this.$store.commit('POINT_PARAM_GET_LDC', data)
+
+              this.$notify({
+                message: '获取点位配置参数成功',
+                type: 'success'
+              })
+            } else {
+              this.$notify({
+                message: '获取点位配置参数失败',
+                type: 'warning'
+              })
+            }
+            break
+          // 接收实点信息
+          case Cmd.REAL_POINT_DATA_RECEIVE_LDC :
+            let list = response.data || []
+
+            list.forEach((item) => {
+
+              //赋值给表单和设备树
+              pubsub.trigger(item.id, item)
+
+            })
+
+            break
+          // 接收虚点信息
+          case Cmd.VIRTUAL_POINT_DATA_RECEIVE_LDC :
+            let listVPoint = response.data || []
+
+            listVPoint.forEach((item) => {
+
+              pubsub.trigger(item.id, item)
+            })
+
+            break
+          // 接收LDC的全部点信息
+          case Cmd.POINT_DATA_ALL_RECEIVE_LDC :
+            let listPoint = response.data || []
+
+            listPoint.forEach((item) => {
+
+              pubsub.trigger(item.id, item)
+            })
+            break;
+          //增加一个场景
+          case Cmd.SCENE_ADD_LDC :
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: '新增场景成功',
+                type: 'success'
+              })
+            } else {
+              this.$notify({
+                message: '新增场景失败',
+                type: 'warning'
+              })
+            }
+            break;
+          //设置一个场景的所有参数
+          case Cmd.SCENE_PARAM_SET_LDC :
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: '同步成功',
+                type: 'success'
+              })
+            } else {
+              this.$notify({
+                message: '同步失败',
+                type: 'warning'
+              })
+            }
+            break;
+
+          //删除一个场景
+          case  Cmd.SCENE_DELETE_LDC :
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: '删除场景成功',
+                type: 'success'
+              })
+            } else {
+              this.$notify({
+                message: '删除场景失败',
+                type: 'warning'
+              })
+            }
+            break;
+
+          //获取场景下的单个模式信息
+          case Cmd.SCENE_MODE_PARAM_GET_LDC :
+            if (result === this.resultEnum.SUCCEED) {
+
+              this.$store.commit('SCENE_MODE_PARAM_GET_LDC', data)
+
+              this.$notify({
+                message: '获取场景模式参数成功',
+                type: 'success'
+              })
+            } else {
+              this.$notify({
+                message: '获取场景模式参数失败',
+                type: 'warning'
+              })
+            }
+            break;
+
+          //删除场景下的单个模式信息
+          case Cmd.SCENE_MODE_PARAM_DELETE_LDC :
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: '删除场景模式信息成功',
+                type: 'success'
+              })
+            } else {
+              this.$notify({
+                message: '删除失败,请重置当前LDC控制器',
+                type: 'warning'
+              })
+            }
+            break;
+
+          //新增一条计划
+          case Cmd.PLAN_ADD_LDC :
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: '新增计划成功',
+                type: 'success'
+              })
+            } else {
+              this.$notify({
+                message: '新增计划失败',
+                type: 'warning'
+              })
+            }
+            break;
+
+          //删除一条计划
+          case Cmd.PLAN_DELETE_LDC :
+            if (result === this.resultEnum.SUCCEED) {
+              this.$notify({
+                message: '删除计划成功',
+                type: 'success'
+              })
+              data = true + '-' + Date()
+              this.$store.commit('PLAN_DELETE_LDC', data)
+
+            } else {
+              this.$notify({
+                message: '删除计划失败,撤回删除信息',
+                type: 'warning'
+              })
+            }
+            break;
+
+          //修改一条计划
+          case Cmd.PLAN_PARAM_SET_LDC :
+
+            if (result === this.resultEnum.SUCCEED) {
+
+              this.$notify({
+                message: '同步计划成功',
+                type: 'success'
+              })
+            } else {
+              this.$notify({
+                message: '同步计划失败',
+                type: 'warning'
+              })
+            }
+            break;
+
+          //获取一条计划所有参数
+          case Cmd.PLAN_PARAM_GET_LDC :
+
+            if (result === this.resultEnum.SUCCEED) {
+
+              this.$store.commit('PLAN_PARAM_GET_LDC', data)
+
+              this.$notify({
+                message: '获取计划信息成功',
+                type: 'success'
+              })
+            } else {
+              this.$notify({
+                message: '获取计划信息失败',
+                type: 'warning'
+              })
+            }
+            break
+        }
+      },
+      // 设备报警条数
+      alarmDataHandle(data) {
+        var warnCount = parseInt(data.alarmRealtimeCount)
+        if (warnCount >= 0) {
+          this.$store.commit('ALARM_COUNT', warnCount)
+        } else {
+          return
+        }
+      },
+      // 设备报警刷新列表
+      alarmListDataHandle(data) {
+       this.$store.commit('ALARM_LIST', data)
+      },
+
+      // 设备状态处理
+      deviceStateHandle(response) {
+        if (!response) {
+          // console.warn('设备状态数据异常：数据不存在')
+          return
+        }
+        var code = response.code
+        var ip = response.ip
+        var data = response.data
+
+        if (code === 0) {
+          this.$notify({
+            // title: '成功',
+            message: ip + ' 离线',
+            type: 'warning'
+          })
+
+        } else if (code === 1) {
+          this.$notify({
+            // title: '成功',
+            message: ip + ' 上线',
+            type: 'success'
+          })
+        }
+        var res = {
+          state: code,
+          ip: ip
+        }
+
+        // 更新控制器状态
+        this.$store.commit('DEVICE_TREE_CONTROLLER_STSTUS', res)
+        // 更新设备树状态
+        this.$store.commit('DEVICE_TREE_STSTUS', data)
+      },
+
+      //报警播报
+      alarmMsgHandle(data){
+        this.$store.commit('ALARMMSG', data)
+      },
+
+      //modbus服务端在线离线状态
+      modbusServerStateHandle(response) {
+        debugger
+        if (!response) {
+          // console.warn('设备状态数据异常：数据不存在')
+          return
+        }
+        let code = response.code
+        let ip = response.ip
+        let post = response.post
+        let res = {
+          state: code,
+          ip: ip,
+          post: post
+
+        }
+        this.$store.commit('MODBUS_DEVICE_CONTROLLER_STSTUS', res)
+      },
+      //modbus服务端设备
+      modbusDeviceHandle(response) {
+        if (null == response) {
+          return
+        }
+        /** qindehua */
+        let data = response.data
+        let index = response.index
+        let result = response.code
+        let state = false
+        switch (index) {
+          case 1://设备在线离线状态
+            let res = {
+              data: data,
+              state: result
+            }
+            this.$store.commit('MODBUS_SERVER_DEVICE_STSTUS', res);
+            break;
+            case 2://设备实时数据
+              this.$store.commit('MODBUS_SERVER_DEVICE_REAL_TIME_DATA', data);
+              break;
+        }
+      }
+    }
+  }
+</script>
+
+

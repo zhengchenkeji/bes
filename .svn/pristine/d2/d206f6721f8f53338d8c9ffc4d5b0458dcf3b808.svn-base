@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.efounder.JEnterprise.mapper.safetyWarning.AlarmRealtimeDataMapper">
+
+    <resultMap type="AlarmRealtimeData" id="AlarmRealtimeDataResult">
+        <result property="id" column="id"/>
+        <result property="alarmTacticsId" column="alarm_tactics_id"/>
+        <result property="alarmValue" column="alarm_value"/>
+        <result property="firstTime" column="first_time"/>
+        <result property="lastTime" column="last_time"/>
+        <result property="amount" column="amount"/>
+        <result property="confirmState" column="confirm_state"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="azwz" column="azwz"/>
+        <result property="alarmName" column="alarm_name"/>
+        <result property="planVal" column="plan_val"/>
+        <result property="promptMsg" column="prompt_msg"/>
+        <result property="level" column="level"/>
+        <result property="alarmTypeId" column="alarm_type_id"/>
+        <result property="alarmTacticsName" column="alarm_tactics_name"/>
+    </resultMap>
+
+    <sql id="selectAlarmRealtimeDataVo">
+        SELECT
+            ard.id,
+            ard.alarm_tactics_id,
+            abat.`name` AS alarm_tactics_name,
+            ard.alarm_value,
+            ard.first_time,
+            ard.last_time,
+            ard.amount,
+            ard.confirm_state,
+            ard.create_time,
+            ard.update_time,
+            ard.azwz,
+            ard.alarm_name,
+            ard.plan_val,
+            ard.prompt_msg,
+            ard.LEVEL,
+            ard.alarm_type_id
+        FROM
+            athena_bes_alarm_realtime_data ard
+            LEFT JOIN athena_bes_alarm_tactics abat on ard.alarm_tactics_id=abat.id
+    </sql>
+
+    <select id="selectAlarmRealtimeDataList" parameterType="AlarmRealtimeData" resultMap="AlarmRealtimeDataResult">
+        <include refid="selectAlarmRealtimeDataVo"/>
+        <where>
+            <if test="alarmTacticsId != null ">and ard.alarm_tactics_id = #{alarmTacticsId}</if>
+            <if test="alarmValue != null ">and ard.alarm_value = #{alarmValue}</if>
+            <if test="confirmState != null ">and ard.confirm_state = #{confirmState}</if>
+            <if test="azwz != null  and azwz != ''">and ard.azwz  like concat('%', #{azwz}, '%') </if>
+            <if test="alarmName != null  and alarmName != ''">and ard.alarm_name like concat('%', #{alarmName}, '%')</if>
+            <if test="planVal != null  and planVal != ''">and ard.plan_val = #{planVal}</if>
+            <if test="promptMsg != null  and promptMsg != ''">and ard.prompt_msg like concat('%', #{promptMsg}, '%')</if>
+            <if test="startTime != null and endTime != null "> and DATE_FORMAT(ard.last_time, '%Y-%m-%d' )  BETWEEN #{startTime} and #{endTime}</if>
+            <if test="level != null  and level != ''">and ard.level = #{level}</if>
+            <if test="alarmTypeId != null ">and ard.alarm_type_id = #{alarmTypeId}</if>
+        </where>
+        ORDER BY  ard.last_time DESC
+    </select>
+
+    <select id="selectAlarmRealtimeDataInfo" parameterType="AlarmRealtimeData" resultMap="AlarmRealtimeDataResult">
+        <include refid="selectAlarmRealtimeDataVo"/>
+        <where>
+            <if test="level != null  and level != ''">and ard.level = #{level}</if>
+        </where>
+        ORDER BY ard.last_time DESC
+    </select>
+
+    <select id="selectAlarmRealtimeDataById" parameterType="Long" resultMap="AlarmRealtimeDataResult">
+        <include refid="selectAlarmRealtimeDataVo"/>
+        where ard.id = #{id}
+    </select>
+    <select id="selectAlarmRealtimeData"
+            resultType="com.ruoyi.efounder.JEnterprise.domain.safetyWarning.AlarmRealtimeData">
+        <include refid="selectAlarmRealtimeDataVo"/>
+        WHERE ard.azwz=#{azwz} AND ard.prompt_msg=#{promptMsg}
+    </select>
+    <select id="selectAlarmRealtimeDataCount" resultType="java.lang.Integer">
+        SELECT COUNT(1)
+        FROM athena_bes_alarm_realtime_data
+    </select>
+    <select id="selectAlarmRealtimeDataByAlarmTacticsId" resultMap="AlarmRealtimeDataResult">
+        <include refid="selectAlarmRealtimeDataVo"/>
+        WHERE ard.alarm_tactics_id=#{alarmTacticsId}
+    </select>
+
+    <insert id="insertAlarmRealtimeData" parameterType="AlarmRealtimeData" useGeneratedKeys="true" keyProperty="id">
+        insert into athena_bes_alarm_realtime_data
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="alarmTacticsId != null">alarm_tactics_id,</if>
+            <if test="alarmValue != null">alarm_value,</if>
+            <if test="firstTime != null">first_time,</if>
+            <if test="lastTime != null">last_time,</if>
+            <if test="amount != null">amount,</if>
+            <if test="confirmState != null">confirm_state,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="azwz != null">azwz,</if>
+            <if test="alarmName != null">alarm_name,</if>
+            <if test="planVal != null">plan_val,</if>
+            <if test="promptMsg != null">prompt_msg,</if>
+            <if test="level != null">level,</if>
+            <if test="alarmTypeId != null">alarm_type_id,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="alarmTacticsId != null">#{alarmTacticsId},</if>
+            <if test="alarmValue != null">#{alarmValue},</if>
+            <if test="firstTime != null">#{firstTime},</if>
+            <if test="lastTime != null">#{lastTime},</if>
+            <if test="amount != null">#{amount},</if>
+            <if test="confirmState != null">#{confirmState},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="azwz != null">#{azwz},</if>
+            <if test="alarmName != null">#{alarmName},</if>
+            <if test="planVal != null">#{planVal},</if>
+            <if test="promptMsg != null">#{promptMsg},</if>
+            <if test="level != null">#{level},</if>
+            <if test="alarmTypeId != null">#{alarmTypeId},</if>
+        </trim>
+    </insert>
+
+    <update id="updateAlarmRealtimeData" parameterType="AlarmRealtimeData">
+        update athena_bes_alarm_realtime_data
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="alarmTacticsId != null">alarm_tactics_id = #{alarmTacticsId},</if>
+            <if test="alarmValue != null">alarm_value = #{alarmValue},</if>
+            <if test="firstTime != null">first_time = #{firstTime},</if>
+            <if test="lastTime != null">last_time = #{lastTime},</if>
+            <if test="amount != null">amount = #{amount},</if>
+            <if test="confirmState != null">confirm_state = #{confirmState},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="azwz != null">azwz = #{azwz},</if>
+            <if test="alarmName != null">alarm_name = #{alarmName},</if>
+            <if test="planVal != null">plan_val = #{planVal},</if>
+            <if test="promptMsg != null">prompt_msg = #{promptMsg},</if>
+            <if test="level != null">level = #{level},</if>
+            <if test="alarmTypeId != null">alarm_type_id = #{alarmTypeId},</if>
+        </trim>
+        WHERE azwz=#{azwz} AND prompt_msg=#{promptMsg}
+    </update>
+    <update id="updateAlarmRealtimeDataByAlarmTacticsId" parameterType="alarmRealtimeData">
+        update athena_bes_alarm_realtime_data
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="alarmValue != null">alarm_value = #{alarmValue},</if>
+            <if test="lastTime != null">last_time = #{lastTime},</if>
+            <if test="amount != null">amount = #{amount},</if>
+            <if test="confirmState != null">confirm_state = #{confirmState},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="azwz != null">azwz = #{azwz},</if>
+            <if test="alarmName != null">alarm_name = #{alarmName},</if>
+            <if test="planVal != null">plan_val = #{planVal},</if>
+            <if test="promptMsg != null">prompt_msg = #{promptMsg},</if>
+            <if test="level != null">level = #{level},</if>
+            <if test="alarmTypeId != null">alarm_type_id = #{alarmTypeId},</if>
+        </trim>
+        WHERE alarm_tactics_id=#{alarmTacticsId}
+    </update>
+
+    <delete id="deleteAlarmRealtimeDataById" parameterType="Long">
+        delete
+        from athena_bes_alarm_realtime_data
+        where id = #{id}
+    </delete>
+
+    <delete id="deleteAlarmRealtimeDataByIds" parameterType="String">
+        delete from athena_bes_alarm_realtime_data where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

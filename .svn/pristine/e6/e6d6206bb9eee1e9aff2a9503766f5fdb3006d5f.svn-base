@@ -1,0 +1,367 @@
+/*
+package com.zc.relay.handler;
+
+import com.ruoyi.common.core.redis.RedisCache;
+import com.ruoyi.common.utils.StringUtils;
+import com.zc.common.constant.RedisKeyConstants;
+import com.zc.constant.IotConstants.NodeType;
+import com.zc.iot.domain.IotCategory;
+import com.zc.iot.domain.IotDevice;
+import com.zc.iot.domain.IotFunction;
+import com.zc.iot.domain.IotProduct;
+import com.zc.relay.dto.DownDeviceParam;
+import com.zc.relay.dto.DownFunctionParam;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+import java.util.*;
+
+*/
+/**
+ * 获取设备和功能参数
+ * @author Athena-xiepufeng
+ *//*
+
+@Service
+public class DownParamGetterImpl implements DownParamGetter
+{
+
+    private static final Logger log = LoggerFactory.getLogger(DownParamGetterImpl.class);
+
+    @Resource
+    private RedisCache redisCache;
+
+    */
+/**
+     * 获取全部设备和功能参数
+     *
+     * @return
+     *//*
+
+    @Override
+    public List<DownDeviceParam> getDeviceFunctionParam()
+    {
+        List<DownDeviceParam> downDeviceParams = new ArrayList<>();
+
+        // 缓存中获取全部设备信息
+        Map<String, IotDevice> iotDeviceMap = redisCache.getCacheMapValue(RedisKeyConstants.IOT_DEVICE);
+
+        if (iotDeviceMap == null || iotDeviceMap.isEmpty())
+        {
+            log.warn("获取全部设备和功能参数：{输出条件：(iotDeviceMap == null || iotDeviceMap.isEmpty()); 说明：无法从缓存中获取到设备信息。 }");
+            return null;
+        }
+
+        // 存放网关设备
+        List<DownDeviceParam> gatewayDevices = new ArrayList<>();
+
+        // 网关子设备
+        Map<Long, List<DownDeviceParam>> gatewaySubsetDevice = new HashMap<>();
+
+        // 保存品类功能
+        Map<Long, List<DownFunctionParam>> categoryFunction = new HashMap<>();
+
+        iotDeviceMap.forEach((key, iotDevice) ->
+        {
+            // 产品主键
+            Long productKey = iotDevice.getProductKey();
+
+            // 缓存中获取产品信息
+            IotProduct iotProduct = redisCache.getCacheMapValue(RedisKeyConstants.IOT_PRODUCT, productKey);
+
+            if (iotProduct == null)
+            {
+                log.error("获取全部设备和功能参数：{输出条件：(iotProduct == null); 说明：无法从缓存中获取到产品信息。 }");
+                return;
+            }
+
+            // 节点类型
+            Integer nodeType = iotProduct.getNodeType();
+
+            DownDeviceParam downDeviceParam = new DownDeviceParam();
+
+            // 设置设备类型
+            downDeviceParam.setDeviceType(nodeType);
+
+            // 设置设备编号
+            downDeviceParam.setDeviceCode(iotDevice.getDeviceCode());
+
+            // 设置设备id
+            downDeviceParam.setDeviceId(iotDevice.getId());
+
+            // 网关设备
+            if (NodeType.GATEWAY_DEVICE.equals(nodeType))
+            {
+                gatewayDevices.add(downDeviceParam);
+            }
+            // 网关子设备
+            else if (NodeType.SUBSET_DEVICE.equals(nodeType))
+            {
+                List<DownDeviceParam> downDeviceParamList = gatewaySubsetDevice.computeIfAbsent(iotDevice.getGatewayDevice(), k -> new ArrayList<>());
+                downDeviceParamList.add(downDeviceParam);
+            }
+            // 直连设备
+            else if  (NodeType.DIRECT_DEVICE.equals(nodeType))
+            {
+                downDeviceParams.add(downDeviceParam);
+            }
+
+            // 品类主键
+            Long categoryKey = iotProduct.getCategoryKey();
+
+            List<DownFunctionParam> downFunctionParams = categoryFunction.get(categoryKey);
+
+            if (downFunctionParams == null)
+            {
+                downFunctionParams = getDownFunctionParam(categoryKey);
+                categoryFunction.put(categoryKey, downFunctionParams);
+            }
+
+            // 存入功能参数
+            downDeviceParam.setDownFunctionParams(downFunctionParams);
+
+        });
+
+        // 把网关子设备添加到网关设备里
+        gatewayDevices.forEach(gatewayDevice ->
+                gatewayDevice.setDownChildrenDeviceParam(gatewaySubsetDevice.get(gatewayDevice.getDeviceId())));
+
+        downDeviceParams.addAll(gatewayDevices);
+
+        return downDeviceParams;
+    }
+
+    */
+/**
+     * 根据设备编号获取设备和功能参数
+     *
+     * @param deviceCode
+     * @return
+     *//*
+
+    @Override
+    public DownDeviceParam getDeviceFunctionParam(String deviceCode)
+    {
+        if (StringUtils.isEmpty(deviceCode))
+        {
+            log.error("根据设备编号获取设备和功能参数：" +
+                    "{输出条件：(StringUtils.isEmpty(deviceCode)); " +
+                    "说明：传入了一个无效的设备编号。 }");
+            return null;
+        }
+
+        // 从缓存中根据设备编号获取设备id
+        Long deviceId  = redisCache.getCacheMapValue(RedisKeyConstants.IOT_DEVICE_CODE_ID, deviceCode);
+
+        if (deviceId == null)
+        {
+            log.error("根据设备编号获取设备和功能参数：" +
+                    "{输出条件：(deviceId == null); " +
+                    "说明：根据设备编号无法从缓存中获取设备id；" +
+                    "设备编号：" + deviceCode + " }");
+            return null;
+        }
+
+        IotDevice iotDevice  = redisCache.getCacheMapValue(RedisKeyConstants.IOT_DEVICE, deviceId);
+
+        if (iotDevice == null)
+        {
+            log.error("根据设备编号获取设备和功能参数：" +
+                    "{输出条件：(iotDevice == null);" +
+                    " 说明：根据设备编号无法从缓存中获取设备id；" +
+                    "设备id：" + deviceId + " }");
+            return null;
+        }
+
+        Long productKey = iotDevice.getProductKey();
+
+        IotProduct iotProduct  = redisCache.getCacheMapValue(RedisKeyConstants.IOT_PRODUCT, productKey);
+
+        if (iotProduct == null)
+        {
+            log.error("根据设备编号获取设备和功能参数：" +
+                    "{输出条件：(iotProduct == null);" +
+                    " 说明：根据产品主键无法从缓存中获取到产品信息; " +
+                    "产品主键：" + productKey + " }");
+            return null;
+        }
+
+        Integer nodeType = iotProduct.getNodeType();
+
+        DownDeviceParam downDeviceParam = new DownDeviceParam();
+
+        downDeviceParam.setDeviceId(deviceId);
+        downDeviceParam.setDeviceCode(deviceCode);
+        downDeviceParam.setDeviceType(nodeType);
+
+        // 网关设备
+        if (NodeType.GATEWAY_DEVICE.equals(nodeType))
+        {
+            List<DownDeviceParam> subsetDownDeviceParams =  getSubsetDownDeviceParam(deviceId);
+
+            if (subsetDownDeviceParams == null || subsetDownDeviceParams.isEmpty())
+            {
+                downDeviceParam.setDownChildrenDeviceParam(subsetDownDeviceParams);
+            }
+        }
+
+        // 产品主键
+        Long categoryKey = iotProduct.getCategoryKey();
+
+        IotCategory iotCategory  = redisCache.getCacheMapValue(RedisKeyConstants.IOT_CATEGORY, categoryKey);
+
+        if (iotCategory == null)
+        {
+            log.error("根据设备编号获取设备和功能参数：{输出条件：(iotCategory == null); " +
+                    "说明：根据品类主键无法从缓存中获取到品类信息；" +
+                    "品类主键：" + categoryKey + " }");
+            return null;
+        }
+
+        List<DownFunctionParam> downFunctionParams = getDownFunctionParam(iotCategory.getId());
+
+        if (downFunctionParams == null)
+        {
+            log.error("根据设备编号获取设备和功能参数：{输出条件：(downFunctionParams == null); " +
+                    "说明：调用 getDownFunctionParam 传入产品id 无法获取功能参数；" +
+                    "品类主键：" + iotCategory.getId() + " }");
+            return null;
+        }
+
+        downDeviceParam.setDownFunctionParams(downFunctionParams);
+
+        return downDeviceParam;
+    }
+
+    */
+/**
+     * 根据品类主键获取功能参数
+     * @return
+     *//*
+
+    private List<DownFunctionParam> getDownFunctionParam(Long categoryKey)
+    {
+        if (categoryKey == null)
+        {
+            log.error("根据品类主键获取功能参数：" +
+                    "{输出条件：(categoryKey == null); " +
+                    "说明：传入的参数为 null。 }");
+            return null;
+        }
+
+        // 缓存中获取功能标识和功能主键的映射关系
+        Map<String, Long> functionIdentifierIdMap = redisCache.getCacheMapValue(RedisKeyConstants.getCategoryFunctionIdentifierKey(categoryKey));
+
+        if (functionIdentifierIdMap == null || functionIdentifierIdMap.isEmpty())
+        {
+            log.error("根据品类主键获取功能参数：" +
+                    "{输出条件：(functionIdentifierIdMap == null || functionIdentifierIdMap.isEmpty()); " +
+                    "说明：根据产品主键无法从缓存中获取到功能标识和功能主键的映射关系；" +
+                    "产品主键：" + categoryKey + " }");
+            return null;
+        }
+
+        // 功能参数
+        List<DownFunctionParam> downFunctionParams = new ArrayList<>();
+
+        functionIdentifierIdMap.forEach((functionIdentifier, functionKey) ->
+        {
+            // 根据功能主键从缓存中获取功能信息
+            IotFunction iotFunction = redisCache.getCacheMapValue(RedisKeyConstants.IOT_FUNCTION, functionKey);
+
+            if (iotFunction == null)
+            {
+                log.error("根据品类主键获取功能参数：" +
+                        "{输出条件：(iotFunction == null); " +
+                        "说明：根据功能主键无法从缓存中获取功能数据；" +
+                        "功能主键：" + functionKey + " }");
+                return;
+            }
+
+            DownFunctionParam downFunctionParam = new DownFunctionParam();
+
+            // 功能标识
+            downFunctionParam.setFunctionIdentify(iotFunction.getIdentifier());
+            // 协议解析-起始位
+            downFunctionParam.setAnalysisStart(iotFunction.getAnalysisStart());
+
+            // 协议解析-终止位
+            downFunctionParam.setAnalysisEnd(iotFunction.getAnalysisEnd());
+
+            // 读写类型
+            downFunctionParam.setReadWriteType(iotFunction.getReadWriteType());
+
+            // 协议解析--是否解析
+            downFunctionParam.setAnalysisOpen(iotFunction.getAnalysisOpen());
+
+            // 协议解析处理类型
+            downFunctionParam.setAnalysisType(iotFunction.getAnalysisType());
+
+            downFunctionParams.add(downFunctionParam);
+
+        });
+
+        return downFunctionParams;
+    }
+
+    */
+/**
+     * 获取网关子设备参数
+     * @return
+     *//*
+
+    private List<DownDeviceParam> getSubsetDownDeviceParam(Long deviceId)
+    {
+        if (deviceId == null)
+        {
+            log.error("获取网关子设备参数：" +
+                    "{输出条件：(deviceId == null); " +
+                    "说明：传入的设备id是null。 }");
+            return null;
+        }
+
+        Set<Long> subsetDeviceIds  = redisCache.getCacheSet(RedisKeyConstants.getDeviceParentChildrenKey(deviceId));
+
+        if (subsetDeviceIds == null || subsetDeviceIds.isEmpty())
+        {
+            return null;
+        }
+
+        List<DownDeviceParam> downDeviceParams = new ArrayList<>();
+
+        subsetDeviceIds.forEach(subsetDeviceId ->
+        {
+
+            IotDevice iotDevice = redisCache.getCacheMapValue(RedisKeyConstants.IOT_DEVICE, subsetDeviceId);
+
+            if (iotDevice == null)
+            {
+                log.error("获取网关子设备参数：" +
+                        "{输出条件：(iotDevice == null); " +
+                        "说明：根据设备id无法从缓存中获取设备信息；" +
+                        "设备id：" + subsetDeviceId + " }");
+                return;
+            }
+
+            DownDeviceParam downDeviceParam = getDeviceFunctionParam(iotDevice.getDeviceCode());
+
+            if (downDeviceParam == null)
+            {
+                log.error("获取网关子设备参数：" +
+                        "{输出条件：(downDeviceParam == null); " +
+                        "说明：调用getDeviceFunctionParam传入设备编号无法获取设备参数信息；" +
+                        "设备编号：" + iotDevice.getDeviceCode() + " }");
+                return;
+            }
+
+            downDeviceParams.add(downDeviceParam);
+
+        });
+
+        return downDeviceParams;
+
+    }
+}
+*/

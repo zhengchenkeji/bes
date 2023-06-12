@@ -1,0 +1,147 @@
+package com.ruoyi.energyInfo.parkInfo.service.impl;
+
+import java.text.DecimalFormat;
+import java.util.List;
+import java.util.Map;
+
+import com.ruoyi.common.core.domain.AjaxResult;
+import com.ruoyi.common.utils.DateUtils;
+import com.ruoyi.energyCollection.acquisitionParam.domain.ElectricParams;
+import com.ruoyi.energyCollection.acquisitionParam.mapper.ElectricParamsMapper;
+import com.ruoyi.energyCollection.collMethod.domain.CollMethod;
+import com.ruoyi.energyCollection.collMethod.mapper.CollMethodMapper;
+import com.ruoyi.energyInfo.energy.mapper.EnergyTypeMapper;
+import com.ruoyi.energyInfo.parkInfo.domain.Park;
+import com.ruoyi.energyInfo.parkInfo.mapper.ParkMapper;
+import com.ruoyi.energyInfo.parkInfo.service.IParkService;
+import com.zc.common.core.foreignkeyservice.AssociatedService;
+import com.zc.common.core.foreignkeyservice.ForeignKeyService;
+import com.zc.common.core.foreignkeyservice.LinkModel;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.PostConstruct;
+
+import static com.ruoyi.common.core.domain.AjaxResult.error;
+import static com.ruoyi.common.core.domain.AjaxResult.success;
+
+/**
+ * 园区Service业务层处理
+ *
+ * @author ruoyi
+ * @date 2022-09-08
+ */
+@Service
+public class ParkServiceImpl /*extends AssociatedService*/ implements IParkService/*, ForeignKeyService*/ {
+    @Autowired
+    private ParkMapper parkMapper;
+    @Autowired
+    private EnergyTypeMapper energyTypeMapper;
+    @Autowired
+    private ElectricParamsMapper electricParamsMapper;
+    @Autowired
+    private CollMethodMapper collMethodMapper;
+
+    /**
+     * 查询园区
+     *
+     * @param code 园区主键
+     * @return 园区
+     */
+    @Override
+    public Park selectParkByCode(String code) {
+        return parkMapper.selectParkByCode(code);
+    }
+
+    /**
+     * 查询园区列表
+     *
+     * @param park 园区
+     * @return 园区
+     */
+    @Override
+    public List<Park> selectParkList(Park park) {
+        return parkMapper.selectParkList(park);
+    }
+
+    /**
+     * 新增园区
+     *
+     * @param park 园区
+     * @return 结果
+     */
+    @Override
+    public int insertPark(Park park) {
+        park.setCreateTime(DateUtils.getNowDate());
+        DecimalFormat df = new DecimalFormat("0000");
+        List<Park> parklist = parkMapper.findAllPark();
+        int parkLen = parklist.size();
+        if (parkLen == 0) {
+            park.setCode("0000");
+        } else {
+            String maxBmbh = parkMapper.findMaxYqbh();
+            Integer cuBESParkbh = (Integer.parseInt(maxBmbh) + 1);
+            String currentBESParkbh = df.format(cuBESParkbh);
+            park.setCode(currentBESParkbh);
+        }
+        return parkMapper.insertPark(park);
+    }
+
+    /**
+     * 修改园区
+     *
+     * @param park 园区
+     * @return 结果
+     */
+    @Override
+    public int updatePark(Park park) {
+        park.setUpdateTime(DateUtils.getNowDate());
+        return parkMapper.updatePark(park);
+    }
+
+    /**
+     * 批量删除园区
+     *
+     * @param codes 需要删除的园区主键
+     * @return 结果
+     */
+    @Override
+    public AjaxResult deleteParkByCodes(String[] codes) {
+        for (String code : codes) {
+            //具有外键所关联的信息，无法删除息
+            List<Map<String, Object>> enerys = energyTypeMapper.selectEnergyConfigListByCode(code, "");
+            if (enerys.size() > 0) {
+                return error("园区已被园区能耗配置关联，请先删除相关信息");
+            }
+            ElectricParams electricParam = new ElectricParams();
+            electricParam.setParkCode(code);
+            List<ElectricParams> electricParams = electricParamsMapper.selectElectricParamsList(electricParam);
+            if (electricParams.size() > 0) {
+                return error("园区已被采集参数定义关联，请先删除相关信息");
+            }
+            CollMethod collMethod = new CollMethod();
+            collMethod.setParkCode(code);
+            List<CollMethod> collMethods = collMethodMapper.selectCollMethodList(collMethod);
+            if (collMethods.size() > 0) {
+                return error("园区已被采集方案定义关联，请先删除相关信息");
+            }
+        }
+        boolean isDeleteParkByCodes = parkMapper.deleteParkByCodes(codes);
+        if (isDeleteParkByCodes) {
+            return success("删除成功");
+        }
+        return success("删除失败");
+    }
+
+    /**
+     * 删除园区信息
+     *
+     * @param code 园区主键
+     * @return 结果
+     */
+    @Override
+    public int deleteParkByCode(String code) {
+        return parkMapper.deleteParkByCode(code);
+    }
+
+}

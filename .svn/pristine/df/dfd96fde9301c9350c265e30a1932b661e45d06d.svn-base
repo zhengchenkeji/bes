@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.energyCollection.collMethod.mapper.ElectricCollRlglMapper">
+
+    <resultMap type="ElectricCollRlgl" id="ElectricCollRlglResult">
+        <result property="id"    column="id"    />
+        <result property="electricId"    column="electric_id"    />
+        <result property="electricCode"    column="electric_code"    />
+        <result property="collCode"    column="coll_code"    />
+        <result property="collId"    column="coll_id"    />
+        <result property="statisticalParam"    column="statistical_param"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="isRate"    column="is_rate"    />
+    </resultMap>
+
+    <sql id="selectElectricCollRlglVo">
+        select id,electric_id,electric_code, coll_code, coll_id, statistical_param, create_time, update_time, is_rate from athena_bes_electric_coll_rlgl
+    </sql>
+
+    <!--查询电能参数采集方案关系列表-->
+    <select id="selectElectricCollRlglList" parameterType="ElectricCollRlgl" resultMap="ElectricCollRlglResult">
+        <include refid="selectElectricCollRlglVo"/>
+        <where>  
+            <if test="statisticalParam != null  and statisticalParam != ''"> and statistical_param = #{statisticalParam}</if>
+            <if test="isRate != null  and isRate != ''"> and is_rate = #{isRate}</if>
+            <if test="collCode != null  and collCode != ''"> and coll_code = #{collCode}</if>
+            <if test="electricCode != null  and electricCode != ''"> and electric_code = #{electricCode}</if>
+        </where>
+    </select>
+    
+    <select id="selectElectricCollRlglByElectricCode" parameterType="String" resultMap="ElectricCollRlglResult">
+        <include refid="selectElectricCollRlglVo"/>
+        where electric_code = #{electricCode}
+    </select>
+        
+    <insert id="insertElectricCollRlgl" parameterType="ElectricCollRlgl">
+        insert into athena_bes_electric_coll_rlgl
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">id,</if>
+            <if test="electricCode != null">electric_code,</if>
+            <if test="electricId != null">electric_id,</if>
+            <if test="collCode != null">coll_code,</if>
+            <if test="collId != null">coll_id,</if>
+            <if test="statisticalParam != null">statistical_param,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="isRate != null">is_rate,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">#{id},</if>
+            <if test="electricCode != null">#{electricCode},</if>
+            <if test="electricId != null">#{electricId},</if>
+            <if test="collCode != null">#{collCode},</if>
+            <if test="collId != null">#{collId},</if>
+            <if test="statisticalParam != null">#{statisticalParam},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="isRate != null">#{isRate},</if>
+         </trim>
+    </insert>
+
+    <select id="selectElectricCollRlglByCode" parameterType="String" resultMap="ElectricCollRlglResult">
+        <include refid="selectElectricCollRlglVo"/>
+        where electric_code = #{electricCode} and coll_code = #{collCode}
+    </select>
+
+    <delete id="deleteElectricCollRlgl" parameterType="ElectricCollRlgl">
+        delete from athena_bes_electric_coll_rlgl where electric_code = #{electricCode} and coll_code = #{collCode}
+    </delete>
+
+    <update id="updateElectricCollRlgl" parameterType="ElectricCollRlgl">
+        update athena_bes_electric_coll_rlgl
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="collCode != null">coll_code = #{collCode},</if>
+            <if test="statisticalParam != null">statistical_param = #{statisticalParam},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="isRate != null">is_rate = #{isRate},</if>
+        </trim>
+        where electric_code = #{electricCode} and coll_code = #{collCode}
+    </update>
+
+    <delete id="deleteElectricCollRlglByElectricCode" parameterType="String">
+        delete from athena_bes_electric_coll_rlgl where electric_code = #{electricCode}
+    </delete>
+
+    <delete id="deleteElectricCollRlglByElectricCodes" parameterType="String">
+        delete from athena_bes_electric_coll_rlgl where electric_code in
+        <foreach item="electricCode" collection="array" open="(" separator="," close=")">
+            #{electricCode}
+        </foreach>
+    </delete>
+
+    <delete id="removeAllByCollCode" parameterType="ElectricCollRlgl">
+        delete from athena_bes_electric_coll_rlgl where coll_code = #{collCode}
+    </delete>
+
+    <delete id="removeAllById" parameterType="String">
+        delete from athena_bes_electric_coll_rlgl where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+
+</mapper>

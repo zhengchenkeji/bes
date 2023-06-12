@@ -1,0 +1,85 @@
+package com.zc.relay.handler;
+
+import com.alibaba.fastjson.JSONObject;
+import com.google.auto.service.AutoService;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.reflect.TypeToken;
+import com.zc.common.constant.RedisChannelConstants;
+import com.zc.common.core.redis.pubsub.RedisMessageDispatcher;
+import com.zc.relay.dto.DownData;
+import com.zc.relay.dto.DownDataChildDevice;
+import com.zc.relay.dto.DownSetData;
+import com.zc.relay.dto.DownSetDataChildDevice;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.redis.connection.Message;
+
+import java.lang.reflect.Type;
+import java.util.ServiceLoader;
+
+/**
+ * @author Athena-xiepufeng
+ */
+@AutoService(RedisMessageDispatcher.class)
+public class BesDownRedisMessageDispatcher implements RedisMessageDispatcher
+{
+    private static final Logger log = LoggerFactory.getLogger(BesDownRedisMessageDispatcher.class);
+
+    private static BesDownInstructHandle downInstructHandle;
+
+    static
+    {
+        ServiceLoader<BesDownInstructHandle> load = ServiceLoader.load(BesDownInstructHandle.class);
+
+        if (!load.iterator().hasNext())
+        {
+            log.warn("DownInstructHandle 没有实现类");
+        }
+
+        for (BesDownInstructHandle item : load)
+        {
+            downInstructHandle = item;
+            break;
+        }
+    }
+
+
+    @Override
+    public void onMessage(Message message, byte[] pattern)
+    {
+
+        String channel = new String(message.getChannel());
+        String body = new String(message.getBody());
+
+        JsonElement jsonElement = JsonParser.parseString(body);
+        JsonObject jsonObject = jsonElement.getAsJsonObject();
+
+        switch (channel)
+        {
+            // 下发获取属性
+            case RedisChannelConstants.TEST_SUB_DEMO:
+            {
+                Type type = new TypeToken<DownData>()
+                {
+                }.getType();
+
+                Gson gson = new Gson();
+
+                DownData downData = gson.fromJson(jsonObject, type);
+                downInstructHandle.getAttribute(downData);
+                break;
+            }
+        }
+
+    }
+
+    @Override
+    public boolean isChannelExist(String channel)
+    {
+
+        return RedisChannelConstants.TEST_SUB_DEMO.equals(channel);
+    }
+}

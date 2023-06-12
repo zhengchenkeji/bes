@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.efounder.JEnterprise.mapper.deviceTree.FunctionPointMapper">
+
+    <resultMap type="FunctionPoint" id="FunctionPointResult">
+        <result property="id"    column="id"    />
+        <result property="deviceTreeId"    column="device_tree_id"    />
+        <result property="type"    column="type"    />
+        <result property="alias"    column="alias"    />
+        <result property="active"    column="active"    />
+        <result property="initValue"    column="init_value"    />
+        <result property="moduleId"    column="module_id"    />
+        <result property="channelIndex"    column="channel_index"    />
+        <result property="workMode"    column="work_mode"    />
+        <result property="polarity"    column="polarity"    />
+        <result property="lineType"    column="line_type"    />
+        <result property="unit"    column="unit"    />
+        <result property="precisionCode"    column="precision_code"    />
+        <result property="highRange"    column="high_range"    />
+        <result property="lowRange"    column="low_range"    />
+        <result property="activePassive"    column="active_passive"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="meterId"    column="meter_id"    />
+        <result property="alarmType"    column="alarm_type"    />
+        <result property="alarmActive"    column="alarm_active"    />
+        <result property="alarmPriority"    column="alarm_priority"    />
+        <result property="alarmHighValue"    column="alarm_high_value"    />
+        <result property="alarmLowValue"    column="alarm_low_value"    />
+        <result property="alarmTrigger"    column="alarm_trigger"    />
+    </resultMap>
+
+    <sql id="selectFunctionPointVo">
+        select id, device_tree_id, type, alias, active, init_value, module_id, channel_index, work_mode, polarity, line_type, unit, precision_code, high_range, low_range, active_passive, create_time, update_time, meter_id, alarm_type, alarm_active, alarm_priority, alarm_high_value, alarm_low_value, alarm_trigger from athena_bes_function_point
+    </sql>
+
+    <select id="selectFunctionPointList" parameterType="FunctionPoint" resultMap="FunctionPointResult">
+        <include refid="selectFunctionPointVo"/>
+        <where>
+            <if test="deviceTreeId != null "> and device_tree_id = #{deviceTreeId}</if>
+            <if test="type != null "> and type = #{type}</if>
+            <if test="alias != null  and alias != ''"> and alias = #{alias}</if>
+            <if test="active != null "> and active = #{active}</if>
+            <if test="initValue != null  and initValue != ''"> and init_value = #{initValue}</if>
+            <if test="moduleId != null "> and module_id = #{moduleId}</if>
+            <if test="channelIndex != null "> and channel_index = #{channelIndex}</if>
+            <if test="workMode != null "> and work_mode = #{workMode}</if>
+            <if test="polarity != null "> and polarity = #{polarity}</if>
+            <if test="lineType != null "> and line_type = #{lineType}</if>
+            <if test="unit != null "> and unit = #{unit}</if>
+            <if test="precisionCode != null "> and precision_code = #{precisionCode}</if>
+            <if test="highRange != null  and highRange != ''"> and high_range = #{highRange}</if>
+            <if test="lowRange != null  and lowRange != ''"> and low_range = #{lowRange}</if>
+            <if test="activePassive != null "> and active_passive = #{activePassive}</if>
+            <if test="meterId != null "> and meter_id = #{meterId}</if>
+            <if test="alarmType != null "> and alarm_type = #{alarmType}</if>
+            <if test="alarmActive != null "> and alarm_active = #{alarmActive}</if>
+            <if test="alarmPriority != null "> and alarm_priority = #{alarmPriority}</if>
+            <if test="alarmHighValue != null  and alarmHighValue != ''"> and alarm_high_value = #{alarmHighValue}</if>
+            <if test="alarmLowValue != null  and alarmLowValue != ''"> and alarm_low_value = #{alarmLowValue}</if>
+            <if test="alarmTrigger != null "> and alarm_trigger = #{alarmTrigger}</if>
+        </where>
+    </select>
+
+    <select id="selectFunctionPointById" parameterType="Long" resultMap="FunctionPointResult">
+        <include refid="selectFunctionPointVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertFunctionPoint" parameterType="FunctionPoint">
+        insert into athena_bes_function_point
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">id,</if>
+            <if test="deviceTreeId != null">device_tree_id,</if>
+            <if test="type != null">type,</if>
+            <if test="alias != null">alias,</if>
+            <if test="active != null">active,</if>
+            <if test="initValue != null">init_value,</if>
+            <if test="moduleId != null">module_id,</if>
+            <if test="channelIndex != null">channel_index,</if>
+            <if test="workMode != null">work_mode,</if>
+            <if test="polarity != null">polarity,</if>
+            <if test="lineType != null">line_type,</if>
+            <if test="unit != null">unit,</if>
+            <if test="precisionCode != null">precision_code,</if>
+            <if test="highRange != null">high_range,</if>
+            <if test="lowRange != null">low_range,</if>
+            <if test="activePassive != null">active_passive,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="meterId != null">meter_id,</if>
+            <if test="alarmType != null">alarm_type,</if>
+            <if test="alarmActive != null">alarm_active,</if>
+            <if test="alarmPriority != null">alarm_priority,</if>
+            <if test="alarmHighValue != null">alarm_high_value,</if>
+            <if test="alarmLowValue != null">alarm_low_value,</if>
+            <if test="alarmTrigger != null">alarm_trigger,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">#{id},</if>
+            <if test="deviceTreeId != null">#{deviceTreeId},</if>
+            <if test="type != null">#{type},</if>
+            <if test="alias != null">#{alias},</if>
+            <if test="active != null">#{active},</if>
+            <if test="initValue != null">#{initValue},</if>
+            <if test="moduleId != null">#{moduleId},</if>
+            <if test="channelIndex != null">#{channelIndex},</if>
+            <if test="workMode != null">#{workMode},</if>
+            <if test="polarity != null">#{polarity},</if>
+            <if test="lineType != null">#{lineType},</if>
+            <if test="unit != null">#{unit},</if>
+            <if test="precisionCode != null">#{precisionCode},</if>
+            <if test="highRange != null">#{highRange},</if>
+            <if test="lowRange != null">#{lowRange},</if>
+            <if test="activePassive != null">#{activePassive},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="meterId != null">#{meterId},</if>
+            <if test="alarmType != null">#{alarmType},</if>
+            <if test="alarmActive != null">#{alarmActive},</if>
+            <if test="alarmPriority != null">#{alarmPriority},</if>
+            <if test="alarmHighValue != null">#{alarmHighValue},</if>
+            <if test="alarmLowValue != null">#{alarmLowValue},</if>
+            <if test="alarmTrigger != null">#{alarmTrigger},</if>
+         </trim>
+    </insert>
+
+    <update id="updateFunctionPoint" parameterType="FunctionPoint">
+        update athena_bes_function_point
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="deviceTreeId != null">device_tree_id = #{deviceTreeId},</if>
+            <if test="type != null">type = #{type},</if>
+            <if test="alias != null">alias = #{alias},</if>
+            <if test="active != null">active = #{active},</if>
+            <if test="initValue != null">init_value = #{initValue},</if>
+            <if test="moduleId != null">module_id = #{moduleId},</if>
+            <if test="channelIndex != null">channel_index = #{channelIndex},</if>
+            <if test="workMode != null">work_mode = #{workMode},</if>
+            <if test="polarity != null">polarity = #{polarity},</if>
+            <if test="lineType != null">line_type = #{lineType},</if>
+            <if test="unit != null">unit = #{unit},</if>
+            <if test="precisionCode != null">precision_code = #{precisionCode},</if>
+            <if test="highRange != null">high_range = #{highRange},</if>
+            <if test="lowRange != null">low_range = #{lowRange},</if>
+            <if test="activePassive != null">active_passive = #{activePassive},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="meterId != null">meter_id = #{meterId},</if>
+            <if test="alarmType != null">alarm_type = #{alarmType},</if>
+            <if test="alarmActive != null">alarm_active = #{alarmActive},</if>
+            <if test="alarmPriority != null">alarm_priority = #{alarmPriority},</if>
+            <if test="alarmHighValue != null">alarm_high_value = #{alarmHighValue},</if>
+            <if test="alarmLowValue != null">alarm_low_value = #{alarmLowValue},</if>
+            <if test="alarmTrigger != null">alarm_trigger = #{alarmTrigger},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteFunctionPointById" parameterType="Long">
+        delete from athena_bes_function_point where id = #{id}
+    </delete>
+
+    <delete id="deleteFunctionPointByIds" parameterType="String">
+        delete from athena_bes_function_point where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

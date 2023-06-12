@@ -1,0 +1,95 @@
+package com.ruoyi.systemSetting.electricityPriceSetting.mapper;
+
+import com.ruoyi.systemSetting.electricityPriceSetting.domain.ElectricityPriceRule;
+import com.ruoyi.systemSetting.electricityPriceSetting.domain.ElectricityPriceSetting;
+
+import java.util.List;
+
+/**
+ * 电价设置Mapper接口
+ *
+ * @author ruoyi
+ * @date 2022-11-29
+ */
+public interface ElectricityPriceSettingMapper {
+
+    /**
+     * @Description: 获取电价规则列表
+     * @auther: gaojikun
+     * @param: [electricityPriceRule]
+     * @return: List<ElectricityPriceRule>
+     */
+    List<ElectricityPriceRule> periceConfigListInfo(ElectricityPriceRule electricityPriceRule);
+
+    /*
+     * 电价规则名称查重
+     */
+    List<ElectricityPriceRule> periceConfigCheck(ElectricityPriceRule electricityPriceRule);
+
+    /**
+     * 批量删除电价规则
+     *
+     * @param ids 需要删除的数据主键集合
+     * @return 结果
+     */
+    int deletepriceConfig(Long[] ids);
+
+    /**
+     * @Description: 添加电价规则
+     */
+    boolean addPriceConfig(ElectricityPriceRule electricityPriceRule);
+
+    /**
+     * @Description: 修改电价规则
+     */
+    boolean updatePriceConfig(ElectricityPriceRule electricityPriceRule);
+
+    /**
+     * 查询电价设置
+     *
+     * @param id 电价设置主键
+     * @return 电价设置
+     */
+    public ElectricityPriceSetting selectElectricityPriceSettingById(Long id);
+
+    /**
+     * 查询电价设置列表
+     *
+     * @param ElectricityPriceSetting 电价设置
+     * @return 电价设置集合
+     */
+    List<ElectricityPriceSetting> selectElectricityPriceSettingList(ElectricityPriceSetting ElectricityPriceSetting);
+
+    List<ElectricityPriceSetting> CheckList(ElectricityPriceSetting ElectricityPriceSetting);
+    /**
+     * 新增电价设置
+     *
+     * @param ElectricityPriceSetting 电价设置
+     * @return 结果
+     */
+    boolean insertElectricityPriceSetting(ElectricityPriceSetting ElectricityPriceSetting);
+
+    /**
+     * 修改电价设置
+     *
+     * @param ElectricityPriceSetting 电价设置
+     * @return 结果
+     */
+    boolean updateElectricityPriceSetting(ElectricityPriceSetting ElectricityPriceSetting);
+
+    /**
+     * 删除电价设置
+     *
+     * @param id 电价设置主键
+     * @return 结果
+     */
+    int deleteElectricityPriceSettingById(Long id);
+
+    /**
+     * 批量删除电价设置
+     *
+     * @param ids 需要删除的数据主键集合
+     * @return 结果
+     */
+    int deleteElectricityPriceSettingByIds(Long[] ids);
+}

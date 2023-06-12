@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.efounder.JEnterprise.mapper.energyDataReport.DataCenterBaseInfoMapper">
+    
+    <resultMap type="DataCenterBaseInfo" id="DataCenterBaseInfoResult">
+        <result property="id"    column="id"    />
+        <result property="dataCenterIp"    column="data_center_ip"    />
+        <result property="dataCenterPort"    column="data_center_port"    />
+        <result property="dataCenterId"    column="data_center_id"    />
+        <result property="dataCenterName"    column="data_center_name"    />
+        <result property="dataCenterType"    column="data_center_type"    />
+        <result property="dataCenterManager"    column="data_center_manager"    />
+        <result property="dataCenterDesc"    column="data_center_desc"    />
+        <result property="dataCenterContact"    column="data_center_contact"    />
+        <result property="dataCenterTel"    column="data_center_tel"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectDataCenterBaseInfoVo">
+        select id, data_center_ip, data_center_port, data_center_id, data_center_name, data_center_type, data_center_manager, data_center_desc, data_center_contact, data_center_tel, create_time, update_time from athena_bes_data_center_base_info
+    </sql>
+
+    <select id="selectDataCenterBaseInfoList" parameterType="DataCenterBaseInfo" resultMap="DataCenterBaseInfoResult">
+        <include refid="selectDataCenterBaseInfoVo"/>
+        <where>  
+            <if test="dataCenterIp != null  and dataCenterIp != ''"> and data_center_ip = #{dataCenterIp}</if>
+            <if test="dataCenterPort != null "> and data_center_port = #{dataCenterPort}</if>
+            <if test="dataCenterId != null  and dataCenterId != ''"> and data_center_id = #{dataCenterId}</if>
+            <if test="dataCenterName != null  and dataCenterName != ''"> and data_center_name like concat('%', #{dataCenterName}, '%')</if>
+            <if test="dataCenterType != null "> and data_center_type = #{dataCenterType}</if>
+            <if test="dataCenterManager != null  and dataCenterManager != ''"> and data_center_manager = #{dataCenterManager}</if>
+            <if test="dataCenterDesc != null  and dataCenterDesc != ''"> and data_center_desc = #{dataCenterDesc}</if>
+            <if test="dataCenterContact != null  and dataCenterContact != ''"> and data_center_contact = #{dataCenterContact}</if>
+            <if test="dataCenterTel != null  and dataCenterTel != ''"> and data_center_tel = #{dataCenterTel}</if>
+        </where>
+    </select>
+    
+    <select id="selectDataCenterBaseInfoById" parameterType="Long" resultMap="DataCenterBaseInfoResult">
+        <include refid="selectDataCenterBaseInfoVo"/>
+        where id = #{id}
+    </select>
+        
+    <insert id="insertDataCenterBaseInfo" parameterType="DataCenterBaseInfo">
+        insert into athena_bes_data_center_base_info
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">id,</if>
+            <if test="dataCenterIp != null and dataCenterIp != ''">data_center_ip,</if>
+            <if test="dataCenterPort != null">data_center_port,</if>
+            <if test="dataCenterId != null and dataCenterId != ''">data_center_id,</if>
+            <if test="dataCenterName != null and dataCenterName != ''">data_center_name,</if>
+            <if test="dataCenterType != null">data_center_type,</if>
+            <if test="dataCenterManager != null and dataCenterManager != ''">data_center_manager,</if>
+            <if test="dataCenterDesc != null and dataCenterDesc != ''">data_center_desc,</if>
+            <if test="dataCenterContact != null and dataCenterContact != ''">data_center_contact,</if>
+            <if test="dataCenterTel != null and dataCenterTel != ''">data_center_tel,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">#{id},</if>
+            <if test="dataCenterIp != null and dataCenterIp != ''">#{dataCenterIp},</if>
+            <if test="dataCenterPort != null">#{dataCenterPort},</if>
+            <if test="dataCenterId != null and dataCenterId != ''">#{dataCenterId},</if>
+            <if test="dataCenterName != null and dataCenterName != ''">#{dataCenterName},</if>
+            <if test="dataCenterType != null">#{dataCenterType},</if>
+            <if test="dataCenterManager != null and dataCenterManager != ''">#{dataCenterManager},</if>
+            <if test="dataCenterDesc != null and dataCenterDesc != ''">#{dataCenterDesc},</if>
+            <if test="dataCenterContact != null and dataCenterContact != ''">#{dataCenterContact},</if>
+            <if test="dataCenterTel != null and dataCenterTel != ''">#{dataCenterTel},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateDataCenterBaseInfo" parameterType="DataCenterBaseInfo">
+        update athena_bes_data_center_base_info
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="dataCenterIp != null and dataCenterIp != ''">data_center_ip = #{dataCenterIp},</if>
+            <if test="dataCenterPort != null">data_center_port = #{dataCenterPort},</if>
+            <if test="dataCenterId != null and dataCenterId != ''">data_center_id = #{dataCenterId},</if>
+            <if test="dataCenterName != null and dataCenterName != ''">data_center_name = #{dataCenterName},</if>
+            <if test="dataCenterType != null">data_center_type = #{dataCenterType},</if>
+            <if test="dataCenterManager != null and dataCenterManager != ''">data_center_manager = #{dataCenterManager},</if>
+            <if test="dataCenterDesc != null and dataCenterDesc != ''">data_center_desc = #{dataCenterDesc},</if>
+            <if test="dataCenterContact != null and dataCenterContact != ''">data_center_contact = #{dataCenterContact},</if>
+            <if test="dataCenterTel != null and dataCenterTel != ''">data_center_tel = #{dataCenterTel},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteDataCenterBaseInfoById" parameterType="Long">
+        delete from athena_bes_data_center_base_info where id = #{id}
+    </delete>
+
+    <delete id="deleteDataCenterBaseInfoByIds" parameterType="String">
+        delete from athena_bes_data_center_base_info where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <select id="queryDataCenterId" parameterType="DataCenterBaseInfo" resultMap="DataCenterBaseInfoResult">
+        <include refid="selectDataCenterBaseInfoVo"/>
+        <where>
+            data_center_id = #{dataCenterId}
+        </where>
+    </select>
+</mapper>

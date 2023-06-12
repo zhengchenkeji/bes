@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zc.efounder.JEnterprise.mapper.systemSetting.ParameterConfigurationMapper">
+    
+    <resultMap type="ParameterConfiguration" id="AthenaBesParamsResult">
+        <result property="id"    column="id"    />
+        <result property="name"    column="name"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <resultMap type="ParamsConfiguration" id="ParamsConfigurationResult">
+        <result property="id"    column="id"    />
+        <result property="paramId"    column="param_id"    />
+        <result property="paramsId"    column="params_id"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+    </resultMap>
+
+    <sql id="selectAthenaBesParamsVo">
+        select id, name, create_by, create_time, update_by, update_time from athena_bes_params
+    </sql>
+
+    <sql id="selectParamsConfigurationVo">
+        select id, param_id, params_id from athena_bes_params_config
+    </sql>
+
+    <!--查询主采集参数列表-->
+    <select id="selectAthenaBesParamsList" parameterType="ParameterConfiguration" resultMap="AthenaBesParamsResult">
+        <include refid="selectAthenaBesParamsVo"/>
+        <where>  
+            <if test="name != null  and name != ''"> and name like concat('%', #{name}, '%')</if>
+        </where>
+    </select>
+
+    <!--获取主采集参数详细信息-->
+    <select id="selectAthenaBesParamsById" parameterType="Long" resultMap="AthenaBesParamsResult">
+        <include refid="selectAthenaBesParamsVo"/>
+        where id = #{id}
+    </select>
+
+    <!--新增主采集参数-->
+    <insert id="insertAthenaBesParams" parameterType="ParameterConfiguration" useGeneratedKeys="true" keyProperty="id">
+        insert into athena_bes_params
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="name != null">name,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="name != null">#{name},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <!--修改主采集参数-->
+    <update id="updateAthenaBesParams" parameterType="ParameterConfiguration">
+        update athena_bes_params
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="name != null">name = #{name},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <!--删除主采集参数-->
+    <delete id="deleteAthenaBesParamsById" parameterType="Long">
+        delete from athena_bes_params where id = #{id}
+    </delete>
+
+    <!--删除主采集参数-->
+    <delete id="deleteAthenaBesParamsByIds" parameterType="String">
+        delete from athena_bes_params where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <!--查询选择采集参数列表-->
+    <select id="listCheckList" parameterType="ParamsConfiguration" resultMap="ParamsConfigurationResult">
+        <include refid="selectParamsConfigurationVo"/>
+        <where>
+            param_id = #{paramId}
+        </where>
+    </select>
+
+    <!--添加一条采集参数-->
+    <insert id="insertConfig" parameterType="ParamsConfiguration" useGeneratedKeys="true" keyProperty="id">
+        insert into athena_bes_params_config
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="paramId != null">param_id,</if>
+            <if test="paramsId != null">params_id,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="paramId != null">#{paramId},</if>
+            <if test="paramsId != null">#{paramsId},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+        </trim>
+    </insert>
+
+    <!--取消一条采集参数-->
+    <delete id="delParamConfig" parameterType="ParamsConfiguration">
+        delete from athena_bes_params_config where param_id = #{paramId} and params_id = #{paramsId}
+    </delete>
+
+    <!--全部取消采集参数-->
+    <delete id="delAllConfig" parameterType="ParamsConfiguration">
+        delete from athena_bes_params_config where param_id = #{paramId}
+    </delete>
+
+
+</mapper>

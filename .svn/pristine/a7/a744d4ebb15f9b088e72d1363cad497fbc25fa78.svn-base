@@ -1,0 +1,28 @@
+package com.zc.relay.handler;
+
+import com.zc.relay.dto.TradeItemLifecycleInfo;
+
+/**
+ * 生命周期钩子
+ * @author Athena-xiepufeng
+ */
+public interface TradeItemLifecycleHook
+{
+    /**
+     * 创建
+     * @param info 生命周期信息
+     */
+    void create(TradeItemLifecycleInfo info);
+
+    /**
+     * 更新
+     * @param info 生命周期信息
+     */
+    void update(TradeItemLifecycleInfo info);
+
+    /**
+     * 销毁
+     * @param info 生命周期信息
+     */
+    void destroy(TradeItemLifecycleInfo info);
+}

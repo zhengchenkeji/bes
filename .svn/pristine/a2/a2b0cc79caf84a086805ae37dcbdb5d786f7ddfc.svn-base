@@ -1,0 +1,224 @@
+package com.zc.connect.nettyClient.ClientHandlers;
+
+import com.ruoyi.common.core.redis.RedisCache;
+import com.zc.common.constant.RedisKeyConstants;
+import com.zc.connect.config.SyncFuture;
+import com.zc.connect.nettyClient.NettyClient;
+import com.zc.efounder.JEnterprise.domain.baseData.Equipment;
+import com.zc.efounder.JEnterprise.domain.baseData.ProductItemData;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelId;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.logging.Logger;
+
+/**
+ * 下位机消息发送类
+ *
+ * @author xiepufeng
+ * @date 2020/4/15 8:26
+ */
+@Component
+public class SendSyncMsgHandler {
+
+    private static final Logger log = Logger.getLogger(SendSyncMsgHandler.class.getName());
+
+    @Autowired
+    private RedisCache redisCache;
+
+    /**
+     * @param message
+     * @Description: 消息发送
+     * @Author:杨攀
+     * @Since: 2019年9月12日下午5:08:47
+     */
+    public void sendMsg(String message, String HOST, int PORT) {
+
+
+        ChannelId channelId1 = NettyClient.channels.get(HOST + ":" + PORT);
+        Channel channel1 = NettyClient.clients.find(channelId1);
+
+        //netty需要用ByteBuf传输
+        ByteBuf byteBuf = Unpooled.buffer();
+        // 字符串传输
+        byteBuf.writeShort(10);
+        byteBuf.writeShort(0);
+        byteBuf.writeShort(6);
+        byte slave_id = 1;
+        byteBuf.writeByte(slave_id);
+        byte funcotion_code = 3;
+        byteBuf.writeByte(funcotion_code);
+        byteBuf.writeShort(0);
+        byteBuf.writeShort(10);
+
+        ChannelFuture future = channel1.writeAndFlush(byteBuf);
+
+//        ByteBuf byteBuf = Unpooled.copiedBuffer(msg, CharsetUtil.UTF_8);
+//        ChannelFuture future = socketChannel.writeAndFlush(byteBuf);
+
+        future.addListener(new ChannelFutureListener() {
+
+            @Override
+            public void operationComplete(ChannelFuture future) throws Exception {
+
+                if (future.isSuccess()) {
+                    System.out.println("===========发送成功");
+                } else {
+                    System.out.println("------------------发送失败");
+                }
+            }
+        });
+    }
+
+    /**
+     * @param message
+     * @Description: 发送同步消息
+     * @Author:杨攀
+     * @Since: 2019年9月12日下午5:08:47
+     */
+    public String sendSyncMsg(String message, String HOST, int PORT, SyncFuture<String> syncFuture) {
+
+        String result = "";
+
+        try {
+
+            ChannelId channelId1 = NettyClient.channels.get(HOST + ":" + PORT);
+            Channel channel1 = NettyClient.clients.find(channelId1);
+
+            //netty需要用ByteBuf传输
+            ByteBuf byteBuf = Unpooled.buffer();
+            // 字符串传输
+            byteBuf.writeShort(10);
+            byteBuf.writeShort(0);
+            byteBuf.writeShort(6);
+            byte slave_id = 1;
+            byteBuf.writeByte(slave_id);
+            byte funcotion_code = 3;
+            byteBuf.writeByte(funcotion_code);
+            byteBuf.writeShort(0);
+            byteBuf.writeShort(10);
+
+            ChannelFuture future = channel1.writeAndFlush(byteBuf);
+
+            future.addListener(new ChannelFutureListener() {
+
+                @Override
+                public void operationComplete(ChannelFuture future) throws Exception {
+
+                    if (future.isSuccess()) {
+                        System.out.println("===========发送成功");
+                    } else {
+                        System.out.println("------------------发送失败");
+                    }
+                }
+            });
+
+            // 等待 8 秒
+            result = syncFuture.get(8, TimeUnit.SECONDS);
+
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        } catch (TimeoutException e) {
+            e.printStackTrace();
+        }
+
+        return result;
+    }
+
+
+    /**
+     * @Description: 发送给modbus服务端消息
+     * @auther: wanghongjie
+     * @date: 9:02 2023/3/15
+     * @param: [equipment, host, port]
+     * @return: void
+     */
+    public void sendModbusSyncMsg(Equipment equipment, String host, Integer port, SyncFuture<String> syncFuture) {
+
+        //获取当前产品下所有的设备
+        Map<String, Equipment> equipmentList = redisCache.getCacheMapValue(RedisKeyConstants.BES_BasicData_Equipment);
+        equipmentList.values().forEach(val1 -> {
+            if (val1.getpId() != null) {
+                if (val1.getpId().equals(equipment.getId())) {
+                    //获取设备所有的数据项
+                    Map<String, ProductItemData> productItemDataList = redisCache.getCacheMapValue(RedisKeyConstants.BES_BasicData_Product_ItemData);
+
+
+                    List<ProductItemData> productItemDataLists = new ArrayList<>();
+                    productItemDataList.values().forEach(val2 -> {
+                        if (val2.getProductId() == equipment.getProductId()) {
+                            productItemDataLists.add(val2);
+                        }
+
+                    });
+                    Collections.sort(productItemDataLists, new Comparator<ProductItemData>() {
+                        @Override
+                        public int compare(ProductItemData o1, ProductItemData o2) {
+                            return o1.getSortNum().intValue() - o2.getSortNum().intValue();
+                        }
+                    });
+
+                    //获取起始字节
+                    int beginByte = productItemDataLists.get(0).getSortNum().intValue();
+                    //获取读取的字节数
+                    int byteSize = productItemDataLists.size();
+                    //获取设备地址
+                    int slaveId = val1.getSonAddress().intValue();
+                    //功能码
+                    int funcotionCode = 3;
+                    //netty需要用ByteBuf传输
+                    ByteBuf byteBuf = Unpooled.buffer();
+                    byteBuf.writeShort(10);//交互（通信）标识：2个字节 为此次通信事务处理标识符，一般每次通信之后将被要求加1以区别不同的通信数据报文。
+                    byteBuf.writeShort(0);//协议标识：2个字节 表示该条指令遵循ModbusTCP协议，一般都为00 00
+                    byteBuf.writeShort(6);//报文长度：2个字节 表示后面数据的长度，有几个字节，高字节在前
+                    byteBuf.writeByte(slaveId);//设备标识 1个字节
+                    byteBuf.writeByte(funcotionCode);//功能码 1个字节
+                    byteBuf.writeShort(beginByte);//起始地址
+                    byteBuf.writeShort(byteSize);//读取多少个数据
+                    ChannelId channelId = NettyClient.channels.get(host + ":" + port);
+                    Channel channel = NettyClient.clients.find(channelId);
+                    ChannelFuture future = channel.writeAndFlush(byteBuf);
+                    future.addListener(new ChannelFutureListener() {
+
+                        @Override
+                        public void operationComplete(ChannelFuture future) throws Exception {
+
+                            if (future.isSuccess()) {
+                                System.out.println("===========发送成功");
+                            } else {
+                                System.out.println("------------------发送失败");
+                            }
+                        }
+                    });
+
+                    // 等待 2 秒
+//                    try {
+//                        String result = "";
+//
+//                        result = syncFuture.get(2, TimeUnit.SECONDS);
+//                        System.out.println(result);
+//                    } catch (InterruptedException e) {
+//                        e.printStackTrace();
+//                    } catch (ExecutionException e) {
+//                        e.printStackTrace();
+//                    } catch (TimeoutException e) {
+//                        e.printStackTrace();
+//                    }
+                }
+            }
+        });
+
+
+    }
+}

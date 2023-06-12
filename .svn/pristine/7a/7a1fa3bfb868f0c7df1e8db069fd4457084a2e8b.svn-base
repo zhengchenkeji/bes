@@ -1,0 +1,95 @@
+package com.ruoyi.systemSetting.parameterConfiguration.service;
+
+import java.util.List;
+
+import com.ruoyi.common.core.domain.AjaxResult;
+import com.ruoyi.energyCollection.acquisitionParam.domain.ElectricParams;
+import com.ruoyi.systemSetting.parameterConfiguration.domain.ParameterConfiguration;
+import com.ruoyi.systemSetting.parameterConfiguration.domain.ParamsConfiguration;
+
+/**
+ * 主采集参数Service接口
+ * 
+ * @author ruoyi
+ * @date 2022-11-30
+ */
+public interface ParameterConfigurationService
+{
+    /**
+     * 查询主采集参数
+     * 
+     * @param id 主采集参数主键
+     * @return 主采集参数
+     */
+    public ParameterConfiguration selectAthenaBesParamsById(Long id);
+
+    /**
+     * 查询主采集参数列表
+     * 
+     * @param parameterConfiguration 主采集参数
+     * @return 主采集参数集合
+     */
+    List<ParameterConfiguration> selectAthenaBesParamsList(ParameterConfiguration parameterConfiguration);
+
+    /**
+     * 新增主采集参数
+     * 
+     * @param parameterConfiguration 主采集参数
+     * @return 结果
+     */
+    AjaxResult insertAthenaBesParams(ParameterConfiguration parameterConfiguration);
+
+    /**
+     * 修改主采集参数
+     * 
+     * @param parameterConfiguration 主采集参数
+     * @return 结果
+     */
+    AjaxResult updateAthenaBesParams(ParameterConfiguration parameterConfiguration);
+
+    /**
+     * 批量删除主采集参数
+     * 
+     * @param ids 需要删除的主采集参数主键集合
+     * @return 结果
+     */
+    int deleteAthenaBesParamsByIds(Long[] ids);
+
+    /**
+     * 删除主采集参数信息
+     * 
+     * @param id 主采集参数主键
+     * @return 结果
+     */
+    int deleteAthenaBesParamsById(Long id);
+
+    /*
+    查询选择采集参数列表
+    */
+    List<ElectricParams> listCheckList(ParamsConfiguration paramsConfiguration);
+
+    /*
+    查询未选择采集参数列表
+    */
+    List<ElectricParams> listNoCheckList(ParamsConfiguration paramsConfiguration);
+
+    /*
+    全部选中采集参数
+    */
+    AjaxResult allCheckList(ParamsConfiguration paramsConfiguration);
+
+    /*
+    全部取消采集参数
+    */
+    AjaxResult allNoCheckList(ParamsConfiguration paramsConfiguration);
+
+    /*
+    添加一条采集参数
+    */
+    AjaxResult insertParamConfigRlgl(ParamsConfiguration paramsConfiguration);
+
+    /*
+    取消一条采集参数
+    */
+    AjaxResult delParamConfigRlgl(ParamsConfiguration paramsConfiguration);
+}

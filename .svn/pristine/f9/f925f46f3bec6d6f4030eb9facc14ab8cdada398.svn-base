@@ -1,0 +1,392 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zc.efounder.JEnterprise.mapper.baseData.EquipmentMapper">
+
+    <resultMap type="Equipment" id="AthenaBesEquipmentResult">
+        <result property="id" column="id"/>
+        <result property="pId" column="p_id"/>
+        <result property="productId" column="product_id"/>
+        <result property="categoryId" column="category_id"/>
+        <result property="code" column="code"/>
+        <result property="name" column="name"/>
+        <result property="state" column="state"/>
+        <result property="ipAddress" column="ip_address"/>
+        <result property="sonAddress" column="son_address"/>
+        <result property="portNum" column="port_num"/>
+        <result property="networkType" column="network_type"/>
+        <result property="remark" column="remark"/>
+        <result property="communication" column="communication"/>
+        <result property="dataAccessName" column="dataAccessName"/>
+        <result property="iotName" column="iotName"/>
+        <result property="createTime" column="create_time"/>
+        <result property="createName" column="create_name"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="updateName" column="update_name"/>
+        <result property="sonNum" column="sonNum"/>
+        <result property="meterState" column="meter_state"/>
+        <result property="parkCode" column="park_code"/>
+        <result property="offlineAlarm" column="offline_alarm"/>
+    </resultMap>
+
+    <resultMap type="HistoryItemData" id="HistoryItemDataResult">
+        <result property="dataValue" column="data_value"/>
+        <result property="code" column="code"/>
+        <result property="time" column="time"/>
+    </resultMap>
+
+    <resultMap type="WarnItemData" id="WarnItemDataResult">
+        <result property="id" column="id"/>
+        <result property="earlyWarnType" column="early_warn_type"/>
+        <result property="happenTime" column="happen_time"/>
+        <result property="resumeTime" column="resume_time"/>
+        <result property="warnType" column="warn_type"/>
+        <result property="warnName" column="warn_name"/>
+        <result property="warnInfo" column="warn_info"/>
+        <result property="itemDataId" column="item_data_id"/>
+        <result property="equipmentId" column="equipment_id"/>
+        <result property="itemDataName" column="itemDataName"/>
+    </resultMap>
+
+    <sql id="selectAthenaBesEquipmentVo">
+        select id, p_id, product_id, code, name, network_type, state, ip_address, son_address, port_num,meter_state, remark, create_time,
+         create_name, update_time, update_name, t1.offline_alarm from athena_bes_equipment
+    </sql>
+
+    <!--查询物联设备列表-->
+    <select id="selectAthenaBesEquipmentList" parameterType="Equipment" resultMap="AthenaBesEquipmentResult">
+        select t1.id, t1.product_id, t1.p_id, t1.code, t1.name, t1.state, t1.ip_address, t1.son_address, t1.port_num,
+        t1.remark, t1.create_time,t1.meter_state,t1.park_code,t1.offline_alarm,
+        t1.create_name, t1.update_time, t1.update_name,t1.network_type,t2.category_id,
+        (SELECT dict_label FROM sys_dict_data where dict_type = 'communication_protocol_product' and dict_value =
+        t2.communication_protocol)
+        communication,
+        (SELECT agreement_name FROM athena_bes_agreement where id = t2.message_protocol)
+        message,
+        (SELECT dict_label FROM sys_dict_data where dict_type = 'iot_type' and dict_value = t2.iot_type) iotName,
+        (SELECT count(1) FROM athena_bes_equipment where p_id = t1.id) sonNum
+        from athena_bes_equipment t1
+        left join athena_bes_product t2 on t1.product_id = t2.id
+        <where>
+            <if test="productId != null ">and t1.product_id = #{productId}</if>
+            <if test="code != null  and code != ''">and t1.code = #{code}</if>
+            <if test="name != null  and name != ''">and t1.name like concat('%', #{name}, '%')</if>
+            <if test="categoryId != null  and categoryId != ''">and t2.category_id = #{categoryId}</if>
+            <if test="pId != null  and pId != ''">and t1.p_id = #{pId}</if>
+            <if test="id != null  and id != ''">and t1.id = #{id}</if>
+        </where>
+    </select>
+
+    <!--查重物联设备-->
+    <select id="selectAthenaBesEquipmentListCheck" parameterType="Equipment" resultMap="AthenaBesEquipmentResult">
+        <include refid="selectAthenaBesEquipmentVo"/>
+        <where>
+            (code = #{code} or product_id = #{productId})
+            <if test="id != null  and id != ''">and id != #{id}</if>
+        </where>
+    </select>
+
+    <!--查询物联设备子设备-->
+    <select id="selectAthenaBesEquipmentSonList" parameterType="Long" resultMap="AthenaBesEquipmentResult">
+        <include refid="selectAthenaBesEquipmentVo"/>
+        where p_id = #{pId}
+    </select>
+
+    <!--查询物联设备-->
+    <select id="selectAthenaBesEquipmentById" parameterType="Long" resultMap="AthenaBesEquipmentResult">
+        <include refid="selectAthenaBesEquipmentVo"/>
+        where id = #{id}
+    </select>
+
+    <select id="getInfoByCode" parameterType="String" resultMap="AthenaBesEquipmentResult">
+        <include refid="selectAthenaBesEquipmentVo"/>
+        where code = #{code}
+    </select>
+
+    <!--查询物联设备详情-->
+    <select id="selectAthenaBesEquipmentInfoById" parameterType="Long" resultType="map">
+        select t1.id, t1.product_id productId, t1.p_id pId, t1.code, t1.name, t1.state, t1.ip_address ipAddress,t1.son_address sonAddress,
+        t1.port_num portNum, t1.remark,
+        t1.create_time createTime, t1.create_name createName, t1.update_time updateTime, t1.update_name updateName,
+        (SELECT dict_label FROM sys_dict_data where dict_type = 'communication_protocol_product' and dict_value = t2.communication_protocol)
+        communication,
+        (SELECT dict_label FROM sys_dict_data where dict_type = 'data_access_product' and dict_value = t2.data_access)
+        dataAccessName,
+        (SELECT agreement_name FROM athena_bes_agreement where id = t2.message_protocol)
+        message,
+        (SELECT dict_label FROM sys_dict_data where dict_type = 'iot_type' and dict_value = t2.iot_type) iotName,
+        t1.network_type,
+        concat(t2.name,' ',t2.code) productName,
+        concat(t6.category_name,' ',t6.category_mark) categoryName
+        from athena_bes_equipment t1
+        left join athena_bes_product t2 on t1.product_id = t2.id
+        left join athena_bes_category t6 on t2.category_id = t6.id
+        where t1.id = #{id}
+    </select>
+
+    <!--新增物联设备-->
+    <insert id="insertAthenaBesEquipment" parameterType="Equipment" useGeneratedKeys="true" keyProperty="id">
+        insert into athena_bes_equipment
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">id,</if>
+            <if test="pId != null">p_id,</if>
+            <if test="productId != null">product_id,</if>
+            <if test="code != null and code != ''">code,</if>
+            <if test="name != null and name != ''">name,</if>
+            <if test="state != null">state,</if>
+            <if test="ipAddress != null">ip_address,</if>
+            <if test="sonAddress != null">son_address,</if>
+            <if test="meterState != null">meter_state,</if>
+            <if test="parkCode != null">park_code,</if>
+            <if test="portNum != null">port_num,</if>
+            <if test="networkType != null">network_type,</if>
+            <if test="remark != null">remark,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="createName != null">create_name,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="updateName != null">update_name,</if>
+            <if test="offlineAlarm != null">offline_alarm,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">#{id},</if>
+            <if test="pId != null">#{pId},</if>
+            <if test="productId != null">#{productId},</if>
+            <if test="code != null and code != ''">#{code},</if>
+            <if test="name != null and name != ''">#{name},</if>
+            <if test="state != null">#{state},</if>
+            <if test="ipAddress != null">#{ipAddress},</if>
+            <if test="sonAddress != null">#{sonAddress},</if>
+            <if test="meterState != null">#{meterState},</if>
+            <if test="parkCode != null">#{parkCode},</if>
+            <if test="portNum != null">#{portNum},</if>
+            <if test="networkType != null">#{networkType},</if>
+            <if test="remark != null">#{remark},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="createName != null">#{createName},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="updateName != null">#{updateName},</if>
+            <if test="offlineAlarm != null">#{offlineAlarm},</if>
+        </trim>
+    </insert>
+
+    <!--修改物联设备-->
+    <update id="updateAthenaBesEquipment" parameterType="Equipment">
+        update athena_bes_equipment
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="productId != null">product_id = #{productId},</if>
+            <if test="code != null and code != ''">code = #{code},</if>
+            <if test="name != null and name != ''">name = #{name},</if>
+            <if test="state != null">state = #{state},</if>
+            <if test="ipAddress != null">ip_address = #{ipAddress},</if>
+            <if test="sonAddress != null">son_address = #{sonAddress},</if>
+            <if test="meterState != null">meter_state = #{meterState},</if>
+            <if test="parkCode != null">park_code = #{parkCode},</if>
+            <if test="portNum != null">port_num = #{portNum},</if>
+            <if test="networkType != null">network_type = #{networkType},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="createName != null">create_name = #{createName},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="updateName != null">update_name = #{updateName},</if>
+            <if test="offlineAlarm != null">offline_alarm = #{offlineAlarm},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <!--删除物联设备-->
+    <delete id="deleteAthenaBesEquipmentById" parameterType="Long">
+        delete from athena_bes_equipment where id = #{id}
+    </delete>
+
+    <!--删除所有物联子设备-->
+    <delete id="deleteSonAthenaBesEquipmentByIds" parameterType="Long">
+        delete from athena_bes_equipment where p_id = #{id}
+    </delete>
+
+    <!--批量删除物联设备-->
+    <delete id="deleteAthenaBesEquipmentByIds" parameterType="String">
+        delete from athena_bes_equipment where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <!--查询物联设备历史数据-->
+    <select id="selectItemDataHistoryListById" resultMap="HistoryItemDataResult">
+        SELECT DATE_FORMAT(t1.create_time,'%Y-%m-%d %H:%i:%s') time,SUM(t1.data_value) data_value,t2.data_item_num code
+        FROM athena_bes_product_item_data_history t1
+        LEFT JOIN athena_bes_product_item_data t2 ON t1.item_data_id = t2.id
+        <where>
+            <if test="ids != null and ids.size() > 0">
+                and t1.item_data_id in
+                <foreach item="id" collection="ids" open="(" separator="," close=")">
+                    #{id}
+                </foreach>
+            </if>
+            <if test="startDate != null">
+                AND date_format(t1.create_time,'%y%m%d') &gt;= date_format(#{startDate},'%y%m%d')
+            </if>
+            <if test="endDate != null">
+                AND date_format(t1.create_time,'%y%m%d') &lt;= date_format(#{endDate},'%y%m%d')
+            </if>
+            <if test="equipmentId != null">
+                AND equipment_id = #{equipmentId}
+            </if>
+        </where>
+        GROUP BY t1.create_time,t1.item_data_id
+    </select>
+
+    <select id="selectEquipmentLastData" parameterType="HistoryItemData" resultMap="HistoryItemDataResult">
+        SELECT DATE_FORMAT(t1.create_time,'%Y-%m-%d %H:%i:%s') time,SUM(t1.data_value) data_value,t2.data_item_num code
+        FROM athena_bes_product_item_data_history t1
+        LEFT JOIN athena_bes_product_item_data t2 ON t1.item_data_id = t2.id
+        where t1.item_data_id  = #{itemDataId} AND equipment_id = #{equipmentId}
+        ORDER BY t1.create_time DESC LIMIT 1
+    </select>
+
+    <select id="selectMemterHistoryListById" resultMap="HistoryItemDataResult">
+        SELECT DATE_FORMAT(t1.F_CJSJ,'%Y-%m-%d %H:%i:%s') time,SUM(t1.F_DATA) data_value,t2.data_item_num code
+        FROM athena_bes_original_data t1
+        LEFT JOIN athena_bes_product_item_data t2 ON t1.F_DNBH = t2.id
+        <where>
+            <if test="ids != null and ids.size() > 0">
+                and t1.F_DNBH in
+                <foreach item="id" collection="ids" open="(" separator="," close=")">
+                    #{id}
+                </foreach>
+            </if>
+            <if test="startDate != null">
+                AND date_format(t1.F_CJSJ,'%y%m%d') &gt;= date_format(#{startDate},'%y%m%d')
+            </if>
+            <if test="endDate != null">
+                AND date_format(t1.F_CJSJ,'%y%m%d') &lt;= date_format(#{endDate},'%y%m%d')
+            </if>
+            <if test="endDate != null">
+                AND date_format(t1.F_CJSJ,'%y%m%d') &lt;= date_format(#{endDate},'%y%m%d')
+            </if>
+            <if test="equipmentCode != null">
+                AND F_DBSYS_NAME = #{equipmentCode}
+            </if>
+        </where>
+        GROUP BY t1.F_CJSJ,t1.F_DNBH
+    </select>
+
+    <select id="selectItemDataWarnDataListById" resultMap="WarnItemDataResult">
+        <!--SELECT t1.happen_time,t1.resume_time,t1.early_warn_type,
+        t1.warn_type,t1.warn_name,t1.warn_info,t1.item_data_id,t1.equipment_id,t2.data_item_num code,t2.name itemDataName
+        FROM athena_bes_product_item_data_warn t1
+        LEFT JOIN athena_bes_product_item_data t2 ON t1.item_data_id = t2.id
+        <where>
+            <if test="equipmentId != null">
+                and t1.equipment_id = #{equipmentId}
+            </if>
+            <if test="startDate != null">
+                AND date_format(t1.happen_time,'%y%m%d') &gt;= date_format(#{startDate},'%y%m%d')
+            </if>
+            <if test="endDate != null">
+                AND date_format(t1.happen_time,'%y%m%d') &lt;= date_format(#{endDate},'%y%m%d')
+            </if>
+        </where>-->
+        SELECT t1.happen_time,t1.resume_time,t1.early_warn_type,
+        t1.warn_type,t1.warn_name,t1.warn_info,t1.item_data_id,t1.equipment_id,t2.data_item_num code,t2.name itemDataName
+        FROM athena_bes_product_item_data_warn t1
+        LEFT JOIN athena_bes_product_item_data t2 ON t1.item_data_id = t2.id
+        <where>
+            <if test="equipmentId != null">
+                and t1.equipment_id = #{equipmentId}
+            </if>
+            <if test="startDate != null">
+                AND date_format(t1.happen_time,'%y%m%d') &gt;= date_format(#{startDate},'%y%m%d')
+            </if>
+            <if test="endDate != null">
+                AND date_format(t1.happen_time,'%y%m%d') &lt;= date_format(#{endDate},'%y%m%d')
+            </if>
+        </where>
+    </select>
+
+    <!--新增历史数据-->
+    <insert id="insertHistoryData" parameterType="HistoryItemData">
+        insert into athena_bes_product_item_data_history
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="itemDataId != null">item_data_id,</if>
+            <if test="dataValue != null">data_value,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="equipmentId != null">equipment_id,</if>
+
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="itemDataId != null">#{itemDataId},</if>
+            <if test="dataValue != null">#{dataValue},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="equipmentId != null">#{equipmentId},</if>
+
+        </trim>
+    </insert>
+
+    <insert id="insertHistoryDataList" parameterType="java.util.ArrayList">
+        INSERT INTO athena_bes_product_item_data_history
+        ( item_data_id , create_time ,data_value)
+        VALUES
+        <foreach collection="lstDto" item="item" index="index" separator=",">
+            (#{item.itemDataId},#{item.createTime},#{item.dataValue})
+        </foreach>
+    </insert>
+
+    <!--新增报警数据-->
+    <insert id="insertWarnItemData" parameterType="WarnItemData">
+        insert into athena_bes_product_item_data_warn
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="earlyWarnType != null">early_warn_type,</if>
+            <if test="happenTime != null">happen_time,</if>
+            <if test="resumeTime != null">resume_time,</if>
+            <if test="warnType != null">warn_type,</if>
+            <if test="warnName != null">warn_name,</if>
+            <if test="warnInfo != null">warn_info,</if>
+            <if test="itemDataId != null">item_data_id,</if>
+            <if test="equipmentId != null">equipment_id,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="earlyWarnType != null">#{earlyWarnType},</if>
+            <if test="happenTime != null">#{happenTime},</if>
+            <if test="resumeTime != null">#{resumeTime},</if>
+            <if test="warnType != null">#{warnType},</if>
+            <if test="warnName != null">#{warnName},</if>
+            <if test="warnInfo != null">#{warnInfo},</if>
+            <if test="itemDataId != null">#{itemDataId},</if>
+            <if test="equipmentId != null">#{equipmentId},</if>
+        </trim>
+    </insert>
+
+    <select id="selectNameByEquipment" resultType="map">
+        SELECT item_data_custom_name name FROM athena_bes_equipment_item_data WHERE equipment_id = #{equipmentId} AND item_data_id = #{itemDataId}
+    </select>
+    <!--获取数据库中设备对应的数据项别名-->
+    <select id="selectEquipmentItemDataList"
+            resultType="com.zc.efounder.JEnterprise.domain.baseData.EquipmentItemData">
+        select * from athena_bes_equipment_item_data where equipment_id = #{equipmentId}
+    </select>
+
+    <insert id="insertAthenaBesEquipmentItemData" parameterType="java.util.ArrayList">
+        insert into athena_bes_equipment_item_data(
+        equipment_id,
+        item_data_id,
+        item_data_custom_name,
+        create_time,
+        create_by
+        ) values
+        <foreach item="item" index="index" collection="equipmentItemDataList" separator=",">
+            (
+            <if test="item.equipmentId != null">#{item.equipmentId},</if>
+            <if test="item.itemDataId != null">#{item.itemDataId},</if>
+            <if test="item.itemDataCustomName != null">#{item.itemDataCustomName},</if>
+            #{item.createTime},
+            #{item.createBy}
+            )
+        </foreach>
+    </insert>
+
+    <delete id="deleteAthenaBesEquipmentItemData">
+        delete from athena_bes_equipment_item_data where equipment_id = #{id}
+    </delete>
+</mapper>

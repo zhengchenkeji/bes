@@ -1,0 +1,177 @@
+package com.zc.connect.nettyClient.ClientHandlers;
+
+import com.ruoyi.common.constant.ModbusFunctions;
+import com.ruoyi.common.core.redis.RedisCache;
+import com.zc.ApplicationContextProvider;
+import com.zc.common.constant.RedisKeyConstants;
+import com.zc.common.core.ThreadPool.ThreadPool;
+import com.zc.connect.business.handler.ModbusMsgReceive;
+import com.zc.connect.nettyClient.ClientHandler;
+import com.zc.connect.nettyClient.NettyClient;
+import com.zc.efounder.JEnterprise.domain.baseData.Equipment;
+import com.zc.efounder.JEnterprise.domain.baseData.ProductItemData;
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandlerContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
+import java.math.BigDecimal;
+import java.net.InetSocketAddress;
+import java.util.*;
+
+/**
+ * @Author: wanghongjie
+ * @Description:
+ * @Date: Created in 14:01 2023/2/23
+ * @Modified By:
+ */
+@Component
+public class ModbusClientHandlers {
+    private static final Logger log = LoggerFactory.getLogger(ModbusClientHandlers.class);
+
+    //redis
+    private RedisCache redisCache = ApplicationContextProvider.getBean(RedisCache.class);
+
+    ModbusMsgReceive clientMsgReceive = ClientHandler.modbusMsgReceive;
+    /**
+     * 回令业务处理
+     * 解析
+     */
+    public void response_analysis(ChannelHandlerContext ctx, Object msg) {
+        ByteBuf byteBuf = (ByteBuf) msg;
+
+
+        short TransActionId = byteBuf.readShort();//交互（通信）标识：2个字节 为此次通信事务处理标识符，一般每次通信之后将被要求加1以区别不同的通信数据报文。
+        short protocal = byteBuf.readShort();//协议标识：2个字节 表示该条指令遵循ModbusTCP协议，一般都为00 00
+        short msg_len = byteBuf.readShort();//报文长度：2个字节 表示后面数据的长度，有几个字节，高字节在前
+        byte slave_id = byteBuf.readByte();//设备标识 1个字节
+        byte funcotion_code = byteBuf.readByte();//功能码 1个字节
+        byte byte_msg_len = byteBuf.readByte();//高低字节报文长度 1个字节
+
+        //判断功能码是否正确
+        //可参考网址:https://blog.csdn.net/weixin_46304253/article/details/107960184?spm=1001.2101.3001.6650.8&utm_medium=distribute.pc_relevant.none-task-blog-2~default~BlogCommendFromBaidu~Rate-8-107960184-blog-78174071.pc_relevant_aa&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2~default~BlogCommendFromBaidu~Rate-8-107960184-blog-78174071.pc_relevant_aa&utm_relevant_index=17
+        if (funcotion_code != ModbusFunctions.COIL_STATUS &&
+                funcotion_code != ModbusFunctions.INPUT_STATUS &&
+                funcotion_code != ModbusFunctions.HOLDING_REGISTER &&
+                funcotion_code != ModbusFunctions.INPUT_REGISTER &&
+                funcotion_code != ModbusFunctions.WRITE_ONE_COIL &&
+                funcotion_code != ModbusFunctions.WRITE_ONE_HOLDING_REGISTER &&
+                funcotion_code != ModbusFunctions.WRITE_MULTIPLE_COIL &&
+                funcotion_code != ModbusFunctions.WRITE_MULTIPLE_HOLDING_REGISTER) {
+
+            return;
+        }
+
+        if (msg_len != byte_msg_len + 3) {//功能码错误或者存在粘包问题
+            return;
+        }
+
+
+        List<Short> shortList = new ArrayList<>();
+        for (int i = 0; i < byte_msg_len / 2; i++) {
+            int surplusByteBuf = byteBuf.readableBytes();
+            if (surplusByteBuf == 0) {
+                return;
+            }
+
+            shortList.add(byteBuf.readShort());
+        }
+
+        //功能码和数据项键值对
+        Map<Integer, List<ProductItemData>> productItemDataMap = new HashMap<>();
+
+        String host = ((InetSocketAddress) ctx.channel().remoteAddress()).getAddress().getHostAddress();
+        int post = ((InetSocketAddress) ctx.channel().remoteAddress()).getPort();
+
+
+        ThreadPool.executor.execute(() -> {
+
+            //遍历配置产品,取出所有的网关设备(tcp)
+            List<Equipment> equipmentList = NettyClient.getEquipmentTCPList();
+            if (equipmentList.size() == 0) {
+                return;
+            }
+            try {
+                equipmentList.forEach(val -> {
+
+                    String HOST = val.getIpAddress();
+                    Integer PORT = Integer.parseInt(val.getPortNum());
+                    if (!host.equals(HOST) || post != PORT) {
+                        return;
+                    }
+
+                    //获取当前产品下所有的设备
+                    Map<String, Equipment> equipmentLists = redisCache.getCacheMapValue(RedisKeyConstants.BES_BasicData_Equipment);
+                    equipmentLists.values().forEach(val1 -> {
+                        if (val1.getpId() == null) {//网关设备或者直连设备
+                            return;
+                        }
+                        if (!val1.getpId().equals(val.getId())) {
+                            return;
+                        }
+                        if (val1.getSonAddress().intValue() != slave_id) {
+                            return;
+                        }
+
+                        //websocket推送设备在线离线状态
+
+                        clientMsgReceive.deviceState(host, post, val1.getId(), true);
+
+                        //获取设备所有的数据项
+                        Map<String, ProductItemData> productItemDataList = redisCache.getCacheMapValue(RedisKeyConstants.BES_BasicData_Product_ItemData);
+
+                        productItemDataList.values().forEach(val2 -> {
+                            if (val2.getProductId() != val1.getProductId()) {
+                                return;
+                            }
+                            if (!productItemDataMap.containsKey(Integer.valueOf(val2.getFunctionCode()))) {//当前key不存在
+                                List<ProductItemData> productItemData = new ArrayList<>();
+                                productItemData.add(val2);
+                                productItemDataMap.put(Integer.valueOf(val2.getFunctionCode()), productItemData);
+                            } else {
+                                List<ProductItemData> productItemData = productItemDataMap.get(Integer.valueOf(val2.getFunctionCode()));
+                                productItemData.add(val2);
+                            }
+                        });
+                    });
+                });
+
+                Set<Integer> keys = productItemDataMap.keySet();
+                for (Integer key : keys) {
+                    if (key != funcotion_code) {
+                        continue;
+                    }
+                    List<ProductItemData> productItemData = productItemDataMap.get(key);
+                    if (productItemData.size() == 0) {
+                        continue;
+                    }
+
+                    Collections.sort(productItemData, new Comparator<ProductItemData>() {
+                        @Override
+                        public int compare(ProductItemData o1, ProductItemData o2) {
+                            return o1.getSortNum().intValue() - o2.getSortNum().intValue();
+                        }
+                    });
+
+                    //获取当前功能码第一个寄存器地址
+                    Integer firstByteNum = productItemData.get(0).getSortNum().intValue();
+                    productItemData.forEach(val -> {
+                        Integer byteNum = val.getSortNum().intValue();//寄存器地址
+
+                        Short s = shortList.get(byteNum - firstByteNum);
+                        val.setDataValue(BigDecimal.valueOf(s));
+                        redisCache.setCacheMapValue(RedisKeyConstants.BES_BasicData_Product_ItemData,val.getId(),val);
+                        System.out.println(s);
+                    });
+
+                    //设备实时数据  websocket推送到前端
+                    clientMsgReceive.deviceRealTimeData(productItemData);
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+    }
+}

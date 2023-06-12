@@ -1,0 +1,217 @@
+package com.zc.iot.domain;
+
+import com.ruoyi.common.annotation.Excels;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
+import com.ruoyi.common.annotation.Excel;
+import com.ruoyi.common.annotation.Excel.Type;
+import com.ruoyi.common.core.domain.BaseEntity;
+import org.hibernate.validator.constraints.Range;
+
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+
+/**
+ * 产品对象 athena_iot_product
+ *
+ * @author xiepufeng
+ * @date 2022-05-31
+ */
+public class IotProduct extends BaseEntity
+{
+    private static final long serialVersionUID = 1L;
+
+    /** 主键 */
+    private Long id;
+
+    /** 产品名称 */
+    @Excel(name = "产品名称")
+    @NotBlank(message = "产品名称不能为空")
+    @Size(max = 50, message = "产品名称长度不能超过50个字符")
+    private String productName;
+
+    /** 产品编号 */
+    @Excel(name = "产品编号")
+    @NotBlank(message = "产品编号不能为空")
+    @Size(max = 50, message = "产品编号长度不能超过50个字符")
+    private String productCode;
+
+    /** 所属品类 */
+    @Excel(name = "所属品类", type = Type.IMPORT)
+    @NotNull(message = "所属品类不能为空")
+    private Long categoryId;
+
+    /** 品类对象 */
+    @Excels({
+            @Excel(name = "品类名称", targetAttr = "categoryName", type = Type.EXPORT),
+            @Excel(name = "品类标识", targetAttr = "categoryMark", type = Type.EXPORT)
+    })
+    private IotCategory category;
+
+    /** 消息协议 */
+    @Excel(name = "消息协议")
+    @NotNull(message = "消息协议不能为空")
+    private Integer protocolId;
+
+    /** 发布状态 */
+    @Excel(name = "发布状态", readConverterExp = "0=未发布,1=已发布")
+    @NotNull(message = "发布状态不能为空")
+    @Range(min = 0, max = 1, message = "发布状态只能是0或1")
+    private Byte publishState;
+
+    /** 传输协议 */
+    @Excel(name = "传输协议")
+    @NotNull(message = "传输协议不能为空")
+    private Integer transportProtocol;
+
+    /** 物模型 */
+    @Excel(name = "物模型")
+    private String metadata;;
+
+    /** 协议相关配置 */
+    private String configuration;
+
+    /** 节点类型 */
+    @Excel(name = "节点类型")
+    @Range(min = 1, max = 3, message = "节点类型只能是1、2、3")
+    @NotNull(message = "节点类型不能为空")
+    private Integer nodeType;
+
+    /** 产品描述 */
+    @Excel(name = "产品描述")
+    @Size(max = 200, message = "产品描述长度不能超过200个字符")
+    private String description;
+
+    public void setId(Long id)
+    {
+        this.id = id;
+    }
+
+    public Long getId()
+    {
+        return id;
+    }
+    public void setProductName(String productName)
+    {
+        this.productName = productName;
+    }
+
+    public String getProductName()
+    {
+        return productName;
+    }
+    public void setProductCode(String productCode)
+    {
+        this.productCode = productCode;
+    }
+
+    public String getProductCode()
+    {
+        return productCode;
+    }
+    public void setCategoryId(Long categoryId)
+    {
+        this.categoryId = categoryId;
+    }
+
+    public Long getCategoryId()
+    {
+        return categoryId;
+    }
+    public void setProtocolId(Integer protocolId)
+    {
+        this.protocolId = protocolId;
+    }
+
+    public Integer getProtocolId()
+    {
+        return protocolId;
+    }
+    public void setTransportProtocol(Integer transportProtocol)
+    {
+        this.transportProtocol = transportProtocol;
+    }
+
+    public Byte getPublishState()
+    {
+        return publishState;
+    }
+
+    public void setPublishState(Byte publishState)
+    {
+        this.publishState = publishState;
+    }
+
+    public Integer getTransportProtocol()
+    {
+        return transportProtocol;
+    }
+    public void setNodeType(Integer nodeType)
+    {
+        this.nodeType = nodeType;
+    }
+
+    public String getMetadata()
+    {
+        return metadata;
+    }
+
+    public void setMetadata(String metadata)
+    {
+        this.metadata = metadata;
+    }
+
+    public String getConfiguration()
+    {
+        return configuration;
+    }
+
+    public void setConfiguration(String configuration)
+    {
+        this.configuration = configuration;
+    }
+
+    public Integer getNodeType()
+    {
+        return nodeType;
+    }
+    public void setDescription(String description)
+    {
+        this.description = description;
+    }
+
+    public String getDescription()
+    {
+        return description;
+    }
+
+    public IotCategory getCategory() {
+        return category;
+    }
+
+    public void setCategory(IotCategory category) {
+        this.category = category;
+    }
+
+    @Override
+    public String toString()
+    {
+        return new ToStringBuilder(this,ToStringStyle.MULTI_LINE_STYLE)
+            .append("id", getId())
+            .append("productName", getProductName())
+            .append("productCode", getProductCode())
+            .append("categoryId", getCategoryId())
+            .append("category", getCategory().toString())
+            .append("protocolId", getProtocolId())
+            .append("publishState", getPublishState())
+            .append("transportProtocol", getTransportProtocol())
+            .append("metadata", getMetadata())
+            .append("configuration", getConfiguration())
+            .append("nodeType", getNodeType())
+            .append("description", getDescription())
+            .append("createTime", getCreateTime())
+            .append("updateTime", getUpdateTime())
+            .toString();
+    }
+}

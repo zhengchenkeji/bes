@@ -1,0 +1,70 @@
+package com.ruoyi.efounder.JEnterprise.controller.energyAnalysis;
+
+
+import com.ruoyi.common.core.controller.BaseController;
+import com.ruoyi.common.core.domain.AjaxResult;
+import com.ruoyi.efounder.JEnterprise.service.energyAnalysis.SurveyService;
+import com.ruoyi.efounder.JEnterprise.domain.energyInfo.EnergyType;
+import com.ruoyi.efounder.JEnterprise.domain.energyInfo.Park;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+
+/**
+ * @Description 用能概况Controller
+ *
+ * @author liuwenge
+ * @date 2022/11/9 10:38
+ */
+@RestController
+@RequestMapping("/energyAnalysis/survey")
+public class SurveyController extends BaseController
+{
+    @Autowired
+    private SurveyService surveyService;
+
+    /**
+     * 查询所有园区
+     */
+    @GetMapping("/getAllPark")
+    public List<Park> getAllPark(){
+        return surveyService.getAllPark();
+    }
+
+    /**
+     * 查询所有能源类型
+     */
+    @GetMapping("/getEnergyType")
+    public List<EnergyType> getEnergyType(){
+        return surveyService.getEnergyType();
+    }
+
+    /**
+     * 查询支路环比
+     */
+    @GetMapping("/queryRingRatioData")
+    public AjaxResult queryRingRatioData(String branchId){
+        return surveyService.queryRingRatioData(branchId);
+    }
+
+    /**
+     * 查询支路能耗趋势
+     */
+    @GetMapping("/queryTrendData")
+    public AjaxResult queryTrendData(String branchId,String trendType){
+        return surveyService.queryTrendData(branchId,trendType);
+    }
+
+    /**
+     * 查询支路能耗趋势
+     */
+    @GetMapping("/queryRankData")
+    public AjaxResult queryRankData(String branchId,String rankType){
+        return surveyService.queryRankData(branchId,rankType);
+    }
+
+
+}

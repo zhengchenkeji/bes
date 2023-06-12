@@ -1,0 +1,83 @@
+package com.ruoyi.energyDataReport.buildBaseInfo.service;
+
+import java.util.List;
+import java.util.Map;
+
+import com.ruoyi.energyDataReport.buildBaseInfo.domain.BuildBaseInfo;
+import com.ruoyi.energyDataReport.buildGroupInfo.domain.BuildGroupInfo;
+import com.ruoyi.energyDataReport.dataCenterBaseInfo.domain.DataCenterBaseInfo;
+import com.ruoyi.energyInfo.parkInfo.domain.Park;
+
+/**
+ * 建筑基本项数据Service接口
+ *
+ * @author ruoyi
+ * @date 2022-09-14
+ */
+public interface BuildBaseInfoService
+{
+    /**
+     * 查询建筑基本项数据
+     *
+     * @param id 建筑基本项数据主键
+     * @return 建筑基本项数据
+     */
+    public BuildBaseInfo selectBuildBaseInfoById(Long id);
+
+    /**
+     * 查询建筑基本项数据列表
+     *
+     * @param buildBaseInfo 建筑基本项数据
+     * @return 建筑基本项数据集合
+     */
+    List<BuildBaseInfo> selectBuildBaseInfoList(BuildBaseInfo buildBaseInfo);
+
+    /**
+     * 新增建筑基本项数据
+     *
+     * @param buildBaseInfo 建筑基本项数据
+     * @return 结果
+     */
+    int insertBuildBaseInfo(BuildBaseInfo buildBaseInfo);
+
+    /**
+     * 修改建筑基本项数据
+     *
+     * @param buildBaseInfo 建筑基本项数据
+     * @return 结果
+     */
+    int updateBuildBaseInfo(BuildBaseInfo buildBaseInfo);
+
+    /**
+     * 批量删除建筑基本项数据
+     *
+     * @param ids 需要删除的建筑基本项数据主键集合
+     * @return 结果
+     */
+    int deleteBuildBaseInfoByIds(Long[] ids);
+
+    /**
+     * 删除建筑基本项数据信息
+     *
+     * @param id 建筑基本项数据主键
+     * @return 结果
+     */
+    int deleteBuildBaseInfoById(Long id);
+
+    /**
+     * 查询所有数据中心
+     */
+    List<DataCenterBaseInfo> getAllDataCenterBaseInfo();
+
+    /**
+     * 查询所有建筑群
+     */
+    List<BuildGroupInfo> getAllBuildGroup();
+
+    /**
+     * 查询所有建筑群
+     */
+    List<Park> getAllPark();
+
+    List<BuildBaseInfo> selectAllInfo(BuildBaseInfo buildBaseInfo);
+}

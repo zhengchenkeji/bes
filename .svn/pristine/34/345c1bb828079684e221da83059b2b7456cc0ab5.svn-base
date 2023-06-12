@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zc.iot.mapper.IotFunctionValueMapper">
+    
+    <resultMap type="IotFunctionValue" id="IotFunctionValueResult">
+        <result property="id"    column="id"    />
+        <result property="functionKey"    column="function_key"    />
+        <result property="value"    column="value"    />
+        <result property="name"    column="name"    />
+        <result property="comments"    column="comments"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="functionName"    column="function_name"    />
+    </resultMap>
+
+    <sql id="selectIotFunctionValueVo">
+        select id, function_key, value, name, comments, create_time, update_time from athena_iot_function_value
+    </sql>
+
+    <select id="selectIotFunctionValueList" parameterType="IotFunctionValue" resultMap="IotFunctionValueResult">
+        select v.id, v.function_key,f.name function_name, v.value, v.name, v.comments, v.create_time, v.update_time
+        from athena_iot_function_value v
+        left join athena_iot_function f on v.function_key = f.id
+        <where>  
+            <if test="functionKey != null "> and function_key = #{functionKey}</if>
+            <if test="value != null  and value != ''"> and value = #{value}</if>
+            <if test="name != null  and name != ''"> and name like concat('%', #{name}, '%')</if>
+        </where>
+    </select>
+    
+    <select id="selectIotFunctionValueById" parameterType="Long" resultMap="IotFunctionValueResult">
+        <include refid="selectIotFunctionValueVo"/>
+        where id = #{id}
+    </select>
+        
+    <insert id="insertIotFunctionValue" parameterType="IotFunctionValue" useGeneratedKeys="true" keyProperty="id">
+        insert into athena_iot_function_value
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">id,</if>
+            <if test="functionKey != null">function_key,</if>
+            <if test="value != null and value != ''">value,</if>
+            <if test="name != null and name != ''">name,</if>
+            <if test="comments != null">comments,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">#{id},</if>
+            <if test="functionKey != null">#{functionKey},</if>
+            <if test="value != null and value != ''">#{value},</if>
+            <if test="name != null and name != ''">#{name},</if>
+            <if test="comments != null">#{comments},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateIotFunctionValue" parameterType="IotFunctionValue">
+        update athena_iot_function_value
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="functionKey != null">function_key = #{functionKey},</if>
+            <if test="value != null and value != ''">value = #{value},</if>
+            <if test="name != null and name != ''">name = #{name},</if>
+            <if test="comments != null">comments = #{comments},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteIotFunctionValueById" parameterType="Long">
+        delete from athena_iot_function_value where id = #{id}
+    </delete>
+
+    <delete id="deleteIotFunctionValueByIds" parameterType="String">
+        delete from athena_iot_function_value where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

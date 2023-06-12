@@ -1,0 +1,284 @@
+package com.zc.efounder.JEnterprise.controller.baseData;
+
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import javax.servlet.http.HttpServletResponse;
+
+import com.ruoyi.common.core.page.PageDomain;
+import com.ruoyi.common.core.page.TableSupport;
+import com.zc.efounder.JEnterprise.domain.baseData.*;
+import com.zc.efounder.JEnterprise.service.baseData.ProductService;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+import com.ruoyi.common.annotation.Log;
+import com.ruoyi.common.core.controller.BaseController;
+import com.ruoyi.common.core.domain.AjaxResult;
+import com.ruoyi.common.enums.BusinessType;
+import com.ruoyi.common.utils.poi.ExcelUtil;
+import com.ruoyi.common.core.page.TableDataInfo;
+
+/**
+ * 产品定义Controller
+ *
+ * @author gaojikun
+ * @date 2023-03-07
+ */
+@RestController
+@RequestMapping("/baseData/product")
+public class ProductController extends BaseController {
+    @Autowired
+    private ProductService productService;
+
+    /**
+     * 查询产品定义列表
+     */
+    @PreAuthorize("@ss.hasPermi('baseData:product:list')")
+    @GetMapping("/list")
+    public PageInfoStream list(Product product) {
+        PageDomain pageDomain = TableSupport.buildPageRequest();
+        Integer pageNum = pageDomain.getPageNum();
+        Integer pageSize = pageDomain.getPageSize();
+        List<Product> list = productService.selectAthenaBesProductList(product);
+        //java8流分页
+        List<Product> subList = list.stream().skip((pageNum - 1) * pageSize).limit(pageSize).
+                collect(Collectors.toList());
+        PageInfoStream pageInfoStream = new PageInfoStream();
+        pageInfoStream.setTotal(list.size());
+        pageInfoStream.setData(subList);
+        return pageInfoStream;
+    }
+
+    /**
+     * @Author:gaojikun
+     * @Date:2023-03-08 16:03
+     * @Description:查询所有产品
+     * @Return:AjaxResult
+     */
+    @GetMapping("/getAllProduct")
+    public AjaxResult getAllProduct(Product product) {
+        return productService.selectAllProductList(product);
+    }
+
+    /**
+     * 查询产品数据项列表
+     */
+    @PreAuthorize("@ss.hasPermi('baseData:product:list')")
+    @GetMapping("/listItemData")
+    public TableDataInfo listItemData(ProductItemData productItemData) {
+//        startPage();
+        List<ProductItemData> list = productService.selectAthenaBesProductItemDataList(productItemData);
+        return getDataTable(list);
+    }
+
+    /**
+     * 查询产品配置-功能定义列表
+     */
+    @PreAuthorize("@ss.hasPermi('baseData:product:list')")
+    @GetMapping("/listFunction")
+    public TableDataInfo listFunction(ProductFunction productFunction) {
+//        startPage();
+        List<ProductFunction> list = productService.selectAthenaBesProductFunctionList(productFunction);
+        return getDataTable(list);
+    }
+
+    /**
+     * 导出产品定义列表
+     */
+    @PreAuthorize("@ss.hasPermi('baseData:product:export')")
+    @Log(title = "产品定义", businessType = BusinessType.EXPORT)
+    @PostMapping("/export")
+    public void export(HttpServletResponse response, Product product) {
+        List<Product> list = productService.selectAthenaBesProductList(product);
+        ExcelUtil<Product> util = new ExcelUtil<>(Product.class);
+        util.exportExcel(response, list, "产品定义");
+    }
+
+    /**
+     * 导出产品数据项列表
+     */
+    @PreAuthorize("@ss.hasPermi('baseData:product:export')")
+    @Log(title = "产品数据项", businessType = BusinessType.EXPORT)
+    @PostMapping("/exportItemData")
+    public void exportItemData(HttpServletResponse response, ProductItemData productItemData) {
+        List<ProductItemData> list = productService.selectAthenaBesProductItemDataList(productItemData);
+        ExcelUtil<ProductItemData> util = new ExcelUtil<>(ProductItemData.class);
+        util.exportExcel(response, list, "产品数据项");
+    }
+
+    /**
+     * 导出产品配置-功能定义列表
+     */
+    @PreAuthorize("@ss.hasPermi('baseData:product:export')")
+    @Log(title = "产品功能", businessType = BusinessType.EXPORT)
+    @PostMapping("/exportFunction")
+    public void exportFunction(HttpServletResponse response, ProductFunction productFunction) {
+        List<ProductFunction> list = productService.selectAthenaBesProductFunctionList(productFunction);
+        ExcelUtil<ProductFunction> util = new ExcelUtil<>(ProductFunction.class);
+        util.exportExcel(response, list, "产品功能");
+    }
+
+    /**
+     * 获取产品定义详细信息
+     */
+    @PreAuthorize("@ss.hasPermi('baseData:product:query')")
+    @GetMapping(value = "/{id}")
+    public AjaxResult getInfo(@PathVariable("id") Long id) {
+        return productService.selectAthenaBesProductById(id);
+    }
+
+    /**
+     * 获取产品数据项详细信息
+     */
+    @PreAuthorize("@ss.hasPermi('baseData:product:query')")
+    @GetMapping(value = "/ItemData/{id}")
+    public AjaxResult getItemDataInfo(@PathVariable("id") Long id) {
+        return productService.selectAthenaBesProductItemDataById(id);
+    }
+
+    /**
+     * 获取产品配置-功能定义详细信息
+     */
+    @PreAuthorize("@ss.hasPermi('system:function:query')")
+    @GetMapping(value = "/function/{id}")
+    public AjaxResult getFunctionInfo(@PathVariable("id") Long id) {
+        return productService.selectAthenaBesProductFunctionById(id);
+    }
+
+    /**
+     * 新增产品定义
+     */
+    @PreAuthorize("@ss.hasPermi('baseData:product:add')")
+    @Log(title = "产品定义", businessType = BusinessType.INSERT)
+    @PostMapping
+    public AjaxResult add(@RequestBody Product product) {
+        return productService.insertAthenaBesProduct(product);
+    }
+
+    /**
+     * 新增产品数据项
+     */
+    @PreAuthorize("@ss.hasPermi('baseData:product:add')")
+    @Log(title = "产品定义", businessType = BusinessType.INSERT)
+    @PostMapping(value = "/ItemData")
+    public AjaxResult addItemData(@RequestBody ProductItemData productItemData) {
+        return productService.insertAthenaBesProductItemData(productItemData);
+    }
+
+    /**
+     * 新增产品配置-功能定义
+     */
+    @PreAuthorize("@ss.hasPermi('system:function:add')")
+    @Log(title = "产品配置-功能定义", businessType = BusinessType.INSERT)
+    @PostMapping(value = "/function")
+    public AjaxResult addFunction(@RequestBody ProductFunction productFunction) {
+        return productService.insertAthenaBesProductFunction(productFunction);
+    }
+
+    /**
+     * 修改产品定义
+     */
+    @PreAuthorize("@ss.hasPermi('baseData:product:edit')")
+    @Log(title = "产品定义", businessType = BusinessType.UPDATE)
+    @PutMapping
+    public AjaxResult edit(@RequestBody Product product) {
+        return productService.updateAthenaBesProduct(product);
+    }
+
+    /**
+     * 修改产品数据项
+     */
+    @PreAuthorize("@ss.hasPermi('baseData:product:edit')")
+    @Log(title = "产品定义", businessType = BusinessType.UPDATE)
+    @PutMapping(value = "/ItemData")
+    public AjaxResult editItemData(@RequestBody ProductItemData productItemData) {
+        return productService.updateAthenaBesProductItemData(productItemData);
+    }
+
+    /**
+     * 修改产品配置-功能定义
+     */
+    @PreAuthorize("@ss.hasPermi('system:function:edit')")
+    @Log(title = "产品配置-功能定义", businessType = BusinessType.UPDATE)
+    @PutMapping(value = "/function")
+    public AjaxResult editFunction(@RequestBody ProductFunction productFunction) {
+        return productService.updateAthenaBesProductFunction(productFunction);
+    }
+
+    /**
+     * 删除产品定义
+     */
+    @PreAuthorize("@ss.hasPermi('baseData:product:remove')")
+    @Log(title = "产品定义", businessType = BusinessType.DELETE)
+    @DeleteMapping("/{ids}")
+    public AjaxResult remove(@PathVariable Long[] ids) {
+        return productService.deleteAthenaBesProductByIds(ids);
+    }
+
+    /**
+     * 删除产品数据项
+     */
+    @PreAuthorize("@ss.hasPermi('baseData:product:remove')")
+    @Log(title = "产品定义", businessType = BusinessType.DELETE)
+    @DeleteMapping("/ItemData/{ids}")
+    public AjaxResult removeItemData(@PathVariable Long[] ids) {
+        return productService.deleteAthenaBesProductItemDataByIds(ids);
+    }
+
+    /**
+     * 删除产品配置-功能定义
+     */
+    @PreAuthorize("@ss.hasPermi('system:function:remove')")
+    @Log(title = "产品配置-功能定义", businessType = BusinessType.DELETE)
+    @DeleteMapping("/function/{ids}")
+    public AjaxResult removeFunction(@PathVariable Long[] ids) {
+        return productService.deleteAthenaBesProductFunctionByIds(ids);
+    }
+
+    /**
+     * 查询数据类型list
+     */
+    @GetMapping("/getAllIotTypeList")
+    public AjaxResult getAllIotTypeList(@RequestParam("dictType") String dictType) {
+        String id = "";
+        List<Map<String, Object>> list = productService.getAllIotTypeList(dictType, id);
+        return AjaxResult.success(list);
+    }
+
+    /**
+     * 查询数据类型list
+     */
+    @GetMapping("/getAllIotTypeIdList")
+    public AjaxResult getAllIotTypeIdList(@RequestParam("dictType") String dictType, @RequestParam("id") String id) {
+        List<Map<String, Object>> list = productService.getAllIotTypeList(dictType, id);
+        return AjaxResult.success(list);
+    }
+
+    /**
+     * 查询物联类型/消息协议list
+     */
+    @GetMapping("/getAllMessageList")
+    public AjaxResult getAllMessageList(@RequestParam("dictType") String dictType) {
+        String id = "";
+        List<Map<String, Object>> list = productService.getAllMessageIdList(dictType, id);
+        return AjaxResult.success(list);
+    }
+
+    /**
+     * 查询物联类型/消息协议list
+     */
+    @GetMapping("/getAllMessageIdList")
+    public AjaxResult getAllMessageIdList(@RequestParam("dictType") String dictType, @RequestParam("id") String id) {
+        List<Map<String, Object>> list = productService.getAllMessageIdList(dictType, id);
+        return AjaxResult.success(list);
+    }
+
+    /**
+     * 查询对应的消息协议list
+     */
+    @GetMapping("/getMessageListById")
+    public AjaxResult getMessageListById(@RequestParam("id") String id) {
+        return productService.getMessageListById(id);
+    }
+}

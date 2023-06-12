@@ -1,0 +1,64 @@
+package com.ruoyi.energyCollection.acquisitionParam.service;
+
+import com.ruoyi.common.core.domain.AjaxResult;
+import com.ruoyi.energyCollection.acquisitionParam.domain.ElectricParams;
+
+import java.util.List;
+
+/**
+ * 采集参数定义Service接口
+ *
+ * @author ruoyi
+ * @date 2022-09-07
+ */
+public interface ElectricParamsService
+{
+    /**
+     * 查询采集参数定义
+     *
+     * @param id 采集参数定义主键
+     * @return 采集参数定义
+     */
+    public ElectricParams selectElectricParamsById(Long id);
+
+    /**
+     * 查询采集参数定义列表
+     *
+     * @param electricParams 采集参数定义
+     * @return 采集参数定义集合
+     */
+    List<ElectricParams> selectElectricParamsList(ElectricParams electricParams);
+
+    /**
+     * 新增采集参数定义
+     *
+     * @param electricParams 采集参数定义
+     * @return 结果
+     */
+    AjaxResult insertElectricParams(ElectricParams electricParams);
+
+    /**
+     * 修改采集参数定义
+     *
+     * @param electricParams 采集参数定义
+     * @return 结果
+     */
+    AjaxResult updateElectricParams(ElectricParams electricParams);
+
+    /**
+     * 批量删除采集参数定义
+     *
+     * @param ids 需要删除的采集参数定义主键集合
+     * @return 结果
+     */
+    AjaxResult deleteElectricParamsByIds(Long[] ids);
+
+
+
+    /**
+     * 查询采集参数定义字典
+     *
+     * @return 采集参数定义列表
+     */
+    public List<ElectricParams> selectElectricParamsListbymeterid(String meterid);
+}

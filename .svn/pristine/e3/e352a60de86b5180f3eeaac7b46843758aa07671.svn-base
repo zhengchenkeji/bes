@@ -1,0 +1,54 @@
+package com.ruoyi.efounder.JEnterprise.mapper.electricPowerTranscription;
+
+import com.ruoyi.efounder.JEnterprise.domain.electricPowerTranscription.PowerData;
+import com.ruoyi.efounder.JEnterprise.domain.energyInfo.Park;
+
+import java.util.List;
+import java.util.Map;
+
+/**
+ * @Description 用能概况Mapper接口
+ *
+ * @author gaojikun
+ * @date 2022/11/9 10:49
+ */
+public interface PowerDataMapper {
+
+    /**
+     * 查询所有园区
+     */
+    List<Park> getAllPark();
+
+
+    /**
+     * 查询支路下电表
+     */
+    List<Map<String,String>> getCheckMeterList(PowerData powerData);
+
+    /**
+     * 查询采集参数
+     */
+    List<Map<String,String>> getCheckMeterParamsList();
+
+    /**
+     * 查询采集参数下分项
+     */
+    List<Map<String,Object>> getMeterParamsList(PowerData powerData);
+
+    /**
+     * 查询电表下采集参数
+     */
+    List<Map<String,String>> getMeterParams(PowerData powerData);
+
+    /**
+     * @Description 日原始数据
+     * @return java.util.List<java.util.Map<java.lang.String,java.lang.Object>>
+     */
+    List<Map<String,Object>> queryDayChartsData(PowerData powerData);
+
+    /**
+     * @Description 支路能耗趋势
+     * @return java.util.List<java.util.Map<java.lang.String,java.lang.Object>>
+     */
+    List<Map<String,Object>> queryMaxChartsData(PowerData powerData);
+}

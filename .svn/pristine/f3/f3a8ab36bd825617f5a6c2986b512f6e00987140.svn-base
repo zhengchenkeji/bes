@@ -1,0 +1,477 @@
+<template>
+  <div class="app-container">
+    <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px">
+      <el-form-item label="告警策略" prop="alarmTacticsId">
+        <el-input
+          v-model="queryParams.alarmTacticsId"
+          placeholder="请输入告警策略"
+          clearable
+          @keyup.enter.native="handleQuery"
+        />
+      </el-form-item>
+      <el-form-item label="告警值" prop="alarmValue">
+        <el-input
+          v-model="queryParams.alarmValue"
+          placeholder="请输入告警值"
+          clearable
+          @keyup.enter.native="handleQuery"
+        />
+      </el-form-item>
+      <el-form-item label="第一次产生时间" prop="firstTime">
+        <el-date-picker clearable
+          v-model="queryParams.firstTime"
+          type="date"
+          value-format="yyyy-MM-dd"
+          placeholder="请选择第一次产生时间">
+        </el-date-picker>
+      </el-form-item>
+      <el-form-item label="最后一次产生时间" prop="lastTime">
+        <el-date-picker clearable
+          v-model="queryParams.lastTime"
+          type="date"
+          value-format="yyyy-MM-dd"
+          placeholder="请选择最后一次产生时间">
+        </el-date-picker>
+      </el-form-item>
+      <el-form-item label="告警次数" prop="amount">
+        <el-input
+          v-model="queryParams.amount"
+          placeholder="请输入告警次数"
+          clearable
+          @keyup.enter.native="handleQuery"
+        />
+      </el-form-item>
+      <el-form-item label="确认状态 0：未确认、1：已确认" prop="confirmState">
+        <el-input
+          v-model="queryParams.confirmState"
+          placeholder="请输入确认状态 0：未确认、1：已确认"
+          clearable
+          @keyup.enter.native="handleQuery"
+        />
+      </el-form-item>
+      <el-form-item label="告警位置" prop="azwz">
+        <el-input
+          v-model="queryParams.azwz"
+          placeholder="请输入告警位置"
+          clearable
+          @keyup.enter.native="handleQuery"
+        />
+      </el-form-item>
+      <el-form-item label="报警名称" prop="alarmName">
+        <el-input
+          v-model="queryParams.alarmName"
+          placeholder="请输入报警名称"
+          clearable
+          @keyup.enter.native="handleQuery"
+        />
+      </el-form-item>
+      <el-form-item label="计划值" prop="planVal">
+        <el-input
+          v-model="queryParams.planVal"
+          placeholder="请输入计划值"
+          clearable
+          @keyup.enter.native="handleQuery"
+        />
+      </el-form-item>
+      <el-form-item label="提示信息 " prop="promptMsg">
+        <el-input
+          v-model="queryParams.promptMsg"
+          placeholder="请输入提示信息 "
+          clearable
+          @keyup.enter.native="handleQuery"
+        />
+      </el-form-item>
+      <el-form-item label="告警等级 1：一般、2：较大、3：严重" prop="level">
+        <el-input
+          v-model="queryParams.level"
+          placeholder="请输入告警等级 1：一般、2：较大、3：严重"
+          clearable
+          @keyup.enter.native="handleQuery"
+        />
+      </el-form-item>
+      <el-form-item label="所属告警类型 1:电表  2:支路  3:分户 4:分项 5:设备报警" prop="alarmTypeId">
+        <el-input
+          v-model="queryParams.alarmTypeId"
+          placeholder="请输入所属告警类型 1:电表  2:支路  3:分户 4:分项 5:设备报警"
+          clearable
+          @keyup.enter.native="handleQuery"
+        />
+      </el-form-item>
+      <el-form-item label="处理人编码" prop="updateCode">
+        <el-input
+          v-model="queryParams.updateCode"
+          placeholder="请输入处理人编码"
+          clearable
+          @keyup.enter.native="handleQuery"
+        />
+      </el-form-item>
+      <el-form-item label="处理人" prop="updateName">
+        <el-input
+          v-model="queryParams.updateName"
+          placeholder="请输入处理人"
+          clearable
+          @keyup.enter.native="handleQuery"
+        />
+      </el-form-item>
+      <el-form-item>
+        <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
+        <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
+      </el-form-item>
+    </el-form>
+
+    <el-row :gutter="10" class="mb8">
+      <el-col :span="1.5">
+        <el-button
+          type="primary"
+          plain
+          icon="el-icon-plus"
+          size="mini"
+          @click="handleAdd"
+          v-hasPermi="['safetyWarning:alarmWorkOrder:add']"
+        >新增</el-button>
+      </el-col>
+      <el-col :span="1.5">
+        <el-button
+          type="success"
+          plain
+          icon="el-icon-edit"
+          size="mini"
+          :disabled="single"
+          @click="handleUpdate"
+          v-hasPermi="['safetyWarning:alarmWorkOrder:edit']"
+        >修改</el-button>
+      </el-col>
+      <el-col :span="1.5">
+        <el-button
+          type="danger"
+          plain
+          icon="el-icon-delete"
+          size="mini"
+          :disabled="multiple"
+          @click="handleDelete"
+          v-hasPermi="['safetyWarning:alarmWorkOrder:remove']"
+        >删除</el-button>
+      </el-col>
+      <el-col :span="1.5">
+        <el-button
+          type="warning"
+          plain
+          icon="el-icon-download"
+          size="mini"
+          @click="handleExport"
+          v-hasPermi="['safetyWarning:alarmWorkOrder:export']"
+        >导出</el-button>
+      </el-col>
+      <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
+    </el-row>
+
+    <el-table v-loading="loading" :data="alarmWorkOrderList" @selection-change="handleSelectionChange">
+      <el-table-column type="selection" width="55" align="center" />
+      <el-table-column label="主键" align="center" prop="id" />
+      <el-table-column label="告警策略" align="center" prop="alarmTacticsId" />
+      <el-table-column label="告警值" align="center" prop="alarmValue" />
+      <el-table-column label="第一次产生时间" align="center" prop="firstTime" width="180">
+        <template slot-scope="scope">
+          <span>{{ parseTime(scope.row.firstTime, '{y}-{m}-{d}') }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="最后一次产生时间" align="center" prop="lastTime" width="180">
+        <template slot-scope="scope">
+          <span>{{ parseTime(scope.row.lastTime, '{y}-{m}-{d}') }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="告警次数" align="center" prop="amount" />
+      <el-table-column label="确认状态 0：未确认、1：已确认" align="center" prop="confirmState" />
+      <el-table-column label="告警位置" align="center" prop="azwz" />
+      <el-table-column label="报警名称" align="center" prop="alarmName" />
+      <el-table-column label="计划值" align="center" prop="planVal" />
+      <el-table-column label="提示信息 " align="center" prop="promptMsg" />
+      <el-table-column label="告警等级 1：一般、2：较大、3：严重" align="center" prop="level" />
+      <el-table-column label="所属告警类型 1:电表  2:支路  3:分户 4:分项 5:设备报警" align="center" prop="alarmTypeId" />
+      <el-table-column label="所属用户id" align="center" prop="userId" />
+      <el-table-column label="处理人编码" align="center" prop="updateCode" />
+      <el-table-column label="处理人" align="center" prop="updateName" />
+      <el-table-column label="状态(0未处理 1已处理)" align="center" prop="status" />
+      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
+        <template slot-scope="scope">
+          <el-button
+            size="mini"
+            type="text"
+            icon="el-icon-edit"
+            @click="handleUpdate(scope.row)"
+            v-hasPermi="['safetyWarning:alarmWorkOrder:edit']"
+          >修改</el-button>
+          <el-button
+            size="mini"
+            type="text"
+            icon="el-icon-delete"
+            @click="handleDelete(scope.row)"
+            v-hasPermi="['safetyWarning:alarmWorkOrder:remove']"
+          >删除</el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+
+    <pagination
+      v-show="total>0"
+      :total="total"
+      :page.sync="queryParams.pageNum"
+      :limit.sync="queryParams.pageSize"
+      @pagination="getList"
+    />
+
+    <!-- 添加或修改告警工单对话框 -->
+    <el-dialog :title="title" :visible.sync="open" width="500px" append-to-body>
+      <el-form ref="form" :model="form" :rules="rules" label-width="80px">
+        <el-form-item label="告警策略" prop="alarmTacticsId">
+          <el-input v-model="form.alarmTacticsId" placeholder="请输入告警策略" />
+        </el-form-item>
+        <el-form-item label="告警值" prop="alarmValue">
+          <el-input v-model="form.alarmValue" placeholder="请输入告警值" />
+        </el-form-item>
+        <el-form-item label="第一次产生时间" prop="firstTime">
+          <el-date-picker clearable
+            v-model="form.firstTime"
+            type="date"
+            value-format="yyyy-MM-dd"
+            placeholder="请选择第一次产生时间">
+          </el-date-picker>
+        </el-form-item>
+        <el-form-item label="最后一次产生时间" prop="lastTime">
+          <el-date-picker clearable
+            v-model="form.lastTime"
+            type="date"
+            value-format="yyyy-MM-dd"
+            placeholder="请选择最后一次产生时间">
+          </el-date-picker>
+        </el-form-item>
+        <el-form-item label="告警次数" prop="amount">
+          <el-input v-model="form.amount" placeholder="请输入告警次数" />
+        </el-form-item>
+        <el-form-item label="确认状态 0：未确认、1：已确认" prop="confirmState">
+          <el-input v-model="form.confirmState" placeholder="请输入确认状态 0：未确认、1：已确认" />
+        </el-form-item>
+        <el-form-item label="告警位置" prop="azwz">
+          <el-input v-model="form.azwz" placeholder="请输入告警位置" />
+        </el-form-item>
+        <el-form-item label="报警名称" prop="alarmName">
+          <el-input v-model="form.alarmName" placeholder="请输入报警名称" />
+        </el-form-item>
+        <el-form-item label="计划值" prop="planVal">
+          <el-input v-model="form.planVal" placeholder="请输入计划值" />
+        </el-form-item>
+        <el-form-item label="提示信息 " prop="promptMsg">
+          <el-input v-model="form.promptMsg" placeholder="请输入提示信息 " />
+        </el-form-item>
+        <el-form-item label="告警等级 1：一般、2：较大、3：严重" prop="level">
+          <el-input v-model="form.level" placeholder="请输入告警等级 1：一般、2：较大、3：严重" />
+        </el-form-item>
+        <el-form-item label="所属告警类型 1:电表  2:支路  3:分户 4:分项 5:设备报警" prop="alarmTypeId">
+          <el-input v-model="form.alarmTypeId" placeholder="请输入所属告警类型 1:电表  2:支路  3:分户 4:分项 5:设备报警" />
+        </el-form-item>
+        <el-form-item label="所属用户id" prop="userId">
+          <el-input v-model="form.userId" type="textarea" placeholder="请输入内容" />
+        </el-form-item>
+        <el-form-item label="处理人编码" prop="updateCode">
+          <el-input v-model="form.updateCode" placeholder="请输入处理人编码" />
+        </el-form-item>
+        <el-form-item label="处理人" prop="updateName">
+          <el-input v-model="form.updateName" placeholder="请输入处理人" />
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="submitForm">确 定</el-button>
+        <el-button @click="cancel">取 消</el-button>
+      </div>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+import { listAlarmWorkOrder, getAlarmWorkOrder, delAlarmWorkOrder, addAlarmWorkOrder, updateAlarmWorkOrder } from "@/api/basicData/safetyWarning/alarmWorkOrder/alarmWorkOrder";
+
+export default {
+  name: "AlarmWorkOrder",
+  data() {
+    return {
+      // 遮罩层
+      loading: true,
+      // 选中数组
+      ids: [],
+      // 非单个禁用
+      single: true,
+      // 非多个禁用
+      multiple: true,
+      // 显示搜索条件
+      showSearch: true,
+      // 总条数
+      total: 0,
+      // 告警工单表格数据
+      alarmWorkOrderList: [],
+      // 弹出层标题
+      title: "",
+      // 是否显示弹出层
+      open: false,
+      // 查询参数
+      queryParams: {
+        pageNum: 1,
+        pageSize: 10,
+        alarmTacticsId: null,
+        alarmValue: null,
+        firstTime: null,
+        lastTime: null,
+        amount: null,
+        confirmState: null,
+        azwz: null,
+        alarmName: null,
+        planVal: null,
+        promptMsg: null,
+        level: null,
+        alarmTypeId: null,
+        userId: null,
+        updateCode: null,
+        updateName: null,
+        status: null
+      },
+      // 表单参数
+      form: {},
+      // 表单校验
+      rules: {
+        azwz: [
+          { required: true, message: "告警位置不能为空", trigger: "blur" }
+        ],
+        alarmName: [
+          { required: true, message: "报警名称不能为空", trigger: "blur" }
+        ],
+        planVal: [
+          { required: true, message: "计划值不能为空", trigger: "blur" }
+        ],
+        promptMsg: [
+          { required: true, message: "提示信息 不能为空", trigger: "blur" }
+        ],
+        level: [
+          { required: true, message: "告警等级 1：一般、2：较大、3：严重不能为空", trigger: "blur" }
+        ],
+        alarmTypeId: [
+          { required: true, message: "所属告警类型 1:电表  2:支路  3:分户 4:分项 5:设备报警不能为空", trigger: "blur" }
+        ],
+        createTime: [
+          { required: true, message: "创建时间不能为空", trigger: "blur" }
+        ],
+      }
+    };
+  },
+  created() {
+    this.getList();
+  },
+  methods: {
+    /** 查询告警工单列表 */
+    getList() {
+      this.loading = true;
+      listAlarmWorkOrder(this.queryParams).then(response => {
+        this.alarmWorkOrderList = response.rows;
+        this.total = response.total;
+        this.loading = false;
+      });
+    },
+    // 取消按钮
+    cancel() {
+      this.open = false;
+      this.reset();
+    },
+    // 表单重置
+    reset() {
+      this.form = {
+        id: null,
+        alarmTacticsId: null,
+        alarmValue: null,
+        firstTime: null,
+        lastTime: null,
+        amount: null,
+        confirmState: null,
+        azwz: null,
+        alarmName: null,
+        planVal: null,
+        promptMsg: null,
+        level: null,
+        alarmTypeId: null,
+        userId: null,
+        createTime: null,
+        updateTime: null,
+        updateCode: null,
+        updateName: null,
+        status: "0"
+      };
+      this.resetForm("form");
+    },
+    /** 搜索按钮操作 */
+    handleQuery() {
+      this.queryParams.pageNum = 1;
+      this.getList();
+    },
+    /** 重置按钮操作 */
+    resetQuery() {
+      this.resetForm("queryForm");
+      this.handleQuery();
+    },
+    // 多选框选中数据
+    handleSelectionChange(selection) {
+      this.ids = selection.map(item => item.id)
+      this.single = selection.length!==1
+      this.multiple = !selection.length
+    },
+    /** 新增按钮操作 */
+    handleAdd() {
+      this.reset();
+      this.open = true;
+      this.title = "添加告警工单";
+    },
+    /** 修改按钮操作 */
+    handleUpdate(row) {
+      this.reset();
+      const id = row.id || this.ids
+      getAlarmWorkOrder(id).then(response => {
+        this.form = response.data;
+        this.open = true;
+        this.title = "修改告警工单";
+      });
+    },
+    /** 提交按钮 */
+    submitForm() {
+      this.$refs["form"].validate(valid => {
+        if (valid) {
+          if (this.form.id != null) {
+            updateAlarmWorkOrder(this.form).then(response => {
+              this.$modal.msgSuccess("修改成功");
+              this.open = false;
+              this.getList();
+            });
+          } else {
+            addAlarmWorkOrder(this.form).then(response => {
+              this.$modal.msgSuccess("新增成功");
+              this.open = false;
+              this.getList();
+            });
+          }
+        }
+      });
+    },
+    /** 删除按钮操作 */
+    handleDelete(row) {
+      const ids = row.id || this.ids;
+      this.$modal.confirm('是否确认删除告警工单编号为"' + ids + '"的数据项？').then(function() {
+        return delAlarmWorkOrder(ids);
+      }).then(() => {
+        this.getList();
+        this.$modal.msgSuccess("删除成功");
+      }).catch(() => {});
+    },
+    /** 导出按钮操作 */
+    handleExport() {
+      this.download('safetyWarning/alarmWorkOrder/export', {
+        ...this.queryParams
+      }, `alarmWorkOrder_${new Date().getTime()}.xlsx`)
+    }
+  }
+};
+</script>

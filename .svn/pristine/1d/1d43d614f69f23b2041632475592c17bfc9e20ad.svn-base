@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zc.efounder.JEnterprise.mapper.safetyWarning.AlarmTacticsAlarmNotifierLinkMapper">
+
+    <resultMap type="AlarmTacticsAlarmNotifierLink" id="AlarmTacticsAlarmNotifierLinkResult">
+        <result property="id"    column="id"    />
+        <result property="alarmTacticsId"    column="alarm_tactics_id"    />
+        <result property="alarmNotifierId"    column="alarm_notifier_id"    />
+    </resultMap>
+    <sql id="selectAlarmTacticsAlarmNotifierLinkVo">
+        select id, alarm_tactics_id, alarm_notifier_id from athena_bes_alarm_tactics_alarm_notifier_link
+    </sql>
+
+    <insert id="insertAlarmTacticsAlarmNotifierLink" parameterType="AlarmTacticsAlarmNotifierLink" useGeneratedKeys="true" keyProperty="id">
+        insert into athena_bes_alarm_tactics_alarm_notifier_link
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="alarmTacticsId != null">alarm_tactics_id,</if>
+            <if test="alarmNotifierId != null">alarm_notifier_id,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="alarmTacticsId != null">#{alarmTacticsId},</if>
+            <if test="alarmNotifierId != null">#{alarmNotifierId},</if>
+         </trim>
+    </insert>
+
+    <update id="updateAlarmTacticsAlarmNotifierLink" parameterType="AlarmTacticsAlarmNotifierLink">
+        update athena_bes_alarm_tactics_alarm_notifier_link
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="alarmTacticsId != null">alarm_tactics_id = #{alarmTacticsId},</if>
+            <if test="alarmNotifierId != null">alarm_notifier_id = #{alarmNotifierId},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteAlarmTacticsAlarmNotifierLinkById" parameterType="Long">
+        delete from athena_bes_alarm_tactics_alarm_notifier_link where id = #{id}
+    </delete>
+
+    <delete id="deleteAlarmTacticsAlarmNotifierLinkByIds" parameterType="String">
+        delete from athena_bes_alarm_tactics_alarm_notifier_link where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+
+
+    <delete id="deleteByAlarmNotifierIdsBoolean" >
+        delete from athena_bes_alarm_tactics_alarm_notifier_link where alarm_notifier_id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+    <delete id="deleteByAlarmtacticsIdsBoolean">
+        delete  from athena_bes_alarm_tactics_alarm_notifier_link where alarm_tactics_id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

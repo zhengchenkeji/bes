@@ -1,0 +1,218 @@
+package com.ruoyi.systemSetting.parameterConfiguration.controller;
+
+import java.util.List;
+import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
+
+import com.ruoyi.energyCollection.acquisitionParam.domain.ElectricParams;
+import com.ruoyi.systemSetting.parameterConfiguration.domain.ParameterConfiguration;
+import com.ruoyi.systemSetting.parameterConfiguration.domain.ParamsConfiguration;
+import com.ruoyi.systemSetting.parameterConfiguration.service.ParameterConfigurationService;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import com.ruoyi.common.annotation.Log;
+import com.ruoyi.common.core.controller.BaseController;
+import com.ruoyi.common.core.domain.AjaxResult;
+import com.ruoyi.common.enums.BusinessType;
+import com.ruoyi.common.utils.poi.ExcelUtil;
+import com.ruoyi.common.core.page.TableDataInfo;
+
+/**
+ * 主采集参数Controller
+ * 
+ * @author gaojikun
+ * @date 2022-11-30
+ */
+@RestController
+@RequestMapping("/systemSetting/parameterConfiguration")
+public class ParameterConfigurationController extends BaseController
+{
+    @Autowired
+    private ParameterConfigurationService parameterConfigurationService;
+
+    /**
+    * @Author:gaojikun
+    * @Date:2023-01-13 13:45
+    * @Param:parameterConfiguration
+    * @Description:查询主采集参数列表
+    * @Return:TableDataInfo
+    */
+    @PreAuthorize("@ss.hasPermi('system:params:list')")
+    @GetMapping("/list")
+    public TableDataInfo list(ParameterConfiguration parameterConfiguration)
+    {
+        startPage();
+        List<ParameterConfiguration> list = parameterConfigurationService.selectAthenaBesParamsList(parameterConfiguration);
+        return getDataTable(list);
+    }
+
+
+    /**
+     * @Author:gaojikun
+     * @Date:2023-01-13 13:45
+     * @Param:parameterConfiguration
+     * @Description:导出主采集参数列表
+     * @Return:
+     */
+    @PreAuthorize("@ss.hasPermi('system:params:export')")
+    @Log(title = "主采集参数", businessType = BusinessType.EXPORT)
+    @PostMapping("/export")
+    public void export(HttpServletResponse response, ParameterConfiguration parameterConfiguration)
+    {
+        List<ParameterConfiguration> list = parameterConfigurationService.selectAthenaBesParamsList(parameterConfiguration);
+        ExcelUtil<ParameterConfiguration> util = new ExcelUtil<>(ParameterConfiguration.class);
+        util.exportExcel(response, list, "主采集参数数据");
+    }
+    
+    /**
+     * @Author:gaojikun
+     * @Date:2023-01-13 13:45
+     * @Param:id
+     * @Description:获取主采集参数详细信息
+     * @Return:AjaxResult
+     */
+    @PreAuthorize("@ss.hasPermi('system:params:query')")
+    @GetMapping(value = "/{id}")
+    public AjaxResult getInfo(@PathVariable("id") Long id)
+    {
+        return AjaxResult.success(parameterConfigurationService.selectAthenaBesParamsById(id));
+    }
+
+    /**
+     * @Author:gaojikun
+     * @Date:2023-01-13 13:45
+     * @Param:parameterConfiguration
+     * @Description:新增主采集参数
+     * @Return:AjaxResult
+     */
+    @PreAuthorize("@ss.hasPermi('system:params:add')")
+    @Log(title = "主采集参数", businessType = BusinessType.INSERT)
+    @PostMapping
+    public AjaxResult add(@RequestBody @Valid ParameterConfiguration parameterConfiguration)
+    {
+        return parameterConfigurationService.insertAthenaBesParams(parameterConfiguration);
+    }
+
+
+    /**
+     * @Author:gaojikun
+     * @Date:2023-01-13 13:45
+     * @Param:parameterConfiguration
+     * @Description:修改主采集参数
+     * @Return:AjaxResult
+     */
+    @PreAuthorize("@ss.hasPermi('system:params:edit')")
+    @Log(title = "主采集参数", businessType = BusinessType.UPDATE)
+    @PutMapping
+    public AjaxResult edit(@RequestBody @Valid ParameterConfiguration parameterConfiguration)
+    {
+        return parameterConfigurationService.updateAthenaBesParams(parameterConfiguration);
+    }
+
+    /**
+     * @Author:gaojikun
+     * @Date:2023-01-13 13:45
+     * @Param:ids
+     * @Description:删除主采集参数
+     * @Return:AjaxResult
+     */
+    @PreAuthorize("@ss.hasPermi('system:params:remove')")
+    @Log(title = "主采集参数", businessType = BusinessType.DELETE)
+	@DeleteMapping("/{ids}")
+    public AjaxResult remove(@PathVariable Long[] ids)
+    {
+        return parameterConfigurationService.deleteAthenaBesParamsByIds(ids);
+    }
+
+
+
+    //----------------------------------------------采集参数------------------------------------------------------
+
+    /**
+     * @Author:gaojikun
+     * @Date:2023-01-13 13:45
+     * @Param:paramsConfiguration
+     * @Description:查询选择采集参数列表
+     * @Return:List<ElectricParams>
+     */
+    @GetMapping("/listCheckList")
+    public List<ElectricParams> listCheckList(ParamsConfiguration paramsConfiguration)
+    {
+        List<ElectricParams> list = parameterConfigurationService.listCheckList(paramsConfiguration);
+        return list;
+    }
+
+    /**
+     * @Author:gaojikun
+     * @Date:2023-01-13 13:45
+     * @Param:paramsConfiguration
+     * @Description:查询未选择采集参数列表
+     * @Return:List<ElectricParams>
+     */
+    @GetMapping("/listNoCheckList")
+    public List<ElectricParams> listNoCheckList(ParamsConfiguration paramsConfiguration)
+    {
+        List<ElectricParams> list = parameterConfigurationService.listNoCheckList(paramsConfiguration);
+        return list;
+    }
+
+    /**
+     * @Author:gaojikun
+     * @Date:2023-01-13 13:45
+     * @Param:paramsConfiguration
+     * @Description:全部选中采集参数
+     * @Return:AjaxResult
+     */
+    @GetMapping("/allCheckList")
+    public AjaxResult allCheckList(ParamsConfiguration paramsConfiguration)
+    {
+        return parameterConfigurationService.allCheckList(paramsConfiguration);
+    }
+
+    /**
+     * @Author:gaojikun
+     * @Date:2023-01-13 13:45
+     * @Param:paramsConfiguration
+     * @Description:全部取消
+     * @Return:AjaxResult
+     */
+    @GetMapping("/allNoCheckList")
+    public AjaxResult allNoCheckList(ParamsConfiguration paramsConfiguration)
+    {
+        return parameterConfigurationService.allNoCheckList(paramsConfiguration);
+    }
+
+    /**
+    * @Author:gaojikun
+    * @Date:2023-01-13 13:47
+    * @Param:paramsConfiguration
+    * @Description:添加一条采集参数
+    * @Return:AjaxResult
+    */
+    @GetMapping("/insertParamConfigRlgl")
+    public AjaxResult insertParamConfigRlgl(@Valid ParamsConfiguration paramsConfiguration)
+    {
+        return parameterConfigurationService.insertParamConfigRlgl(paramsConfiguration);
+    }
+
+    /**
+     * @Author:gaojikun
+     * @Date:2023-01-13 13:45
+     * @Param:paramsConfiguration
+     * @Description:取消一条采集参数
+     * @Return:AjaxResult
+     */
+    @GetMapping("/delParamConfigRlgl")
+    public AjaxResult delParamConfigRlgl(ParamsConfiguration paramsConfiguration)
+    {
+        return parameterConfigurationService.delParamConfigRlgl(paramsConfiguration);
+    }
+}

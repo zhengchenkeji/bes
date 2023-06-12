@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.efounder.JEnterprise.mapper.designer.DesignerAreaMapper">
+
+    <resultMap type="DesignerArea" id="DesignerAreaResult">
+        <result property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="parentId" column="parent_id"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <resultMap type="DesignerAreaPage" id="DesignerAreaPageResult">
+        <result property="id" column="id"/>
+        <result property="areaId" column="area_id"/>
+        <result property="name" column="name"/>
+        <result property="canvasData" column="canvas_data"/>
+        <result property="canvasStyle" column="canvas_style"/>
+        <result property="uploadDesignerScreenshot" column="upload_designer_screenshot"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <sql id="selectDesignerAreaVo">
+        select id, name, parent_id, create_time, update_time from athena_bes_designer_area
+    </sql>
+
+    <select id="listInfo" parameterType="DesignerArea" resultMap="DesignerAreaResult">
+        <include refid="selectDesignerAreaVo"/>
+        <where>
+            <if test="name != null  and name != ''">and name like concat('%', #{name}, '%')</if>
+            <if test="parentId != null  and parentId != ''">and parent_id = #{parentId}</if>
+        </where>
+    </select>
+
+
+    <!--添加区域-->
+    <insert id="addDesignerArea" parameterType="DesignerArea" useGeneratedKeys="true" keyProperty="id">
+        insert into athena_bes_designer_area
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="name != null and name != ''">name,</if>
+            <if test="remark != null and remark != ''">remark,</if>
+            <if test="parentId != null and parentId != ''">parent_id,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="name != null and name != ''">#{name},</if>
+            <if test="remark != null and remark != ''">#{remark},</if>
+            <if test="parentId != null and parentId != ''">#{parentId},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+        </trim>
+    </insert>
+
+    <!--修改区域-->
+    <update id="updateDesignerArea" parameterType="DesignerArea">
+        update athena_bes_designer_area
+        <set>
+            <if test="name != null and name != ''">name = #{name},</if>
+            <if test="remark != null and remark != ''">remark = #{remark},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </set>
+        <where>
+            id = #{id}
+        </where>
+    </update>
+
+    <!--删除设计器区域节点-->
+    <delete id="deleteDesignerArea" parameterType="long">
+        delete from athena_bes_designer_area where id = #{id}
+    </delete>
+
+    <!--删除区域关联的页面-->
+    <delete id="deleteDesignerAreaPageByAreaId" parameterType="long">
+        delete from athena_bes_designer_area_page where area_id = #{id}
+    </delete>
+
+    <!--删除设计器页面信息(根据区域id和页面id)-->
+    <delete id="deleteDesignerAreaPage" parameterType="DesignerAreaPage">
+        delete from athena_bes_designer_area_page where area_id = #{areaId} and id = #{id}
+    </delete>
+
+    <!-- 保存设计器区域信息(根据区域id) -->
+    <insert id="addDesignerAreaPage" parameterType="DesignerAreaPage" useGeneratedKeys="true" keyProperty="id">
+        insert into athena_bes_designer_area_page
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="areaId != null">area_id,</if>
+            <if test="name != null and name != ''">name,</if>
+            <if test="canvasData != null and canvasData != ''">canvas_data,</if>
+            <if test="canvasStyle != null and canvasStyle != ''">canvas_style,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="areaId != null">#{areaId},</if>
+            <if test="name != null and name != ''">#{name},</if>
+            <if test="canvasData != null and canvasData != ''">#{canvasData},</if>
+            <if test="canvasStyle != null and canvasStyle != ''">#{canvasStyle},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+        </trim>
+    </insert>
+
+    <!--根据区域id获取设计器页面信息-->
+    <select id="seleteDesignerAreaPage" resultMap="DesignerAreaPageResult">
+        select * from athena_bes_designer_area_page
+        <where>
+            <if test="id != null">and id = #{id}</if>
+            <if test="areaId != null">and area_id = #{areaId}</if>
+        </where>
+    </select>
+
+    <!--修改设计器区域信息(根据区域id和页面id)-->
+    <update id="updateDesignerAreaPage" parameterType="DesignerAreaPage">
+        update athena_bes_designer_area_page
+        <set>
+            <if test="name != null and name != ''">name = #{name},</if>
+            <if test="canvasData != null and canvasData != ''">canvas_data = #{canvasData},</if>
+            <if test="canvasStyle != null and canvasStyle != ''">canvas_style = #{canvasStyle},</if>
+            <if test="uploadDesignerScreenshot != null and uploadDesignerScreenshot != ''">upload_designer_screenshot = #{uploadDesignerScreenshot},</if>
+            <if test="updateBy != null">update_by =#{updateBy},</if>
+            <if test="updateTime != null">update_time =#{updateTime},</if>
+        </set>
+        <where>
+            id = #{id} and area_id = #{areaId}
+        </where>
+    </update>
+
+
+</mapper>

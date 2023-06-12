@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.energyInfo.householdConfig.mapper.AthenaBesHouseholdBranchLinkMapper">
+
+    <resultMap type="AthenaBesHouseholdBranchLink" id="AthenaBesHouseholdBranchLinkResult">
+        <result property="id"    column="id"    />
+        <result property="branchId"    column="branch_id"    />
+        <result property="householdId"    column="household_id"    />
+    </resultMap>
+
+    <sql id="selectAthenaBesHouseholdBranchLinkVo">
+        select id, branch_id, household_id from athena_bes_household_branch_link
+    </sql>
+
+    <select id="selectAthenaBesHouseholdBranchLinkList" parameterType="AthenaBesHouseholdBranchLink" resultMap="AthenaBesHouseholdBranchLinkResult">
+        <include refid="selectAthenaBesHouseholdBranchLinkVo"/>
+        <where>
+            <if test="branchId != null "> and branch_id = #{branchId}</if>
+            <if test="householdId != null "> and household_id = #{householdId}</if>
+        </where>
+    </select>
+
+    <select id="selectAthenaBesHouseholdBranchLinkById" parameterType="Long" resultMap="AthenaBesHouseholdBranchLinkResult">
+        <include refid="selectAthenaBesHouseholdBranchLinkVo"/>
+        where id = #{id}
+    </select>
+    <select id="selectAthenaBesBranchListById"
+            resultType="com.ruoyi.common.core.domain.entity.AthenaBranchConfig" parameterType="Long">
+        SELECT abbc.branch_id,abbc.branch_code,abbc.branch_name FROM athena_bes_branch_config abbc
+        LEFT JOIN athena_bes_household_branch_link abhbl ON abhbl.branch_id=abbc.branch_id
+        LEFT JOIN athena_bes_household_config abhc ON abhc.household_id=abhbl.household_id
+        WHERE abhc.household_id=#{householdId}
+    </select>
+    <select id="selectAthenaBesBranchLinkByHouseholdId"
+            resultMap="AthenaBesHouseholdBranchLinkResult">
+        <include refid="selectAthenaBesHouseholdBranchLinkVo"/>
+        where household_id = #{householdId}
+    </select>
+
+
+    <insert id="insertAthenaBesHouseholdBranchLink" parameterType="AthenaBesHouseholdBranchLink" useGeneratedKeys="true" keyProperty="id">
+        insert into athena_bes_household_branch_link
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="branchId != null">branch_id,</if>
+            <if test="householdId != null">household_id,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="branchId != null">#{branchId},</if>
+            <if test="householdId != null">#{householdId},</if>
+         </trim>
+    </insert>
+
+    <update id="updateAthenaBesHouseholdBranchLink" parameterType="AthenaBesHouseholdBranchLink">
+        update athena_bes_household_branch_link
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="branchId != null">branch_id = #{branchId},</if>
+            <if test="householdId != null">household_id = #{householdId},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteAthenaBesHouseholdBranchLinkById" parameterType="Long">
+        delete from athena_bes_household_branch_link where id = #{id}
+    </delete>
+    <delete id="deleteAthenaBesHouseholdBranchLinkByHouseholdId" parameterType="Long">
+        delete from athena_bes_household_branch_link where household_id = #{householdId}
+    </delete>
+
+    <delete id="deleteAthenaBesHouseholdBranchLinkByIds" parameterType="String">
+        delete from athena_bes_household_branch_link where household_id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <delete id="deleteAthenaBesHouseholdBranchLinkBranchByHouseholdId" parameterType="list">
+        delete from athena_bes_household_branch_link where household_id IN
+        <foreach item="cascadedIds" collection="cascadedIds" open="(" separator="," close=")">
+            #{cascadedIds}
+        </foreach>
+        AND branch_id IN
+        <foreach item="beginBranchIds" collection="beginBranchIds" open="(" separator="," close=")">
+            #{beginBranchIds}
+        </foreach>
+    </delete>
+    <delete id="deleteHouseholdBranchLinkByBranchIds">
+        delete from athena_bes_household_branch_link where branch_id IN
+        <foreach item="item" collection="ids" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <insert id="batchInsertAthenaHouseholdBranchLink" parameterType="athenaBesHouseholdBranchLink" useGeneratedKeys="true" keyProperty="id">
+        insert into athena_bes_household_branch_link(branch_id,household_id) values
+        <foreach item="item" collection="athenaBesHouseholdBranchLinks"  separator="," >
+            (#{item.branchId},#{item.householdId})
+        </foreach>
+    </insert>
+</mapper>

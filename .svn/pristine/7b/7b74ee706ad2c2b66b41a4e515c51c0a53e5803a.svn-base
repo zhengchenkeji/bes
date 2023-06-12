@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.energyInfo.branchConfig.mapper.AthenaBranchMeterLinkMapper">
+
+    <resultMap type="AthenaBranchMeterLink" id="AthenaBranchMeterLinkResult">
+        <result property="id" column="id"/>
+        <result property="branchId" column="branch_id"/>
+        <result property="meterId" column="meter_id"/>
+        <result property="operator" column="operator"/>
+        <result property="sysName" column="sys_name"/>
+        <result property="alias" column="alias"/>
+        <result property="electricParam" column="electric_param"/>
+        <result property="type" column="type"/>
+        <result property="energyCode" column="energy_code"/>
+        <result property="collectionMethodCode" column="collection_method_code"/>
+        <collection property="electricParamsList" javaType="java.util.ArrayList" column="meter_id"
+                    select="selectBranchElectricParams"/>
+    </resultMap>
+
+    <sql id="selectAthenaBranchMeterLinkVo">
+        select id, branch_id, meter_id, operator from athena_bes_branch_meter_link
+    </sql>
+
+    <select id="selectAthenaBranchMeterLinkList" parameterType="Long" resultMap="AthenaBranchMeterLinkResult">
+        SELECT abbml.id, abbml.branch_id, abbml.meter_id,
+        abbml.operator,abdt.sys_name,abem.alias,abbml.electric_param,abet.`code`,type
+        FROM athena_bes_branch_meter_link abbml
+        LEFT JOIN athena_bes_electric_meter abem ON abem.meter_id=abbml.meter_id
+        LEFT JOIN athena_bes_coll_method abcm ON abcm.id=abem.collection_method_code
+        LEFT JOIN athena_bes_energy_type abet ON abet.`code`=abcm.energy_code
+        LEFT JOIN athena_bes_device_tree abdt ON abdt.device_tree_id=abem.device_tree_id
+        <where>
+            <if test="branchId != null ">AND abbml.branch_id = #{branchId}</if>
+            <if test="energyCode != null ">AND abet.code = #{energyCode}</if>
+        </where>
+    </select>
+
+
+    <select id="selectAthenaBranchMeterLinkListInfo" parameterType="Long" resultMap="AthenaBranchMeterLinkResult">
+        <include refid="selectAthenaBranchMeterLinkVo"/>
+        WHERE branch_id = #{branchId}
+    </select>
+
+    <select id="selectAthenaBranchMeterLinkById" parameterType="Long" resultMap="AthenaBranchMeterLinkResult">
+        <include refid="selectAthenaBranchMeterLinkVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertAthenaBranchMeterLink" parameterType="AthenaBranchMeterLink" useGeneratedKeys="true"
+            keyProperty="id">
+        insert into athena_bes_branch_meter_link
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="branchId != null">branch_id,</if>
+            <if test="meterId != null">meter_id,</if>
+            <if test="operator != null and operator != ''">operator,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="branchId != null">#{branchId},</if>
+            <if test="meterId != null">#{meterId},</if>
+            <if test="operator != null and operator != ''">#{operator},</if>
+        </trim>
+    </insert>
+    <insert id="batchInsertAthenaBranchMeterLink" parameterType="AthenaBranchMeterLink" useGeneratedKeys="true"
+            keyProperty="id">
+        insert into athena_bes_branch_meter_link(branch_id,meter_id,operator,electric_param) values
+        <foreach item="item" collection="athenaBranchMeterLinks" separator=",">
+            (#{item.branchId},#{item.meterId},#{item.operator},#{item.electricParam})
+        </foreach>
+    </insert>
+
+    <update id="updateAthenaBranchMeterLink" parameterType="AthenaBranchMeterLink">
+        update athena_bes_branch_meter_link
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="branchId != null">branch_id = #{branchId},</if>
+            <if test="meterId != null">meter_id = #{meterId},</if>
+            <if test="operator != null and operator != ''">operator = #{operator},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteAthenaBranchMeterLinkById" parameterType="Long">
+        delete from athena_bes_branch_meter_link where id = #{id}
+    </delete>
+    <delete id="deleteAthenaBranchMeterLinkByBranchId" parameterType="Long">
+        delete from athena_bes_branch_meter_link where branch_id = #{branchId}
+    </delete>
+
+    <delete id="deleteAthenaBranchMeterLinkByIds" parameterType="String">
+        delete from athena_bes_branch_meter_link where branch_id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+    <delete id="deleteAthenaBranchMeterLinkByCascadedIds" parameterType="list">
+        delete from athena_bes_branch_meter_link where branch_id in
+        <foreach item="id" collection="ids" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <delete id="deleteAthenaBranchMeterLinkByMeterId" parameterType="AthenaBranchMeterLink">
+        delete from athena_bes_branch_meter_link where meter_id = #{meterId}
+    </delete>
+
+    <delete id="deleteAthenaBranchMeterLinkByBranchIdsAndMeterIds" parameterType="list">
+        delete from athena_bes_branch_meter_link where branch_id in
+        <foreach item="cascadedIds" collection="cascadedIds" open="(" separator="," close=")">
+            #{cascadedIds}
+        </foreach>
+        AND meter_id in
+        <foreach item="meterIds" collection="meterIds" open="(" separator="," close=")">
+            #{meterIds}
+        </foreach>
+    </delete>
+
+    <!--    查询电表下的电能参数-->
+    <select id="selectBranchElectricParams" parameterType="String" resultType="ElectricParams">
+        SELECT t1.* FROM athena_bes_electric_params t1
+        left join `athena_bes_electric_coll_rlgl` t2 on t1.code = t2.electric_code
+        left join athena_bes_electric_meter t3 on t2.coll_id = t3.collection_method_code
+        WHERE t2.statistical_param = '1' and t3.meter_id = #{meterId}
+    </select>
+
+    <select id="selectAll" resultType="AthenaBranchMeterLink">
+        SELECT
+            abbml.id,
+            abem.device_tree_id,
+            abbml.branch_id,
+            abbml.meter_id,
+            abbml.operator,
+            abdt.sys_name,
+            abem.alias,
+            abbml.electric_param,
+            abet.`code`,
+            abem.type,
+            abem.collection_method_code
+        FROM
+            athena_bes_branch_meter_link abbml
+                LEFT JOIN athena_bes_electric_meter abem ON abem.meter_id = abbml.meter_id
+                LEFT JOIN athena_bes_device_tree abdt ON abdt.device_tree_id = abem.device_tree_id
+                LEFT JOIN athena_bes_coll_method abcm ON abcm.id=abem.collection_method_code
+                LEFT JOIN athena_bes_energy_type abet ON abet.`code`=abcm.energy_code
+    </select>
+    <select id="selectBranchReportForm" resultType="java.util.Map">
+        select mindata ,maxdata,sysname  FROM
+        (select F_DATA mindata,F_DBSYS_NAME sysname  from athena_bes_calculate_data where F_DBSYS_NAME=#{sysname}  and F_CJSJ =(SELECT MIN(t.F_CJSJ) from athena_bes_calculate_data t where t.F_DBSYS_NAME=#{sysname} and  t.F_CJSJ &gt;=#{kssj} and t.F_CJSJ &lt;=#{jssj}) limit 1 ) t,
+        (select F_DATA maxdata from athena_bes_calculate_data where F_DBSYS_NAME=#{sysname}
+        and F_CJSJ =(SELECT max(t.F_CJSJ) from athena_bes_calculate_data t where t.F_DBSYS_NAME=#{sysname} and  t.F_CJSJ &gt;=#{kssj} and t.F_CJSJ &lt;=#{jssj})   limit 1 ) t2
+    </select>
+</mapper>

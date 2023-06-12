@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.energyAnalysis.householdRingRatio.mapper.HouseholdRingRatioMapper">
+
+    <select id="getAllPark" resultType="java.util.Map">
+        select code,name from athena_bes_park
+    </select>
+
+    <select id="queryDayData" resultType="java.util.Map">
+
+        SELECT
+	        t1.`hour` dateTime,IFNULL(ROUND(t2.data_value,2),0) thisData,IFNULL(ROUND(t3.data_value,2),0) lastData
+        FROM
+            (
+            SELECT '00' hour UNION ALL
+            SELECT '01' hour UNION ALL
+            SELECT '02' hour UNION ALL
+            SELECT '03' hour UNION ALL
+            SELECT '04' hour UNION ALL
+            SELECT '05' hour UNION ALL
+            SELECT '06' hour UNION ALL
+            SELECT '07' hour UNION ALL
+            SELECT '08' hour UNION ALL
+            SELECT '09' hour UNION ALL
+            SELECT '10' hour UNION ALL
+            SELECT '11' hour UNION ALL
+            SELECT '12' hour UNION ALL
+            SELECT '13' hour UNION ALL
+            SELECT '14' hour UNION ALL
+            SELECT '15' hour UNION ALL
+            SELECT '16' hour UNION ALL
+            SELECT '17' hour UNION ALL
+            SELECT '18' hour UNION ALL
+            SELECT '19' hour UNION ALL
+            SELECT '20' hour UNION ALL
+            SELECT '21' hour UNION ALL
+            SELECT '22' hour UNION ALL
+            SELECT '23' hour
+            ) t1
+        LEFT JOIN
+        (SELECT HOUR(collect_time) dateTime,data_value FROM athena_bes_household_data where collect_time like concat(#{thisTime}, '%') and date_type = '0' and household_id = #{householdId}) t2
+        on t1.hour = t2.dateTime
+        LEFT JOIN
+        (SELECT HOUR(collect_time) dateTime,data_value FROM athena_bes_household_data where collect_time like concat(#{lastTime}, '%') and date_type = '0' and household_id = #{householdId}) t3
+        on t1.hour = t3.dateTime
+
+    </select>
+
+    <select id="queryMonthData" resultType="java.util.Map">
+
+        SELECT
+	        t1.`day` dateTime,IFNULL(ROUND(t2.data_value,2),0) thisData,IFNULL(ROUND(t3.data_value,2),0) lastData
+        FROM
+            (
+            SELECT '01' day UNION ALL
+            SELECT '02' day UNION ALL
+            SELECT '03' day UNION ALL
+            SELECT '04' day UNION ALL
+            SELECT '05' day UNION ALL
+            SELECT '06' day UNION ALL
+            SELECT '07' day UNION ALL
+            SELECT '08' day UNION ALL
+            SELECT '09' day UNION ALL
+            SELECT '10' day UNION ALL
+            SELECT '11' day UNION ALL
+            SELECT '12' day UNION ALL
+            SELECT '13' day UNION ALL
+            SELECT '14' day UNION ALL
+            SELECT '15' day UNION ALL
+            SELECT '16' day UNION ALL
+            SELECT '17' day UNION ALL
+            SELECT '18' day UNION ALL
+            SELECT '19' day UNION ALL
+            SELECT '20' day UNION ALL
+            SELECT '21' day UNION ALL
+            SELECT '22' day UNION ALL
+            SELECT '23' day UNION ALL
+            SELECT '24' day UNION ALL
+            SELECT '25' day UNION ALL
+            SELECT '26' day UNION ALL
+            SELECT '27' day UNION ALL
+            SELECT '28' day UNION ALL
+            SELECT '29' day UNION ALL
+            SELECT '30' day UNION ALL
+            SELECT '31' day
+            ) t1
+        LEFT JOIN
+        (SELECT DAY(collect_time) dateTime,data_value FROM athena_bes_household_data where collect_time like concat(#{thisTime}, '%') and date_type = '1' and household_id = #{householdId}) t2
+        on t1.day = t2.dateTime
+        LEFT JOIN
+        (SELECT DAY(collect_time) dateTime,data_value FROM athena_bes_household_data where collect_time like concat(#{lastTime}, '%') and date_type = '1' and household_id = #{householdId}) t3
+        on t1.day = t3.dateTime
+
+    </select>
+</mapper>

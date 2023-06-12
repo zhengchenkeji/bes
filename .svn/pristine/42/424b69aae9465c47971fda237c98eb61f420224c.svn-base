@@ -1,0 +1,959 @@
+package com.zc.iot.service.impl;
+
+import com.alibaba.fastjson.JSONObject;
+import com.ruoyi.common.constant.HttpStatus;
+import com.ruoyi.common.core.redis.RedisCache;
+import com.ruoyi.common.exception.ServiceException;
+import com.ruoyi.common.utils.DateUtils;
+import com.ruoyi.common.utils.StringUtils;
+import com.zc.common.constant.RedisKeyConstants;
+import com.zc.constant.IotConstants.NodeType;
+import com.zc.constant.IotConstants.ReadWriteType;
+import com.zc.iot.domain.*;
+import com.zc.iot.mapper.IotDeviceMapper;
+import com.zc.iot.service.IIotDeviceService;
+import com.zc.iot.service.IIotFunctionService;
+import com.zc.relay.dto.*;
+import com.zc.relay.handler.DownInstructHandle;
+import com.zc.relay.handler.DownInstructRedisPubHandleImpl;
+import com.zc.relay.handler.TradeItemLifecycleHookDispatcher;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.List;
+
+import static com.zc.constant.IotConstants.LifecycleCategory.DEVICE;
+
+/**
+ * 设备Service业务层处理
+ * 
+ * @author Athena-xiepufeng
+ * @date 2021-11-04
+ */
+@Service
+public class IotDeviceServiceImpl implements IIotDeviceService 
+{
+    @Resource
+    private IotDeviceMapper iotDeviceMapper;
+
+    @Resource
+    private IIotFunctionService iIotFunctionService;
+
+    @Resource
+    private RedisCache redisCache;
+
+    @Resource
+    private TradeItemLifecycleHookDispatcher tradeItemLifecycleHookDispatcher;
+
+    @PostConstruct
+    public void init()
+    {
+        /**
+         * 添加数据到 redis 缓存
+         */
+        addIotDeviceCache();
+    }
+    /**
+     * 添加数据到 redis 缓存
+     */
+    public void addIotDeviceCache()
+    {
+        // 获取全部设备列表数据
+        List<IotDevice> iotDevices = selectIotDeviceList(null);
+
+        // 清楚 redis 缓存数据
+        redisCache.deleteObject(RedisKeyConstants.IOT_DEVICE);
+        redisCache.deleteObject(RedisKeyConstants.IOT_DEVICE_CODE_ID);
+
+        if (iotDevices == null || iotDevices.isEmpty())
+        {
+            return;
+        }
+
+
+        // 添加 redis 缓存数据
+        iotDevices.forEach(val -> {
+            redisCache.setCacheMapValue(RedisKeyConstants.IOT_DEVICE, val.getId(), val);
+            redisCache.setCacheMapValue(RedisKeyConstants.IOT_DEVICE_CODE_ID, val.getDeviceCode(), val.getId());
+        });
+    }
+
+
+    /**
+     * 查询设备
+     * 
+     * @param id 设备主键
+     * @return 设备
+     */
+    @Override
+    public IotDevice selectIotDeviceById(Long id)
+    {
+        return iotDeviceMapper.selectIotDeviceById(id);
+    }
+
+    /**
+     * 查询设备列表
+     * 
+     * @param iotDevice 设备
+     * @return 设备
+     */
+    @Override
+    public List<IotDevice> selectIotDeviceList(IotDevice iotDevice)
+    {
+        return iotDeviceMapper.selectIotDeviceList(iotDevice);
+    }
+
+    /**
+     * 查询设备列表
+     *
+     * @param iotDevice 设备
+     * @return 设备集合
+     */
+    @Override
+    public List<IotDevice> selectIotDeviceListExt(IotDevice iotDevice)
+    {
+        List<IotDevice> iotDevices = iotDeviceMapper.selectIotDeviceList(iotDevice);
+
+        if (iotDevices == null)
+        {
+            return null;
+        }
+
+        iotDevices.forEach(iotDevice1 ->
+        {
+            Long productKey = iotDevice1.getProductKey();
+
+            IotProduct iotProduct = redisCache.getCacheMapValue(RedisKeyConstants.IOT_PRODUCT, productKey);
+
+            if (iotProduct == null) return;
+
+            iotDevice1.setProductName(iotProduct.getProductName());
+
+            Long groupKey = iotDevice1.getGroupKey();
+
+            IotGroup iotGroup = redisCache.getCacheMapValue(RedisKeyConstants.IOT_GROUP, groupKey);
+
+            if (iotGroup == null) return;
+
+            iotDevice1.setGroupName(iotGroup.getName());
+
+        });
+
+        return iotDevices;
+    }
+
+    /**
+     * 查询网关设备列表
+     *
+     * @param iotDevice 设备
+     * @return 设备集合
+     */
+    @Override
+    public List<IotDevice> selectIotDeviceGatewayList(IotDevice iotDevice)
+    {
+        return iotDeviceMapper.selectIotDeviceGatewayList(iotDevice);
+    }
+
+    /**
+     * 新增设备
+     * 
+     * @param iotDevice 设备
+     * @return 结果
+     */
+    @Override
+    public int insertIotDevice(IotDevice iotDevice)
+    {
+
+        // 设备编号
+        String deviceCode = iotDevice.getDeviceCode();
+
+        if (StringUtils.isEmpty(deviceCode))
+        {
+            throw new ServiceException("设备编号不存在", HttpStatus.BAD_REQUEST);
+        }
+
+        // 设备名称
+        String deviceName = iotDevice.getDeviceName();
+
+        if (StringUtils.isEmpty(deviceName))
+        {
+            throw new ServiceException("设备名称不存在", HttpStatus.BAD_REQUEST);
+        }
+
+        // 所属产品
+        Long productKey = iotDevice.getProductKey();
+
+        if (productKey == null)
+        {
+            throw new ServiceException("所属产品不存在", HttpStatus.BAD_REQUEST);
+        }
+
+        IotProduct iotProduct = redisCache.getCacheMapValue(RedisKeyConstants.IOT_PRODUCT, productKey);
+
+        // 所属组织
+        Long groupKey = iotDevice.getGroupKey();
+
+        if (groupKey == null)
+        {
+            throw new ServiceException("所属组织不存在", HttpStatus.BAD_REQUEST);
+        }
+
+        IotGroup iotGroup = redisCache.getCacheMapValue(RedisKeyConstants.IOT_GROUP, groupKey);
+
+        if (iotGroup == null)
+        {
+            throw new ServiceException("所属组织不存在", HttpStatus.BAD_REQUEST);
+        }
+
+        if (iotProduct == null)
+        {
+            throw new ServiceException("所属产品不存在", HttpStatus.BAD_REQUEST);
+        }
+
+        // 根据设备编号获取设备信息
+        IotDevice iotDevice1 = iotDeviceMapper.selectIotDeviceByCode(deviceCode);
+
+        if (iotDevice1 != null)
+        {
+            throw new ServiceException("设备编号不能重复", HttpStatus.CONFLICT);
+        }
+
+        /*
+        * 判断是否是网关子设备
+        * 是网关子设备，必须携带网关设备主键
+        * */
+        boolean isSubsetDevice = NodeType.SUBSET_DEVICE.equals(iotProduct.getNodeType());
+
+        Long gatewayDevice = null;
+
+        if (isSubsetDevice)
+        {
+            // 网关设备
+            gatewayDevice = iotDevice.getGatewayDevice();
+
+            if (gatewayDevice == null)
+            {
+                throw new ServiceException("网关设备不存在", HttpStatus.BAD_REQUEST);
+            }
+
+            // 从数据库中获取网关设备信息
+            IotDevice iotDevice2 = iotDeviceMapper.selectIotDeviceById(gatewayDevice);
+
+            // 网关设备不存在则抛出异常
+            if (iotDevice2 == null)
+            {
+                throw new ServiceException("网关设备不存在", HttpStatus.BAD_REQUEST);
+            }
+
+            IotProduct iotProduct1 = redisCache.getCacheMapValue(RedisKeyConstants.IOT_PRODUCT, iotDevice2.getProductKey());
+
+            if (!NodeType.GATEWAY_DEVICE.equals(iotProduct1.getNodeType()))
+            {
+                throw new ServiceException("所属网关设备类型必须是网关设备", HttpStatus.CONFLICT);
+            }
+
+        }else
+        {
+            iotDevice.setGatewayDevice(gatewayDevice);
+        }
+
+        iotDevice.setCreateTime(DateUtils.getNowDate());
+
+        // 添加到数据库
+        int result = iotDeviceMapper.insertIotDevice(iotDevice);
+        // 添加到缓存
+        if (result == 1)
+        {
+            // 添加设备信息到缓存
+            redisCache.setCacheMapValue(RedisKeyConstants.IOT_DEVICE, iotDevice.getId(), iotDevice);
+            // 添加设备编号与设备主键映射关系到缓存
+            redisCache.setCacheMapValue(RedisKeyConstants.IOT_DEVICE_CODE_ID, iotDevice.getDeviceCode(), iotDevice.getId());
+            // 添加网关设备与子设备的关系缓存
+            if (isSubsetDevice)
+            {
+                redisCache.setCacheSetValue(RedisKeyConstants.getDeviceParentChildrenKey(gatewayDevice), iotDevice.getId());
+            }
+
+            // 数据变化通知给业务平台
+            tradeItemLifecycleHookDispatcher.create(
+                    new TradeItemLifecycleInfo(DEVICE, iotDevice.getId()));
+        }
+        return result;
+    }
+
+    /**
+     * 修改设备
+     * 
+     * @param iotDevice 设备
+     * @return 结果
+     */
+    @Override
+    public int updateIotDevice(IotDevice iotDevice)
+    {
+
+        Long id = iotDevice.getId();
+
+        if (id == null)
+        {
+            throw new ServiceException("主键不存在", HttpStatus.BAD_REQUEST);
+        }
+
+        IotDevice iotDevice1 = selectIotDeviceById(id);
+
+        if(iotDevice1 == null)
+        {
+            throw new ServiceException("没有找到对应的数据", HttpStatus.CONFLICT);
+        }
+
+        String deviceCode = iotDevice.getDeviceCode();
+
+        if (StringUtils.isEmpty(deviceCode))
+        {
+            throw new ServiceException("设备编号不存在", HttpStatus.BAD_REQUEST);
+        }
+
+        String deviceName = iotDevice.getDeviceName();
+
+        if (StringUtils.isEmpty(deviceName))
+        {
+            throw new ServiceException("设备名称不存在", HttpStatus.BAD_REQUEST);
+        }
+
+        Long productKey = iotDevice.getProductKey();
+
+        if (productKey == null)
+        {
+            throw new ServiceException("所属产品不存在", HttpStatus.BAD_REQUEST);
+        }
+
+        IotProduct iotProduct = redisCache.getCacheMapValue(RedisKeyConstants.IOT_PRODUCT, productKey);
+
+        if (iotProduct == null)
+        {
+            throw new ServiceException("所属产品不存在", HttpStatus.BAD_REQUEST);
+        }
+
+        Long groupKey = iotDevice.getGroupKey();
+
+        if (groupKey == null)
+        {
+            throw new ServiceException("所属组织不存在", HttpStatus.BAD_REQUEST);
+        }
+
+        // 组织
+        IotGroup iotGroup = redisCache.getCacheMapValue(RedisKeyConstants.IOT_GROUP, groupKey);
+
+        if (iotGroup == null)
+        {
+            throw new ServiceException("所属组织不存在", HttpStatus.BAD_REQUEST);
+        }
+
+        // 检查设备编号是否重复
+        IotDevice iotDevice2 = iotDeviceMapper.selectIotDeviceByCode(deviceCode);
+
+        if (iotDevice2 != null && !iotDevice2.getId().equals(id))
+        {
+            throw new ServiceException("设备编号不能重复", HttpStatus.CONFLICT);
+        }
+
+        /*
+         * 判断是否是网关子设备
+         * 是网关子设备，必须携带网关设备主键
+         * */
+        boolean isSubsetDevice = NodeType.SUBSET_DEVICE.equals(iotProduct.getNodeType());
+
+        Long gatewayDevice = null;
+
+        if (isSubsetDevice)
+        {
+            // 网关设备
+            gatewayDevice = iotDevice.getGatewayDevice();
+
+            if (gatewayDevice == null)
+            {
+                throw new ServiceException("网关设备不存在", HttpStatus.BAD_REQUEST);
+            }
+
+            // 从数据库中获取网关设备信息
+            IotDevice iotDevice3 = iotDeviceMapper.selectIotDeviceById(gatewayDevice);
+
+            // 网关设备不存在则抛出异常
+            if (iotDevice3 == null)
+            {
+                throw new ServiceException("网关设备不存在", HttpStatus.BAD_REQUEST);
+            }
+
+            IotProduct iotProduct1 = redisCache.getCacheMapValue(RedisKeyConstants.IOT_PRODUCT, iotDevice3.getProductKey());
+
+            if (!NodeType.GATEWAY_DEVICE.equals(iotProduct1.getNodeType()))
+            {
+                throw new ServiceException("所属网关设备类型必须是网关设备", HttpStatus.CONFLICT);
+            }
+
+        }else
+        {
+            iotDevice.setGatewayDevice(gatewayDevice);
+        }
+
+        // 更新时间
+        iotDevice.setUpdateTime(DateUtils.getNowDate());
+
+        // 更新数据库数据
+        int result = iotDeviceMapper.updateIotDevice(iotDevice);
+        // 更新缓存
+        if (result == 1)
+        {
+            if (!iotDevice1.getDeviceCode().equals(iotDevice.getDeviceCode()))
+            {
+                // 删除设备编号主键映射关系缓存
+                redisCache.delCacheMapValue(RedisKeyConstants.IOT_DEVICE_CODE_ID, iotDevice1.getDeviceCode());
+                // 更新设备编号主键映射关系缓存
+                redisCache.setCacheMapValue(RedisKeyConstants.IOT_DEVICE_CODE_ID, iotDevice.getDeviceCode(), id);
+            }
+
+            // 更新缓存中的设备信息
+            redisCache.setCacheMapValue(RedisKeyConstants.IOT_DEVICE, iotDevice.getId(), iotDevice);
+
+            // 数据变化通知给业务平台
+            tradeItemLifecycleHookDispatcher.update(
+                    new TradeItemLifecycleInfo(DEVICE, iotDevice.getId()));
+
+            // 更新网关设备与子设备的关系缓存
+            if (isSubsetDevice && !iotDevice1.getGatewayDevice().equals(iotDevice.getGatewayDevice()))
+            {
+                // 删除网关设备与子设备的关系缓存
+                redisCache.delCacheSetValue(RedisKeyConstants.getDeviceParentChildrenKey(iotDevice1.getGatewayDevice()), id);
+                // 添加网关设备与子设备的关系缓存
+                redisCache.setCacheSetValue(RedisKeyConstants.getDeviceParentChildrenKey(iotDevice.getGatewayDevice()), id);
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * 批量删除设备
+     * 
+     * @param ids 需要删除的设备主键
+     * @return 结果
+     */
+    @Override
+    public int deleteIotDeviceByIds(Long[] ids)
+    {
+        for (Long id : ids)
+        {
+            IotDevice iotDevice = new IotDevice();
+            iotDevice.setGatewayDevice(id);
+            List<IotDevice> iotDevices = iotDeviceMapper.selectIotDeviceList(iotDevice);
+
+            if (iotDevices != null && !iotDevices.isEmpty())
+            {
+                throw new ServiceException("当前设备下有子设备，不能被删除", HttpStatus.CONFLICT);
+            }
+        }
+
+        int result = iotDeviceMapper.deleteIotDeviceByIds(ids);
+
+        if (result <= 0)
+        {
+            return result;
+        }
+
+        for (Long id : ids) {
+
+            // 获取缓存中的设备信息
+            IotDevice iotDevice = redisCache.getCacheMapValue(RedisKeyConstants.IOT_DEVICE, id);
+
+            if (iotDevice == null) continue;
+
+            // 删除设备编号与设置主键映射关系缓存
+            redisCache.delCacheMapValue(RedisKeyConstants.IOT_DEVICE_CODE_ID, iotDevice.getDeviceCode());
+
+            /*删除实时数据缓存数据*/
+            redisCache.deleteObject(RedisKeyConstants.getDeviceFunctionValueKey(id));
+
+            /*删除设备缓存数据*/
+            redisCache.delCacheMapValue(RedisKeyConstants.IOT_DEVICE, id);
+
+            // 数据变化通知给业务平台
+            tradeItemLifecycleHookDispatcher.destroy(
+                    new TradeItemLifecycleInfo(DEVICE, id));
+
+            // 获取产品信息
+            IotProduct iotProduct = redisCache.getCacheMapValue(RedisKeyConstants.IOT_PRODUCT, iotDevice.getProductKey());
+
+            if (iotProduct == null)
+            {
+                continue;
+            }
+            /*
+             * 判断是否是网关子设备
+             * 是网关子设备，必须携带网关设备主键
+             * */
+            boolean isSubsetDevice = NodeType.SUBSET_DEVICE.equals(iotProduct.getNodeType());
+
+            // 不是网关设备直接返回
+            if (!isSubsetDevice)
+            {
+                continue;
+            }
+
+            // 删除网关设备与子设备的关系缓存
+            redisCache.delCacheSetValue(RedisKeyConstants.getDeviceParentChildrenKey(iotDevice.getGatewayDevice()), id);
+
+        }
+
+        return result;
+    }
+
+    /**
+     * 删除设备信息
+     * 
+     * @param id 设备主键
+     * @return 结果
+     */
+    @Override
+    public int deleteIotDeviceById(Long id)
+    {
+
+        IotDevice iotDevice = selectIotDeviceById(id);
+
+        if (iotDevice == null)
+        {
+            throw new ServiceException("没有找到对应的数据", HttpStatus.CONFLICT);
+        }
+
+        IotDevice iotDevice1 = new IotDevice();
+        iotDevice1.setGatewayDevice(id);
+        List<IotDevice> iotDevices = iotDeviceMapper.selectIotDeviceList(iotDevice1);
+
+        if (iotDevices != null && !iotDevices.isEmpty())
+        {
+            throw new ServiceException("当前设备下有子设备，不能被删除", HttpStatus.CONFLICT);
+        }
+
+        // 删除数据库设备信息
+        int result = iotDeviceMapper.deleteIotDeviceById(id);
+
+        if (result != 1)
+        {
+            return result;
+        }
+
+        redisCache.delCacheMapValue(RedisKeyConstants.IOT_DEVICE_CODE_ID, iotDevice.getDeviceName());
+        /*删除设备缓存数据*/
+        redisCache.delCacheMapValue(RedisKeyConstants.IOT_DEVICE, id);
+        /*删除实时数据缓存数据*/
+        redisCache.deleteObject(RedisKeyConstants.getDeviceFunctionValueKey(id));
+
+        // 数据变化通知给业务平台
+        tradeItemLifecycleHookDispatcher.destroy(
+                new TradeItemLifecycleInfo(DEVICE, id));
+
+        // 获取产品信息
+        IotProduct iotProduct = redisCache.getCacheMapValue(RedisKeyConstants.IOT_PRODUCT, iotDevice.getProductKey());
+
+        if (iotProduct == null)
+        {
+            return result;
+        }
+
+        /*
+         * 判断是否是网关子设备
+         * 是网关子设备，必须携带网关设备主键
+         * */
+        boolean isSubsetDevice = NodeType.SUBSET_DEVICE.equals(iotProduct.getNodeType());
+
+        // 不是网关设备直接返回
+        if (!isSubsetDevice)
+        {
+            return result;
+        }
+
+        // 删除网关设备与子设备的关系缓存
+        redisCache.delCacheSetValue(RedisKeyConstants.getDeviceParentChildrenKey(iotDevice.getGatewayDevice()), id);
+
+        return result;
+    }
+
+    /**
+     * 查询设备功能
+     * @param id 设备主键
+     * @return
+     */
+    @Override
+    public List<IotFunction> selectIotDeviceFunction(Long id)
+    {
+
+        if (id == null)
+        {
+            return null;
+        }
+
+
+        /*根据设备 id 获取缓存中设备信息*/
+        IotDevice iotDevice = redisCache.getCacheMapValue(RedisKeyConstants.IOT_DEVICE, id);
+
+        if (iotDevice == null)
+        {
+            return null;
+        }
+
+        Long productKey = iotDevice.getProductKey();
+
+        /*缓存中获取产品信息*/
+        IotProduct iotProduct = redisCache.getCacheMapValue(RedisKeyConstants.IOT_PRODUCT, productKey);
+
+        if (iotProduct == null)
+        {
+            return null;
+        }
+
+        Long categoryId = iotProduct.getCategoryId();
+
+        IotFunction iotFunction = new IotFunction();
+
+        iotProduct.setCategoryId(categoryId);
+
+        /*查询出所属设备的功能信息*/
+        List<IotFunction>  iotFunctions = iIotFunctionService.selectIotFunctionList(iotFunction);
+
+        if (iotFunctions == null)
+        {
+           return null;
+        }
+
+        /*缓存中取出设备功能的实时数据*/
+        iotFunctions.forEach(item ->
+        {
+
+            /*判断功能是否可读*/
+            if (!ReadWriteType.READABLE_WRITABLE.equals(item.getReadWriteType())
+                    && !ReadWriteType.READABLE.equals(item.getReadWriteType()))
+            {
+                return;
+            }
+
+            Number value = redisCache.getCacheMapValue(RedisKeyConstants.getDeviceFunctionValueKey(id), item.getId());
+            if (value == null) return;
+            item.setRealValue(value);
+        });
+
+        return iotFunctions;
+    }
+
+    /**
+     *  功能调试，属性设置
+     * @param iotDebugAttribute 属性调试参数
+     * @return 请求结果
+     */
+    @Override
+    public boolean setAttribute(IotDebugAttribute iotDebugAttribute)
+    {
+
+        if (iotDebugAttribute == null)
+        {
+            throw new ServiceException("参数不能为空", HttpStatus.BAD_REQUEST);
+        }
+
+        /*调试属性值*/
+        Number value = iotDebugAttribute.getValue();
+
+        if (value == null)
+        {
+            throw new ServiceException("属性值不能为空", HttpStatus.BAD_REQUEST);
+        }
+
+        /*获取下发的数据*/
+        DownData downData = getDownData(iotDebugAttribute);
+
+        if (downData == null)
+        {
+            throw new ServiceException("数据异常", HttpStatus.CONFLICT);
+        }
+
+        DownInstructHandle downInstructRedisPubHandle = new DownInstructRedisPubHandleImpl();
+
+        /*下发子设备数据*/
+        if (downData instanceof DownDataChildDevice)
+        {
+
+            DownSetDataChildDevice<Number> downSetData = new DownSetDataChildDevice<>();
+
+            downSetData.setAttrs((DownDataChildDevice)downData);
+            downSetData.setValue(value);
+
+            return downInstructRedisPubHandle.setAttribute(downSetData);
+        }
+
+        DownSetData<Number> downSetData = new DownSetData<>();
+
+        downSetData.setAttrs(downData);
+        downSetData.setValue(value);
+
+        return downInstructRedisPubHandle.setAttribute(downSetData);
+    }
+
+    /**
+     *  功能调试，属性获取
+     * @param iotDebug
+     * @return 请求结果
+     */
+    @Override
+    public Number getAttribute(IotDebug iotDebug)
+    {
+        if (iotDebug == null)
+        {
+            throw new ServiceException("参数不能为空", HttpStatus.BAD_REQUEST);
+        }
+
+        DownData downData = getDownData(iotDebug);
+
+        if (downData == null)
+        {
+            throw new ServiceException("数据异常", HttpStatus.CONFLICT);
+        }
+
+        DownInstructHandle downInstructRedisPubHandle = new DownInstructRedisPubHandleImpl();
+
+        /*下发子设备数据*/
+        if (downData instanceof DownDataChildDevice)
+        {
+            downInstructRedisPubHandle.getAttribute((DownDataChildDevice)downData);
+        }else
+        {
+            downInstructRedisPubHandle.getAttribute(downData);
+        }
+
+        return redisCache.getCacheMapValue(RedisKeyConstants.getDeviceFunctionValueKey(iotDebug.getDeviceId()), iotDebug.getFunctionId());
+    }
+
+    /**
+     * 功能调试，批量属性设置
+     *
+     * @param iotDebugAttributes 属性调试参数
+     * @return 请求结果
+     */
+    @Override
+    public boolean setAttributeBatch(List<IotDebugAttribute> iotDebugAttributes)
+    {
+
+        if (iotDebugAttributes == null || iotDebugAttributes.isEmpty())
+        {
+            return false;
+        }
+
+        iotDebugAttributes.forEach(this::setAttribute);
+
+        return true;
+    }
+
+    /**
+     * 功能调试，批量属性获取
+     *
+     * @param iotDebugs
+     * @return 请求结果
+     */
+    @Override
+    public List<IotDebugAttribute> getAttributeBatch(List<IotDebug> iotDebugs)
+    {
+
+        if (iotDebugs == null || iotDebugs.isEmpty())
+        {
+            throw new ServiceException("参数不能为空", HttpStatus.BAD_REQUEST);
+        }
+
+        List<IotDebugAttribute> iotDebugAttributes = new ArrayList<>();
+
+        iotDebugs.forEach(iotDebug -> {
+            getAttribute(iotDebug);
+
+            Long deviceId = iotDebug.getDeviceId();
+            Long functionId = iotDebug.getFunctionId();
+
+            IotDebugAttribute iotDebugAttribute = new IotDebugAttribute();
+            iotDebugAttribute.setDeviceId(deviceId);
+            iotDebugAttribute.setFunctionId(functionId);
+            iotDebugAttribute.setValue(redisCache.getCacheMapValue(RedisKeyConstants.getDeviceFunctionValueKey(deviceId), functionId));
+
+            iotDebugAttributes.add(iotDebugAttribute);
+        });
+
+        return iotDebugAttributes;
+    }
+
+
+    /**
+     *  功能调试，服务调用
+     * @param iotDebugServe 服务调式参数
+     * @return 请求结果
+     */
+    @Override
+    public boolean invokeService(IotDebugServe iotDebugServe)
+    {
+        if (iotDebugServe == null)
+        {
+            return false;
+        }
+        /*调试属性值*/
+        JSONObject value = iotDebugServe.getValue();
+
+        if (value == null)
+        {
+            return false;
+        }
+
+        DownData downData = getDownData(iotDebugServe);
+
+        if (downData == null)
+        {
+            return false;
+        }
+
+        DownInstructHandle downInstructRedisPubHandle = new DownInstructRedisPubHandleImpl();
+
+        /*下发子设备数据*/
+        if (downData instanceof DownDataChildDevice)
+        {
+            DownSetDataChildDevice<JSONObject> downSetData = new DownSetDataChildDevice<>();
+
+            downSetData.setAttrs((DownDataChildDevice)downData);
+            downSetData.setValue(value);
+
+            return downInstructRedisPubHandle.serveInvoke(downSetData);
+        }
+
+        DownSetData<JSONObject> downSetData = new DownSetData<>();
+
+        downSetData.setAttrs(downData);
+        downSetData.setValue(value);
+
+        return downInstructRedisPubHandle.serveInvoke(downSetData);
+
+    }
+
+    /**
+     * 获取下发数据
+     * @param iotDebug 调试数据
+     * @return
+     */
+    private DownData getDownData(IotDebug iotDebug)
+    {
+
+        String identifier = iotDebug.getIdentifier();
+        Long deviceId = iotDebug.getDeviceId();
+        Long functionId = iotDebug.getFunctionId();
+
+        if (deviceId == null || functionId == null)
+        {
+            return null;
+        }
+
+        /*根据设备 id 获取缓存中设备信息*/
+        IotDevice iotDevice = redisCache.getCacheMapValue(RedisKeyConstants.IOT_DEVICE, deviceId);
+
+        /*不存在则返回*/
+        if (iotDevice == null)
+        {
+            return null;
+        }
+
+        /*根据功能主键获取缓存功能信息*/
+        IotFunction iotFunction = redisCache.getCacheMapValue(RedisKeyConstants.IOT_FUNCTION, functionId);
+
+        /*不存在则返回*/
+        if (iotFunction == null)
+        {
+            return null;
+        }
+
+        /*设备编号*/
+        String deviceCode = iotDevice.getDeviceCode();
+        /*功能标识*/
+        String functionIdentifier = iotFunction.getIdentifier();
+
+        if (StringUtils.isEmpty(deviceCode) || StringUtils.isEmpty(functionIdentifier))
+        {
+            return null;
+        }
+
+        /*产品主键*/
+        Long productKey = iotDevice.getProductKey();
+
+        /*根据产品 id 获取缓存中产品信息*/
+        IotProduct iotProduct = redisCache.getCacheMapValue(RedisKeyConstants.IOT_PRODUCT, productKey);
+
+        if (iotProduct == null)
+        {
+            return null;
+        }
+
+
+        /*判断是否是网关子设备*/
+        if (NodeType.SUBSET_DEVICE.equals(iotProduct.getNodeType()))
+        {
+            /*所属网关设备主键*/
+            Long gatewayDevice = iotDevice.getGatewayDevice();
+
+            if (gatewayDevice == null)
+            {
+                return null;
+            }
+
+            /*缓存中获取所属网关设备信息*/
+            IotDevice IotGatewayDevice = redisCache.getCacheMapValue(RedisKeyConstants.IOT_DEVICE, gatewayDevice);
+
+            if (IotGatewayDevice == null)
+            {
+                return null;
+            }
+
+            /*网关设备编号*/
+            String gatewayDeviceCode = IotGatewayDevice.getDeviceCode();
+
+            if (StringUtils.isEmpty(gatewayDeviceCode))
+            {
+                return null;
+            }
+
+            DownDataChildDevice downDataChildDevice = new DownDataChildDevice();
+            downDataChildDevice.setFunctionIdentify(functionIdentifier);
+            downDataChildDevice.setIdentifier(identifier);
+
+            downDataChildDevice.setDeviceCode(gatewayDeviceCode);
+            downDataChildDevice.setChildDeviceCode(deviceCode);
+
+            return downDataChildDevice;
+        }
+
+        DownData downData = new DownData();
+
+        downData.setIdentifier(identifier);
+        downData.setDeviceCode(deviceCode);
+        downData.setFunctionIdentify(functionIdentifier);
+
+        return downData;
+
+    }
+
+
+    /**
+     * 设备统计
+     *
+     * @return 设备统计数
+     */
+    @Override
+    public IotDeviceStatistics statistics() {
+
+        IotDeviceStatistics iotDeviceStatistics = new IotDeviceStatistics();
+
+        iotDeviceStatistics.setDeviceCount(iotDeviceMapper.selectIotDeviceCount());
+        iotDeviceStatistics.setOnlineCount(iotDeviceMapper.selectIotDeviceOnlineCount());
+        iotDeviceStatistics.setEnabledCount(iotDeviceMapper.selectIotDeviceEnabledCount());
+
+        return iotDeviceStatistics;
+    }
+
+}

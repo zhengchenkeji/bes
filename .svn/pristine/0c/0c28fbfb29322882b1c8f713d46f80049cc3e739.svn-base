@@ -1,0 +1,78 @@
+package com.ruoyi.safetyWarning.alarmRealtime.controller;
+
+import com.ruoyi.common.annotation.Log;
+import com.ruoyi.common.core.controller.BaseController;
+import com.ruoyi.common.core.domain.AjaxResult;
+import com.ruoyi.common.core.page.TableDataInfo;
+import com.ruoyi.common.enums.BusinessType;
+import com.ruoyi.safetyWarning.alarmRealtime.domain.AlarmRealtimeData;
+import com.ruoyi.safetyWarning.alarmRealtime.service.IAlarmRealtimeDataService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+/**
+ * 告警实时数据Controller
+ *
+ * @author qindehua
+ * @date 2022-11-04
+ */
+@RestController
+@RequestMapping("/alarmRealtime/data")
+public class AlarmRealtimeDataController extends BaseController {
+    @Autowired
+    private IAlarmRealtimeDataService alarmRealtimeDataService;
+
+    /**
+     * 查询告警实时数据列表
+     */
+    @PreAuthorize("@ss.hasPermi('alarmRealtime:data:list')")
+    @GetMapping("/list")
+    public TableDataInfo list(AlarmRealtimeData alarmRealtimeData) {
+        startPage();
+        List<AlarmRealtimeData> list = alarmRealtimeDataService.selectAlarmRealtimeDataList(alarmRealtimeData);
+        return getDataTable(list);
+    }
+
+
+
+    /**
+     * 处理实时报警数据
+     */
+    @PreAuthorize("@ss.hasPermi('alarmRealtime:data:edit')")
+    @PutMapping("/updateAlarm")
+    public AjaxResult updateAlarm(@RequestBody List<AlarmRealtimeData> alarmRealtimeDatas) {
+        return alarmRealtimeDataService.updateAlarmRealtimeData(alarmRealtimeDatas);
+    }
+
+    /**
+     * 获取告警实时数据
+     */
+    @PreAuthorize("@ss.hasPermi('alarmRealtime:data:list')")
+    @GetMapping("/alarmCount")
+    public AjaxResult getAlarmCount() {
+        return AjaxResult.success(alarmRealtimeDataService.selectAlarmCount());
+    }
+
+    /**
+     * 获取告警实时数据
+     */
+    @PreAuthorize("@ss.hasPermi('alarmRealtime:data:list')")
+    @GetMapping("/alarmInfo")
+    public AjaxResult alarmInfo(@RequestParam("level") String level) {
+        return AjaxResult.success(alarmRealtimeDataService.selectAlarmInfo(level));
+    }
+
+
+    /**
+     * 删除告警实时数据
+     */
+    @PreAuthorize("@ss.hasPermi('alarmRealtime:data:remove')")
+    @Log(title = "告警实时数据", businessType = BusinessType.DELETE)
+    @DeleteMapping("/{ids}")
+    public AjaxResult remove(@PathVariable Long[] ids) {
+        return toAjax(alarmRealtimeDataService.deleteAlarmRealtimeDataByIds(ids));
+    }
+}

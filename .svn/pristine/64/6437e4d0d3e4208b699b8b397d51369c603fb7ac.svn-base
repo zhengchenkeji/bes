@@ -1,0 +1,281 @@
+package com.ruoyi.systemSetting.electricityPriceSetting.impl;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+
+import com.ruoyi.common.core.domain.AjaxResult;
+import com.ruoyi.common.utils.DateUtils;
+import com.ruoyi.common.utils.StringUtils;
+import com.ruoyi.systemSetting.electricityPriceSetting.domain.ElectricityPriceRule;
+import com.ruoyi.systemSetting.electricityPriceSetting.domain.ElectricityPriceSetting;
+import com.ruoyi.systemSetting.electricityPriceSetting.mapper.ElectricityPriceSettingMapper;
+import com.ruoyi.systemSetting.electricityPriceSetting.service.ElectricityPriceSettingService;
+import org.checkerframework.checker.units.qual.A;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import static com.ruoyi.common.utils.SecurityUtils.getUsername;
+
+/**
+ * 电价设置Service业务层处理
+ *
+ * @author gaojikun
+ * @date 2022-11-29
+ */
+@Service
+public class ElectricityPriceSettingServiceImpl implements ElectricityPriceSettingService {
+    @Autowired
+    private ElectricityPriceSettingMapper electricityPriceSettingMapper;
+
+
+    /**
+     * @Description: 获取电价规则列表
+     * @auther: gaojikun
+     * @param: electricityPriceRule
+     * @return: AjaxResult
+     */
+    @Override
+    public AjaxResult periceConfigListInfo(ElectricityPriceRule electricityPriceRule) {
+        List<ElectricityPriceRule> electricityPriceRuleList = electricityPriceSettingMapper.periceConfigListInfo(electricityPriceRule);
+        if (electricityPriceRuleList == null || electricityPriceRuleList.size() == 0) {
+            return AjaxResult.success("无数据");
+        }
+        return AjaxResult.success("获取成功", electricityPriceRuleList);
+    }
+
+
+    /**
+     * @param ids 电价设置主键
+     * @return AjaxResult
+     * @Description: 删除电价规则
+     * @auther: gaojikun
+     */
+    @Override
+    public AjaxResult deletepriceConfig(Long[] ids) {
+        if (ids == null || ids.length == 0) {
+            return AjaxResult.error("参数错误");
+        }
+        boolean isDelete = electricityPriceSettingMapper.deletepriceConfig(ids);
+        if (!isDelete) {
+            return AjaxResult.error("参数错误");
+        } else {
+            return AjaxResult.success("删除成功");
+        }
+    }
+
+    /**
+     * @param electricityPriceRule
+     * @return AjaxResult
+     * @Description: 添加电价规则
+     * @auther: gaojikun
+     */
+    @Override
+    public AjaxResult addPriceConfig(ElectricityPriceRule electricityPriceRule) {
+
+        if (electricityPriceRule.getParentId() == null || electricityPriceRule.getName() == null || StringUtils.isEmpty(electricityPriceRule.getName())) {
+            return AjaxResult.error("参数错误");
+        }
+        List<ElectricityPriceRule> checkList = electricityPriceSettingMapper.periceConfigCheck(electricityPriceRule);
+        if (checkList.size() > 0) {
+            return AjaxResult.error("名称重复");
+        }
+        electricityPriceRule.setCreateBy(getUsername());
+        electricityPriceRule.setCreateTime(DateUtils.getNowDate());
+        boolean isAdd = electricityPriceSettingMapper.addPriceConfig(electricityPriceRule);
+        if (!isAdd) {
+            return AjaxResult.error("添加失败");
+        }
+        return AjaxResult.success("添加成功", electricityPriceRule);
+    }
+
+    /**
+     * @param electricityPriceRule
+     * @return AjaxResult
+     * @Description: 修改电价规则
+     * @auther: gaojikun
+     */
+    @Override
+    public AjaxResult updatePriceConfig(ElectricityPriceRule electricityPriceRule) {
+        if (electricityPriceRule.getId() == null || electricityPriceRule.getName() == null || StringUtils.isEmpty(electricityPriceRule.getName())) {
+            return AjaxResult.error("参数错误");
+        }
+        List<ElectricityPriceRule> checkList = electricityPriceSettingMapper.periceConfigCheck(electricityPriceRule);
+        if (checkList.size() > 0) {
+            return AjaxResult.error("名称重复");
+        }
+        electricityPriceRule.setUpdateBy(getUsername());
+        electricityPriceRule.setUpdateTime(DateUtils.getNowDate());
+
+        boolean isUpdate = electricityPriceSettingMapper.updatePriceConfig(electricityPriceRule);
+
+        if (isUpdate) {
+            return AjaxResult.success("修改成功");
+        }
+        return AjaxResult.error("修改失败");
+    }
+
+
+    /**
+     * @param id
+     * @return AjaxResult
+     * @Description: 查询电价设置
+     * @auther: gaojikun
+     */
+    @Override
+    public AjaxResult selectElectricityPriceSettingById(Long id) {
+        if (id == null) {
+            return AjaxResult.error("参数错误");
+        }
+        ElectricityPriceSetting electricityPriceSetting = electricityPriceSettingMapper.selectElectricityPriceSettingById(id);
+        return AjaxResult.success(electricityPriceSetting);
+    }
+
+    /**
+     * @param electricityPriceSetting
+     * @return List<ElectricityPriceSetting>
+     * @Description: 查询电价设置列表
+     * @auther: gaojikun
+     */
+    @Override
+    public List<ElectricityPriceSetting> selectElectricityPriceSettingList(ElectricityPriceSetting electricityPriceSetting) {
+        if (electricityPriceSetting.getEndTime() != null) {
+            String date = updateDateType(electricityPriceSetting.getEndTime());
+            electricityPriceSetting.setEndTimeStr(date.substring(11));
+        }
+        if (electricityPriceSetting.getStartTime() != null) {
+            String date = updateDateType(electricityPriceSetting.getStartTime());
+            electricityPriceSetting.setStartTimeStr(date.substring(11));
+        }
+        return electricityPriceSettingMapper.selectElectricityPriceSettingList(electricityPriceSetting);
+    }
+
+    //转换时间
+    private String updateDateType(Date date) {
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//定义新的日期格式
+        String dateString = formatter.format(date);
+        return dateString;
+    }
+
+    /**
+     * @param electricityPriceSetting
+     * @return AjaxResult
+     * @Description: 新增电价设置
+     * @auther: gaojikun
+     */
+    @Override
+    public AjaxResult insertElectricityPriceSetting(ElectricityPriceSetting electricityPriceSetting) {
+        if (electricityPriceSetting.getRuleId() == null || electricityPriceSetting.getPrice() == null
+                || electricityPriceSetting.getStartTime() == null || electricityPriceSetting.getEndTime() == null) {
+            return AjaxResult.error("参数错误");
+        }
+
+        List<ElectricityPriceSetting> checkList = electricityPriceSettingMapper.CheckList(electricityPriceSetting);
+        boolean isCheck = false;
+        if (checkList.size() > 0) {
+            for (ElectricityPriceSetting e : checkList) {
+                isCheck = checkTime(e, electricityPriceSetting);
+            }
+        }
+        if (!isCheck) {
+            electricityPriceSetting.setCreateBy(getUsername());
+            electricityPriceSetting.setCreateTime(DateUtils.getNowDate());
+            boolean isAdd = electricityPriceSettingMapper.insertElectricityPriceSetting(electricityPriceSetting);
+            if (isAdd) {
+                return AjaxResult.success("添加成功");
+            } else {
+                return AjaxResult.error("添加失败");
+            }
+        } else {
+            return AjaxResult.error("时间重复，请检查时间");
+        }
+
+    }
+
+    //查询时间是否重复
+    private boolean checkTime(ElectricityPriceSetting Pone, ElectricityPriceSetting Ptwo) {
+        if ((Pone.getStartTime().getTime() < Ptwo.getStartTime().getTime() && Pone.getEndTime().getTime() > Ptwo.getStartTime().getTime())
+                || (Ptwo.getStartTime().getTime() < Pone.getStartTime().getTime() && Ptwo.getEndTime().getTime() > Pone.getStartTime().getTime())
+                || (Ptwo.getStartTime().getTime() <= Pone.getStartTime().getTime() && Ptwo.getEndTime().getTime() >= Pone.getEndTime().getTime())
+                || (Pone.getStartTime().getTime() < Ptwo.getStartTime().getTime() && Pone.getEndTime().getTime() > Ptwo.getEndTime().getTime())
+        ) {
+            //有交集
+            return true;
+        } else {
+            //无交集
+            return false;
+        }
+    }
+
+
+    /**
+     * @param electricityPriceSetting
+     * @return AjaxResult
+     * @Description: 修改电价设置
+     * @auther: gaojikun
+     */
+    @Override
+    public AjaxResult updateElectricityPriceSetting(ElectricityPriceSetting electricityPriceSetting) {
+        if (electricityPriceSetting.getId() == null ||
+                electricityPriceSetting.getRuleId() == null || electricityPriceSetting.getPrice() == null
+                || electricityPriceSetting.getStartTime() == null || electricityPriceSetting.getEndTime() == null) {
+            return AjaxResult.error("参数错误");
+        }
+        List<ElectricityPriceSetting> checkList = electricityPriceSettingMapper.CheckList(electricityPriceSetting);
+        boolean isCheck = false;
+        if (checkList.size() > 0) {
+            for (ElectricityPriceSetting e : checkList) {
+                isCheck = checkTime(e, electricityPriceSetting);
+            }
+        }
+        if (!isCheck) {
+            electricityPriceSetting.setUpadteBy(getUsername());
+            electricityPriceSetting.setUpdateTime(DateUtils.getNowDate());
+            boolean isEdit = electricityPriceSettingMapper.updateElectricityPriceSetting(electricityPriceSetting);
+            if (isEdit) {
+                return AjaxResult.success("修改成功");
+            } else {
+                return AjaxResult.error("修改失败");
+            }
+        } else {
+            return AjaxResult.error("时间重复，请检查时间");
+        }
+
+    }
+
+    /**
+     * @param ids
+     * @return AjaxResult
+     * @Description: 批量删除电价设置
+     * @auther: gaojikun
+     */
+    @Override
+    public AjaxResult deleteElectricityPriceSettingByIds(Long[] ids) {
+        if (ids == null || ids.length == 0) {
+            return AjaxResult.error("参数错误");
+        }
+        int delNum = electricityPriceSettingMapper.deleteElectricityPriceSettingByIds(ids);
+        if (delNum == 0) {
+            return AjaxResult.error("删除失败");
+        }
+        return AjaxResult.success("删除成功");
+    }
+
+    /**
+     * @param id
+     * @return AjaxResult
+     * @Description: 删除电价设置信息
+     * @auther: gaojikun
+     */
+    @Override
+    public AjaxResult deleteElectricityPriceSettingById(Long id) {
+        if (id == null) {
+            return AjaxResult.error("参数错误");
+        }
+        int delNum = electricityPriceSettingMapper.deleteElectricityPriceSettingById(id);
+        if (delNum == 0) {
+            return AjaxResult.error("删除失败");
+        }
+        return AjaxResult.success("删除成功");
+    }
+}

@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.efounder.JEnterprise.mapper.safetyWarning.AlarmNotifierMapper">
+
+    <resultMap type="AlarmNotifier" id="AlarmNotifierResult">
+        <result property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="homeAddress" column="home_address"/>
+        <result property="tel" column="tel"/>
+        <result property="email" column="email"/>
+        <result property="company" column="company"/>
+        <result property="companyTel" column="company_tel"/>
+        <result property="post" column="post"/>
+        <result property="groupId" column="group_id"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="deptname" column="deptname"/>
+        <result property="tacticsId" column="tacticsId"/>
+        <result property="linkid" column="linkid"/>
+
+    </resultMap>
+
+    <sql id="selectAlarmNotifierVo">
+        select id, name, home_address, tel, email, company, company_tel, post, group_id, create_time, update_time from athena_bes_alarm_notifier
+    </sql>
+    <select id="selectAlarmNotifierList" parameterType="AlarmNotifier" resultMap="AlarmNotifierResult">
+        SELECT
+        t1.id,t1.name,t1.home_address,t1.tel,t1.email,t1.company,t1.company_tel,t1.post,t2.dept_name
+        deptname
+        from athena_bes_alarm_notifier t1 INNER JOIN sys_dept t2 on t1.group_id=t2.dept_id
+        <where>
+            <if test="name != null  and name != ''">and name like concat('%', #{name}, '%')</if>
+            <if test="homeAddress != null  and homeAddress != ''">and home_address = #{homeAddress}</if>
+            <if test="tel != null  and tel != ''">and tel = #{tel}</if>
+            <if test="email != null  and email != ''">and email = #{email}</if>
+            <if test="company != null  and company != ''">and company   like concat('%', #{company}, '%') </if>
+            <if test="companyTel != null  and companyTel != ''">and company_tel = #{companyTel}</if>
+            <if test="post != null  and post != ''">and post = #{post}</if>
+            <if test="groupId != null ">
+                AND (group_id = #{groupId} OR group_id IN ( SELECT t.dept_id FROM sys_dept t WHERE find_in_set(#{groupId}, ancestors) ))
+            </if>
+
+        </where>
+    </select>
+    <select id="selectTacticsNotifierLinkList" parameterType="AlarmNotifier" resultMap="AlarmNotifierResult">
+        select t1.id,t1.name,t1.company,t1.company_tel,t1.post,t2.dept_name deptname,t3.alarm_tactics_id tacticsId,t3.id
+        linkid
+        from athena_bes_alarm_notifier t1 INNER JOIN sys_dept t2 on t1.group_id=t2.dept_id
+        LEFT JOIN athena_bes_alarm_tactics_alarm_notifier_link t3 on t1.id =t3.alarm_notifier_id
+
+        <where>
+            t3.alarm_tactics_id=#{tacticsId}
+            <if test="name != null  and name != ''">and name like concat('%', #{name}, '%')</if>
+            <if test="homeAddress != null  and homeAddress != ''">and home_address = #{homeAddress}</if>
+            <if test="tel != null  and tel != ''">and tel = #{tel}</if>
+            <if test="email != null  and email != ''">and email = #{email}</if>
+            <if test="company != null  and company != ''">and  company like concat('%', #{company}, '%')</if>
+            <if test="companyTel != null  and companyTel != ''">and company_tel = #{companyTel}</if>
+            <if test="post != null  and post != ''">and post = #{post}</if>
+        </where>
+    </select>
+
+    <select id="selectTacticsNotifierNotLinkList" parameterType="AlarmNotifier" resultMap="AlarmNotifierResult">
+        SELECT t1.id,t1.NAME,t1.company,t1.company_tel,t1.post,t2.dept_name deptname
+	    FROM athena_bes_alarm_notifier t1
+	    INNER JOIN sys_dept t2 ON t1.group_id = t2.dept_id
+        <where>
+            not EXISTS(
+            SELECT a.alarm_notifier_id from athena_bes_alarm_tactics_alarm_notifier_link a where a.alarm_tactics_id=#{tacticsId} and a.alarm_notifier_id=t1.id
+            )
+            <if test="name != null  and name != ''">and name like concat('%', #{name}, '%')</if>
+            <if test="homeAddress != null  and homeAddress != ''">and home_address = #{homeAddress}</if>
+            <if test="tel != null  and tel != ''">and tel = #{tel}</if>
+            <if test="email != null  and email != ''">and email = #{email}</if>
+            <if test="company != null  and company != ''">and company like concat('%', #{company}, '%')</if>
+            <if test="companyTel != null  and companyTel != ''">and company_tel = #{companyTel}</if>
+            <if test="post != null  and post != ''">and post = #{post}</if>
+        </where>
+    </select>
+
+
+    <select id="selectAlarmNotifierById" parameterType="Long" resultMap="AlarmNotifierResult">
+        <include refid="selectAlarmNotifierVo"/>
+        where id = #{id}
+    </select>
+    <select id="getNotifierByName" resultType="java.lang.Integer">
+
+    SELECT count(1) FROM athena_bes_alarm_notifier where `name`=#{name}
+     <if test=" id!=null  and id != ''">
+        and id!=#{id}
+     </if>
+     limit 1
+    </select>
+    <select id="getNotifierByPhone" resultType="java.lang.Integer">
+     SELECT count(1) FROM athena_bes_alarm_notifier where `tel`=#{tel}
+        <if test=" id!=null  and id != ''">
+            and id!=#{id}
+        </if>
+        limit 1
+    </select>
+    <select id="getNotifierByEmail" resultType="java.lang.Integer">
+     SELECT count(1) FROM athena_bes_alarm_notifier where `email`=#{email}
+        <if test=" id!=null  and id != ''">
+            and id!=#{id}
+        </if>
+      limit 1
+    </select>
+
+    <insert id="insertAlarmNotifier" parameterType="AlarmNotifier">
+        insert into athena_bes_alarm_notifier
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">id,</if>
+            <if test="name != null and name != ''">name,</if>
+            <if test="homeAddress != null and homeAddress != ''">home_address,</if>
+            <if test="tel != null and tel != ''">tel,</if>
+            <if test="email != null and email != ''">email,</if>
+            <if test="company != null and company != ''">company,</if>
+            <if test="companyTel != null and companyTel != ''">company_tel,</if>
+            <if test="post != null and post != ''">post,</if>
+            <if test="groupId != null">group_id,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">#{id},</if>
+            <if test="name != null and name != ''">#{name},</if>
+            <if test="homeAddress != null and homeAddress != ''">#{homeAddress},</if>
+            <if test="tel != null and tel != ''">#{tel},</if>
+            <if test="email != null and email != ''">#{email},</if>
+            <if test="company != null and company != ''">#{company},</if>
+            <if test="companyTel != null and companyTel != ''">#{companyTel},</if>
+            <if test="post != null and post != ''">#{post},</if>
+            <if test="groupId != null">#{groupId},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+        </trim>
+    </insert>
+    <update id="updateAlarmNotifier" parameterType="AlarmNotifier">
+        update athena_bes_alarm_notifier
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="name != null and name != ''">name = #{name},</if>
+            <if test="homeAddress != null and homeAddress != ''">home_address = #{homeAddress},</if>
+            <if test="tel != null and tel != ''">tel = #{tel},</if>
+            <if test="email != null and email != ''">email = #{email},</if>
+            <if test="company != null and company != ''">company = #{company},</if>
+            <if test="companyTel != null and companyTel != ''">company_tel = #{companyTel},</if>
+            <if test="post != null and post != ''">post = #{post},</if>
+            <if test="groupId != null">group_id = #{groupId},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteAlarmNotifierById" parameterType="Long">
+        delete from athena_bes_alarm_notifier where id = #{id}
+    </delete>
+
+    <delete id="deleteAlarmNotifierByIds" parameterType="String">
+        delete from athena_bes_alarm_notifier where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

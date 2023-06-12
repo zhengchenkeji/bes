@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.efounder.JEnterprise.mapper.energyInfo.EnergyTypeMapper">
+
+    <resultMap type="EnergyConfig" id="EnergyConfigResult">
+        <result property="parkCode" column="park_code"/>
+        <result property="energyCode" column="energy_code"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <resultMap type="EnergyType" id="EnergyTypeResult">
+        <result property="guid" column="guid"/>
+        <result property="code" column="code"/>
+        <result property="name" column="name"/>
+        <result property="price" column="price"/>
+        <result property="coalAmount" column="coal_amount"/>
+        <result property="co2" column="co2"/>
+        <result property="unit" column="unit"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <sql id="selectEnergyTypeVo">
+        select guid, code, name, price, coal_amount, co2, unit, create_time, update_time from athena_bes_energy_type
+    </sql>
+
+    <sql id="selectEnergyConfigVo">
+        select id,park_code, energy_code, create_time, update_time from athena_bes_park_energytype_rlgl
+    </sql>
+
+    <!--查询能源类型列表-->
+    <select id="selectEnergyTypeList" parameterType="EnergyType" resultMap="EnergyTypeResult">
+        <include refid="selectEnergyTypeVo"/>
+        <where>
+            <if test="name != null  and name != ''">and name like concat('%', #{name}, '%')</if>
+            <if test="code != null  and code != ''">and code like concat('%', #{code}, '%')</if>
+            <if test="price != null ">and price = #{price}</if>
+            <if test="coalAmount != null ">and coal_amount = #{coalAmount}</if>
+            <if test="co2 != null ">and co2 = #{co2}</if>
+            <if test="unit != null  and unit != ''">and unit = #{unit}</if>
+        </where>
+    </select>
+
+    <select id="selectParkEnergyRlglList" parameterType="EnergyConfig" resultMap="EnergyConfigResult">
+        <include refid="selectEnergyConfigVo"/>
+        <where>
+            <if test="parkCode != null and parkCode != '' ">and park_code = #{parkCode}</if>
+            <if test="energyCode != null  and energyCode != ''">and energy_code = #{energyCode}</if>
+        </where>
+    </select>
+
+    <!--查询能源类型列表-->
+    <select id="selectEnergyConfigList" resultType="java.util.Map">
+        SELECT a.code, a.name, a.price, a.coal_amount, a.co2, b.energy_code AS F_PARK_ENENGGY_RLGL FROM
+	    athena_bes_energy_type a LEFT JOIN ( SELECT * FROM athena_bes_park_energytype_rlgl WHERE park_code = #{code}) b on a.code=b.energy_code
+    </select>
+
+    <select id="selectEnergyConfigListByCode" resultType="java.util.Map">
+        SELECT * FROM athena_bes_park_energytype_rlgl
+        <where>
+            <if test="parkCode != null  and parkCode != ''">and park_code = #{parkCode}</if>
+            <if test="energyCode != null  and energyCode != ''">and energy_code = #{energyCode}</if>
+        </where>
+    </select>
+
+    <select id="selectEnergyTypeListByCode" parameterType="EnergyType" resultMap="EnergyTypeResult">
+        <include refid="selectEnergyTypeVo"/>
+        <where>
+            <if test="code != null  and code != ''">OR code = #{code}</if>
+            <if test="name != null  and name != ''">OR name = #{name}</if>
+            <if test="guid != null  and guid != ''">and guid != #{guid}</if>
+        </where>
+    </select>
+
+    <!--获取能源类型详细信息-->
+    <select id="selectEnergyTypeByGuid" parameterType="String" resultMap="EnergyTypeResult">
+        <include refid="selectEnergyTypeVo"/>
+        where guid = #{guid}
+    </select>
+
+    <!--新增能源类型-->
+    <insert id="insertEnergyType" parameterType="EnergyType">
+        insert into athena_bes_energy_type
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="guid != null">guid,</if>
+            <if test="code != null">code,</if>
+            <if test="name != null and name != ''">name,</if>
+            <if test="price != null">price,</if>
+            <if test="coalAmount != null">coal_amount,</if>
+            <if test="co2 != null">co2,</if>
+            <if test="unit != null and unit != ''">unit,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="guid != null">#{guid},</if>
+            <if test="code != null">#{code},</if>
+            <if test="name != null and name != ''">#{name},</if>
+            <if test="price != null">#{price},</if>
+            <if test="coalAmount != null">#{coalAmount},</if>
+            <if test="co2 != null">#{co2},</if>
+            <if test="unit != null and unit != ''">#{unit},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+        </trim>
+    </insert>
+
+    <!--修改能源类型-->
+    <update id="updateEnergyType" parameterType="EnergyType">
+        update athena_bes_energy_type
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="code != null">code = #{code},</if>
+            <if test="name != null and name != ''">name = #{name},</if>
+            <if test="price != null">price = #{price},</if>
+            <if test="coalAmount != null">coal_amount = #{coalAmount},</if>
+            <if test="co2 != null">co2 = #{co2},</if>
+            <if test="unit != null and unit != ''">unit = #{unit},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where guid = #{guid}
+    </update>
+
+    <!--删除能源类型-->
+    <delete id="deleteEnergyTypeByGuid" parameterType="String">
+        delete from athena_bes_energy_type where guid = #{guid}
+    </delete>
+
+    <!--删除能源类型-->
+    <delete id="deleteEnergyTypeByGuids" parameterType="String">
+        delete from athena_bes_energy_type where guid in
+        <foreach item="guid" collection="array" open="(" separator="," close=")">
+            #{guid}
+        </foreach>
+    </delete>
+
+    <select id="findpark_energytype" parameterType="com.ruoyi.efounder.JEnterprise.domain.energyInfo.EnergyConfig"
+            resultType="java.util.HashMap">
+		select * from athena_bes_park_energytype_rlgl where park_code = #{parkCode} and energy_code = #{energyCode}
+	</select>
+
+    <insert id="addpark_energytype" parameterType="com.ruoyi.efounder.JEnterprise.domain.energyInfo.EnergyConfig"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into athena_bes_park_energytype_rlgl
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="parkCode != null">park_code,</if>
+            <if test="energyCode != null">energy_code,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="parkCode != null">#{parkCode},</if>
+            <if test="energyCode != null">#{energyCode},</if>
+            <if test="createTime != null">now(),</if>
+            <if test="updateTime != null">now(),</if>
+        </trim>
+    </insert>
+
+    <delete id="delpark_energytype" parameterType="com.ruoyi.efounder.JEnterprise.domain.energyInfo.EnergyConfig">
+		DELETE FROM athena_bes_park_energytype_rlgl WHERE park_code = #{parkCode} and energy_code = #{energyCode}
+	</delete>
+
+    <select id="findAllByParkCode" parameterType="EnergyType" resultMap="EnergyTypeResult">
+        SELECT
+            et.CODE,
+            et.NAME
+        FROM
+            `athena_bes_park_energytype_rlgl`  pel
+                INNER JOIN athena_bes_energy_type et ON et.CODE=pel.energy_code
+        WHERE pel.park_code=#{parkCode}
+
+    </select>
+
+    <select id="allEnergyTypeList" resultMap="EnergyTypeResult">
+        <include refid="selectEnergyTypeVo"/>
+    </select>
+</mapper>

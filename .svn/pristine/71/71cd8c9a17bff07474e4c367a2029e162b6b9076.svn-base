@@ -1,0 +1,105 @@
+package com.ruoyi.energyInfo.branchConfig.domain.vo;
+
+
+/**
+ * 电表VO
+ * @author qindehua
+ */
+public class ElectricMeterVo {
+    private static final long serialVersionUID = 1L;
+
+    /**
+     * 电表ID
+     */
+    private Long meterId;
+    /**
+     * 运算符
+     */
+    private String operator;
+
+    /**
+     * 电表别名
+     */
+    private String alias;
+
+
+    /**
+     * 电表系统名称
+     */
+    private String sysName;
+
+    private String electricParam;
+    /**
+     * 电表类型
+     */
+    private String type;
+
+    /**
+     * 采集方案
+     */
+    private Long collectionMethodCode;
+
+    /** 设备树ID */
+    private Long deviceTreeId;
+
+    public Long getDeviceTreeId() {
+        return deviceTreeId;
+    }
+
+    public void setDeviceTreeId(Long deviceTreeId) {
+        this.deviceTreeId = deviceTreeId;
+    }
+
+    public Long getCollectionMethodCode() {
+        return collectionMethodCode;
+    }
+
+    public void setCollectionMethodCode(Long collectionMethodCode) {
+        this.collectionMethodCode = collectionMethodCode;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public String getSysName() {
+        return sysName;
+    }
+
+    public void setSysName(String sysName) {
+        this.sysName = sysName;
+    }
+
+    public Long getMeterId() {
+        return meterId;
+    }
+
+    public void setMeterId(Long meterId) {
+        this.meterId = meterId;
+    }
+
+    public String getOperator() {
+        return operator;
+    }
+
+    public void setOperator(String operator) {
+        this.operator = operator;
+    }
+
+    public String getAlias() {
+        return alias;
+    }
+
+    public void setAlias(String alias) {
+        this.alias = alias;
+    }
+
+    public String getElectricParam() {
+        return electricParam;
+    }
+
+}

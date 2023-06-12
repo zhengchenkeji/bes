@@ -1,0 +1,872 @@
+<template>
+  <div>
+    <el-dialog :visible.sync="open" :title="title" width="1200px" style="height: 800px;" append-to-body>
+      <el-form ref="form" :model="sceneForm" :rules="rules" label-width="120px">
+        <el-form-item label="场景联动名称" prop="name">
+          <el-input v-model="sceneForm.name"/>
+        </el-form-item>
+        <!----------------------------------- 触发条件-------------------------------------->
+        <div class="trigger">
+          <div style="font-size: 16px;margin-left: 30px;margin-bottom: 15px">
+            触发条件
+            <el-tooltip placement="top">
+              <div slot="content">
+                触发条件满足条件中任意一个即可触发
+              </div>
+              <i class="el-icon-question"></i>
+            </el-tooltip>
+          </div>
+
+          <el-form-item class="trigger_item" style="background-color: #f5f5f6;" :label="'触发器:'+(index+1)"
+                        v-for="(item,index) in sceneForm.triggerList" prop="triggerModeCode">
+            <el-select
+              v-model="item.triggerModeCode"
+              placeholder="请选择触发器"
+              style="width: 15%"
+            >
+              <el-option
+                v-for="item in dict.type.trigger_code"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+              />
+            </el-select>
+            <!------------------------------------ 定时触发------------------------------------>
+            <span v-show="item.triggerModeCode==2">
+            <el-input style="width: 23%;" placeholder="请输入cron表达式" v-model="item.cronExpression"></el-input>
+          </span>
+
+            <!------------------------------------ 设备触发------------------------------------>
+            <span v-show="item.triggerModeCode==3">
+            <span>
+              <el-input style="width: 18%;" placeholder="请选择设备" v-model="item.triggerDevice">
+                <el-button slot="append" icon="el-icon-s-tools" @click="deviceTreeTrigger(item)"></el-button>
+              </el-input>
+            </span>
+            <el-select
+              v-model="item.deviceAction"
+              placeholder="请选择设备动作"
+              style="width: 15%"
+            >
+              <el-option
+                v-for="item in deviceActionList"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+              />
+            </el-select>
+          </span>
+
+            <!------------------------------------ 场景触发------------------------------------>
+            <span v-show="item.triggerModeCode==4">
+             <el-select
+               v-model="item.triggerSceneId"
+               placeholder="请选择场景"
+               multiple
+               collapse-tags
+             >
+            <el-option
+              v-for="item in sceneList"
+              :key="item.id"
+              :label="item.name"
+              :value="item.id"
+            />
+          </el-select>
+          </span>
+            <el-button type="text" icon="el-icon-delete" @click="deleteTrigger(item,index)">删除</el-button>
+          </el-form-item>
+          <el-button type="text" icon="el-icon-plus" @click="addTrigger">触发器</el-button>
+        </div>
+
+        <!----------------------------------- 执行动作-------------------------------------->
+        <div class="action">
+          <div style="font-size: 16px;margin-left: 30px;margin-bottom: 15px">
+            执行动作
+          </div>
+
+          <el-form-item class="action_item" style="background-color: #f5f5f6" :label="'执行动作:'+(index+1)"
+                        v-for="(item,index) in sceneForm.actuatorList"
+                        prop="movementMode">
+            <el-select
+              v-model="item.movementMode"
+              placeholder="请选择动作模式"
+              style="width: 15%"
+              @change="movementModeChange(item)"
+            >
+              <el-option
+                v-for="item in dict.type.movement_mode"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+              />
+            </el-select>
+            <!------------------------------------ 消息通知------------------------------------>
+            <span v-show="item.movementMode==1">
+              <span>
+              <el-input style="width: 18%;" placeholder="请选择用户" v-model="item.userOrDevice">
+                <el-button slot="append" icon="el-icon-s-tools" @click="chooseUser(item)"></el-button>
+              </el-input>
+            </span>
+              <el-select
+                v-model="item.executeType"
+                placeholder="请选择执行类型"
+                style="width: 15%"
+                @change="noticeModeChange(item,index)"
+              >
+              <el-option
+                v-for="item in dict.type.execute_type_notice"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+              />
+            </el-select>
+              <el-select
+              v-model="item.noticeConfig"
+              style="width: 15%"
+              placeholder="请选择通知配置"
+              @change="noticeTypeChange(item,index)"
+            >
+              <el-option
+                v-for="item in noticeConfigList[index]"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+              />
+            </el-select>
+              <el-select
+              v-model="item.noticeTemplate"
+              placeholder="请选择通知模板"
+              style="width: 15%"
+            >
+              <el-option
+                v-for="item in noticeTemplateList[index]"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+              />
+            </el-select>
+              <el-input
+                type="textarea"
+                style="width: 78%;"
+                :rows="2"
+                placeholder="请输入通知内容"
+                v-model="item.content"></el-input>
+          </span>
+            <!------------------------------------ 设备输出------------------------------------>
+            <span v-show="item.movementMode==2">
+            <span>
+              <el-input style="width: 18%;" placeholder="请选择设备" v-model="item.userOrDevice">
+                <el-button slot="append" icon="el-icon-s-tools" @click="deviceTreeAction(item)"></el-button>
+              </el-input>
+            </span>
+            <el-select
+              v-model="item.executeType"
+              placeholder="请选择设备动作类型"
+              style="width: 15%"
+              @change="executeTypeChange(item,index)"
+            >
+              <el-option
+                v-for="item in dict.type.execute_type_device"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+              />
+            </el-select>
+              <el-select
+                v-model="item.executeAttribute"
+                style="width: 15%"
+                :placeholder="item.executeType==1?'请选择设备点位':'请选择设备功能'">
+              <el-option
+                v-for="item in executeAttributeList[index]"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+              />
+            </el-select>
+             <span v-show="item.executeType==1">
+
+              <el-input style="width: 15%;" placeholder="请输入值" v-model="item.executeValue">
+              </el-input>
+            </span>
+
+          </span>
+            <el-button type="text" icon="el-icon-delete" @click="deleteAction(item,index)">删除</el-button>
+          </el-form-item>
+          <el-button type="text" icon="el-icon-plus" @click="addAction">执行动作</el-button>
+        </div>
+
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="submitForm">确 定</el-button>
+        <el-button @click="cancel">取 消</el-button>
+      </div>
+    </el-dialog>
+    <!-- 设备树形数据-->
+    <el-drawer size='28%' title="设备树数据" :visible.sync="visible" direction="rtl">
+      <div style="height: 68vh;overflow:auto">
+        <el-tree
+          :data="treedata"
+          show-checkbox
+          check-strictly
+          node-key="id"
+          :default-checked-keys="treeids"
+          ref="tree"
+          @check="handleNodeCheck"
+          @check-change="handleCheckChange">
+        </el-tree>
+      </div>
+      <div style="text-align: center;">
+        <el-button type="primary" @click="savetree">保存</el-button>
+      </div>
+    </el-drawer>
+    <!-- 选择用户-->
+    <el-dialog :visible.sync="userOpen" title="用户信息" width="1000px" style="height: 800px;" append-to-body>
+      <el-row :gutter="20">
+        <!--部门数据-->
+        <el-col :span="4" :xs="24">
+          <div class="head-container">
+            <el-input
+              v-model="deptName"
+              placeholder="请输入部门名称"
+              clearable
+              size="small"
+              prefix-icon="el-icon-search"
+              style="margin-bottom: 20px"
+            />
+          </div>
+          <div class="head-container">
+            <el-tree
+              :data="deptOptions"
+              :props="defaultProps"
+              :expand-on-click-node="false"
+              :filter-node-method="filterNode"
+              ref="tree"
+              default-expand-all
+              highlight-current
+              @node-click="handleNodeClick"
+            />
+          </div>
+        </el-col>
+        <!--用户数据-->
+        <el-col :span="20" :xs="24">
+          <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" label-width="68px">
+            <el-form-item label="用户名称" prop="userName">
+              <el-input
+                v-model="queryParams.userName"
+                placeholder="请输入用户名称"
+                clearable
+                style="width: 240px"
+                @keyup.enter.native="handleQuery"
+              />
+            </el-form-item>
+            <el-form-item label="手机号码" prop="phonenumber">
+              <el-input
+                v-model="queryParams.phonenumber"
+                placeholder="请输入手机号码"
+                clearable
+                style="width: 240px"
+                @keyup.enter.native="handleQuery"
+              />
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
+              <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
+            </el-form-item>
+          </el-form>
+
+          <el-table v-loading="loading" :data="userList" ref="userTable" @selection-change="handleSelectionChange">
+            <el-table-column type="selection" width="50" align="center"/>
+            <el-table-column label="用户编号" align="center" key="userId" prop="userId"/>
+            <el-table-column label="用户名称" align="center" key="userName" prop="userName" :show-overflow-tooltip="true"/>
+            <el-table-column label="用户昵称" align="center" key="nickName" prop="nickName" :show-overflow-tooltip="true"/>
+            <el-table-column label="部门" align="center" key="deptName" prop="dept.deptName"
+                             :show-overflow-tooltip="true"/>
+            <el-table-column label="手机号码" align="center" key="phonenumber" prop="phonenumber" width="120"/>
+          </el-table>
+          <pagination
+            v-show="total>0"
+            :total="total"
+            :page.sync="queryParams.pageNum"
+            :limit.sync="queryParams.pageSize"
+            @pagination="getList"
+          />
+        </el-col>
+      </el-row>
+      <div slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="submitUserForm">确 定</el-button>
+        <el-button @click="cancelUser">取 消</el-button>
+      </div>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+import {getDeviceTreee} from "@/api/monitor/inspection";
+import {treeselect} from "@/api/system/dept";
+import {listUser} from "@/api/system/user";
+import {listOrder,edit,getAllSceneControlList} from "@/api/ruleEngine/sceneLink/sceneLink";
+
+export default {
+  dicts: ['trigger_code', 'movement_mode', 'execute_type_notice', 'execute_type_device'],
+  name: "scenelinkage",
+  props: {},
+  data() {
+    return {
+      open: false,//是否显示
+      actionOrTrigger: null,//true 触发器 false 执行动作
+      triggerData: {},//循环 选中的触发器数据
+      actionData: {},//循环 选中的执行动作数据
+      userOpen: false,
+      title: "",
+      // 用户查询参数
+      queryParams: {
+        pageNum: 1,
+        pageSize: 10,
+        userName: undefined,
+        phonenumber: undefined,
+        deptId: undefined
+      },
+      //场景联动表单
+      sceneForm: {
+        id: null,//场景联动Id
+        name: null,//场景联动名称
+        triggerMode: null,//触发方式
+        sceneStatus: 1,//默认状态为开启
+        //触发器集合
+        triggerList: [{
+          triggerModeCode: null, //触发器类型
+          triggerDevice: null, //触发器设备
+          triggerDeviceId: null,//触发器设备ID
+          deviceAction: null,//设备动作
+          cronExpression: null,//cron 表达式
+          triggerSceneId: []//场景
+        }],
+        //执行动作集合
+        actuatorList: [{
+          movementMode: null,//动作模式
+          userOrDevice: null,//用户,设备显示列表
+          userIds: [],//用户集合
+          executeType: null,//执行类型
+          noticeConfig: null,//通知配置
+          noticeTemplate: null,//通知模板
+          treeId: null,//设备ID
+          executeAttribute: null,//设备点位
+          executeValue: null,//下发值
+          content:null//通知内容
+        }],
+      },
+      treedata: [],//设备树数据
+      treeids: [],//选中设备的id
+      props: {multiple: true, value: "id"},
+      // 部门树选项
+      deptOptions: undefined,
+      defaultProps: {
+        children: "children",
+        label: "label"
+      },
+      userSelectList: [],//用户选中时数据
+      deptName: "",//部门名称
+      userList: [],//用户列表
+      // 总条数
+      total: 0,
+      // 遮罩层
+      loading: true,
+      options: [],
+      visible: false, //设备树界面
+
+      //场景列表
+      sceneList: [],
+      //触发器设备动作类型
+      deviceActionList: [{label: "上线", value: 1}, {label: "离线", value: 2}],
+      noticeConfigList: [],//通知配置
+      noticeTemplateList: [], //通知模板
+      //点位列表
+      executeAttributeList: [],
+      //功能列表
+      functionList: [{label: "重启", value: 1}],
+      rules: {},
+    }
+  },
+  created() {
+    this.getDeviceTreeList();
+    this.getList();
+    this.getTreeselect();
+    this.getSceneAll();
+  },
+  watch: {
+    // 根据名称筛选部门树
+    deptName(val) {
+      this.$refs.tree.filter(val);
+    }
+  },
+  methods: {
+    /******************获取场景配置***********/
+    getSceneAll(){
+      getAllSceneControlList().then((res)=>{
+        res.data.forEach(item=>{
+          item.id=item.id.toString()
+        })
+        this.sceneList=res.data
+      })
+    },
+    /******************获取处理数据***********/
+    getData(data){
+
+      //格式化数据
+      data.actuatorList.forEach((item,index) => {
+        this.noticeModeChange(item,index,true)
+        this.noticeTypeChange(item,index,true)
+        this.executeTypeChange(item,index,true)
+        item.movementMode=item.movementMode.toString()
+        if (item.userIds){
+          item.userIds =item.userIds.split(',')
+        }
+      })
+      data.triggerList.forEach((item) => {
+        if (item.triggerSceneId){
+          item.triggerSceneId = item.triggerSceneId.split(',')
+        }
+      })
+      this.$nextTick(()=>{
+        this.sceneForm=data
+      })
+    },
+    /******************表单确认操作***********/
+    submitForm() {
+      //校验
+      if (!this.verification()) {
+        return
+      }
+      var text = []
+      //翻译字典 存入触发方式
+      this.sceneForm.triggerList.forEach(item => {
+        text.push(this.selectDictLabel(this.dict.type.trigger_code, item.triggerModeCode))
+      })
+      this.sceneForm.triggerMode = text.toString()
+      //格式化数据
+      this.sceneForm.actuatorList.forEach((item) => {
+        item.userIds = item.userIds.toString()
+      })
+      this.sceneForm.triggerList.forEach((item) => {
+        item.triggerSceneId = item.triggerSceneId.toString()
+      })
+     //修改
+      if (this.sceneForm.id != null) {
+        edit(this.sceneForm).then((res) => {
+          this.$message.success("修改成功！")
+        })
+      }
+      //新增
+      else {
+        //格式化数据
+        this.sceneForm.actuatorList.forEach((item) => {
+          item.userIds = item.userIds.toString()
+        })
+        this.sceneForm.triggerList.forEach((item) => {
+          item.triggerSceneId = item.triggerSceneId.toString()
+        })
+        listOrder(this.sceneForm).then((res) => {
+          this.$message.success("新增成功！")
+          this.$parent.getList();
+        })
+      }
+      this.open = false
+    },
+    /******************表单确认操作***********/
+    emptyForm() {
+      this.sceneForm = {
+        id: null,//场景联动Id
+        name: null,
+        triggerMode: null,//触发方式
+        sceneStatus: 1,//默认状态为开启
+        //触发器集合
+        triggerList: [{
+          triggerModeCode: null, //触发器类型
+          triggerDevice: null, //触发器设备
+          triggerDeviceId: null,//触发器设备ID
+          deviceAction: null,//设备动作
+          cronExpression: null,//cron 表达式
+          triggerSceneId: []//场景
+        }],
+        //执行动作集合
+        actuatorList: [{
+          movementMode: null,//动作模式
+          userOrDevice: null,//用户，设备回显列表
+          userIds: [],//用户集合
+          executeType: null,//执行类型
+          noticeConfig: null,//通知配置
+          noticeTemplate: null,//通知模板
+          treeId: null,//设备ID
+          executeAttribute: null,//设备点位
+          content: null,//内容
+          executeValue: null//下发值
+        }],
+      }
+    },
+    /******************表单取消操作***********/
+    cancel() {
+      this.open = false
+    },
+    /******************新加触发器***********/
+    addTrigger() {
+      this.sceneForm.triggerList.push({
+        triggerModeCode: null,
+        triggerDevice: null,
+        triggerDeviceId: null,
+        deviceAction: null,
+        cronExpression: null,
+        triggerSceneId: []
+      })
+    },
+    /******************删除触发器***********/
+    deleteTrigger(data, index) {
+      this.$modal.confirm('是否确认删除触发器？',).then(function () {
+        return true
+      }).then(() => {
+        this.$delete(this.sceneForm.triggerList, index)
+      }).catch(() => {
+      })
+    },
+    /******************新加执行动作***********/
+    addAction() {
+      this.sceneForm.actuatorList.push({
+        movementMode: null,
+        userOrDevice: null,
+        userIds: [],
+        executeType: null,
+        noticeConfig: null,
+        noticeTemplate: null,
+        treeId: null,
+        content: null,
+        executeAttribute: null,
+        executeValue: null
+      })
+    },
+    /******************删除执行动作***********/
+    deleteAction(data, index) {
+      this.$modal.confirm('是否确认删除执行动作？',).then(function () {
+        return true
+      }).then(() => {
+        this.$delete(this.sceneForm.actuatorList, index)
+      }).catch(() => {
+      })
+    },
+    /******************打开触发条件设备树***********/
+    deviceTreeTrigger(data) {
+      this.triggerData = data;
+      this.actionOrTrigger = true
+      this.visible = true;
+    },
+    /******************打开执行动作设备树***********/
+    deviceTreeAction(data) {
+      this.actionData = data;
+      this.actionOrTrigger = false
+      this.visible = true;
+    },
+    /**********树节点 状态改变事件***********/
+    handleCheckChange(data, checked, indeterminate) {
+    },
+    /**********树节点 选中事件***********/
+    handleNodeCheck(data, checked) {
+      checked.checkedKeys.forEach((item) => {
+        if (data.deviceTreeId != item) {
+          this.$refs.tree.setChecked(item, false)
+        }
+      })
+    },
+    /**************选择设备保存方法*************/
+    savetree() {
+      console.log(this.$refs.tree.getCheckedNodes()[0])
+      if (this.actionOrTrigger) {
+        //触发器
+        if (this.$refs.tree.getCheckedNodes().length > 0) {
+          this.triggerData.triggerDevice = this.$refs.tree.getCheckedNodes()[0].label
+          this.triggerData.triggerDeviceId = this.$refs.tree.getCheckedNodes()[0].id
+        } else {
+          this.triggerData.triggerDevice = ""
+          this.triggerData.triggerDeviceId = null
+        }
+        console.log(this.triggerData, "triggerData")
+      } else {
+        //执行动作
+        if (this.$refs.tree.getCheckedNodes().length > 0) {
+          this.actionData.userOrDevice = this.$refs.tree.getCheckedNodes()[0].label
+          this.actionData.treeId = this.$refs.tree.getCheckedNodes()[0].id
+        } else {
+          this.actionData.userOrDevice = ""
+          this.actionData.treeId = null
+        }
+        console.log(this.actionData, "actionData")
+      }
+
+      this.visible = false;
+    },
+    /**************执行类型改变时（消息通知）*************/
+    noticeModeChange(item, index,update) {
+      console.log("noticeModeChange")
+      if(!update){
+        item.noticeConfig = null
+        item.noticeTemplate = null
+      }
+      if (item.executeType == 1) {
+        this.noticeConfigList[index] = [{label: "短信类型", value: "1"}]
+      } else if (item.executeType == 2) {
+        this.noticeConfigList[index] = [{label: "邮箱类型", value: "2"}]
+      }
+    },
+    /**************通知配置改变时*************/
+    noticeTypeChange(item, index,update) {
+      if (!update){
+        item.noticeTemplate = null
+      }
+      if (item.noticeConfig == 1) {
+        this.noticeTemplateList[index] = [{label: "测试短信模板", value: "1"}]
+      } else if (item.noticeConfig == 2) {
+        this.noticeTemplateList[index] = [{label: "测试邮箱模板", value: "2"}]
+      }
+    },
+    /**************执行类型改变时（设备）*************/
+    executeTypeChange(item, index,update) {
+      if (!update){
+        item.executeAttribute = null
+        item.executeValue = null
+      }
+      if (item.executeType == 1) {
+        this.executeAttributeList[index] = [{label: "开关", value: "1"}]
+      } else if (item.executeType == 2) {
+        this.executeAttributeList[index] = [{label: "重启", value: "2"}]
+      }
+    },
+
+    /**************动作模式改变时*************/
+    movementModeChange(item) {
+
+      //切换时 清空旧数据
+      item.executeType = null
+      item.userOrDevice = null
+      item.userIds = []
+      item.noticeConfig = null
+      item.noticeTemplate = null
+      item.treeId = null
+      item.executeAttribute = null
+      item.executeValue = null
+    },
+    /**************获取树节点*************/
+    getDeviceTreeList() {
+      getDeviceTreee().then(response => {
+        if (response.code == 200) {
+          response.data.forEach(val => {
+            if (!val.energyNode) {
+              val.disabled = true
+            }
+            val.id = val.deviceTreeId;
+            val.label = val.sysName;
+          })
+          this.treedata = this.handleTree(response.data, "deviceTreeId", "deviceTreeFatherId");
+        }
+      })
+    },
+
+
+    /** 查询部门下拉树结构 */
+    getTreeselect() {
+      treeselect().then(response => {
+        this.deptOptions = response.data;
+      });
+    },
+    /** 筛选节点 */
+    filterNode(value, data) {
+      if (!value) return true;
+      return data.label.indexOf(value) !== -1;
+    },
+    /** 节点单击事件 */
+    handleNodeClick(data) {
+      this.queryParams.deptId = data.id;
+      this.handleQuery();
+    },
+    /** 搜索 */
+    handleQuery() {
+      this.queryParams.pageNum = 1;
+      this.getList();
+    },
+    /** 重置按钮操作 */
+    resetQuery() {
+      this.dateRange = [];
+      this.resetForm("queryForm");
+      this.handleQuery();
+    },
+    /** 查询用户列表 */
+    getList() {
+      this.loading = true;
+      listUser(this.addDateRange(this.queryParams, this.dateRange)).then(response => {
+          this.userList = response.rows;
+          this.total = response.total;
+          this.loading = false;
+        }
+      );
+    },
+    /** 查询用户列表 */
+    chooseUser(item) {
+      this.actionData = item
+      this.userOpen = true
+      this.$nextTick(()=>{
+        console.log(this.actionData.userIds, "userIds")
+        if (this.actionData.userIds.length > 0) {
+          this.userList.forEach(item => {
+            if (this.actionData.userIds.includes(item.userId.toString())) {
+              this.$refs.userTable.toggleRowSelection(item, true)
+            }
+          })
+        }
+      })
+    },
+
+    /************用户确认按钮*****************/
+    submitUserForm() {
+      var text = []
+      var userIds = []
+      this.userSelectList.forEach((item) => {
+        text.push(item.userName)
+        userIds.push(item.userId.toString())
+      })
+      this.actionData.userIds = userIds
+      this.actionData.userOrDevice = text.toString()
+      console.log(this.actionData, "actionData")
+      this.userOpen = false
+
+    },
+    /*********************验证*****************/
+    verification() {
+      if (this.sceneForm.name == null) {
+        this.$message.warning("请输入场景联动名称！")
+        return false;
+      }
+      if (this.sceneForm.triggerList.length<=0){
+        this.$message.warning("至少有一种触发器！")
+        return false;
+      }
+      if (this.sceneForm.actuatorList.length<=0){
+        this.$message.warning("至少有一种执行动作！")
+        return false;
+      }
+      for (let i = 0; i < this.sceneForm.triggerList.length; i++) {
+        var item=this.sceneForm.triggerList[i]
+        if (item.triggerModeCode == null) {
+          this.$message.warning("请选择触发器！")
+          return false;
+        }
+        else {
+          //定时触发
+          if (item.triggerModeCode == 2) {
+            if (item.cronExpression == null) {
+              this.$message.warning("请输入cron表达式！")
+              return false;
+            }
+          }
+          //设备触发
+          else if (item.triggerModeCode == 3) {
+            if (item.triggerDevice == null) {
+              this.$message.warning("请选择触发器设备！")
+              return false;
+            }
+            if (item.deviceAction == null) {
+              this.$message.warning("请选择设备动作！")
+              return false;
+            }
+          }
+          //场景触发
+          else if (item.triggerModeCode == 4) {
+            if (item.triggerSceneId.length <= 0) {
+              this.$message.warning("请选择场景！")
+              return false;
+            }
+          }
+        }
+      }
+
+      for (let i = 0; i < this.sceneForm.actuatorList.length; i++) {
+        var item=this.sceneForm.actuatorList[i]
+        if (item.movementMode == null) {
+          this.$message.warning("请选择动作模式！")
+          return false;
+        }
+        else {
+          //消息通知
+          if (item.movementMode == 1) {
+            if (item.userOrDevice == null) {
+              this.$message.warning("请选择用户列表！")
+              return false;
+            }
+            if (item.executeType == null) {
+              this.$message.warning("请选择执行类型")
+              return false;
+            }
+            if (item.noticeConfig == null) {
+              this.$message.warning("请选择通知配置")
+              return false;
+            }
+            if (item.noticeTemplate == null) {
+              this.$message.warning("请选择通知模板")
+              return false;
+            }
+            if (item.content == null) {
+              this.$message.warning("请输入通知内容")
+              return false;
+            }
+          }
+          //设备输出
+          else if (item.movementMode == 2) {
+            if (item.userOrDevice == null) {
+              this.$message.warning("请选择设备！")
+              return false;
+            }
+            if (item.executeType == null) {
+              this.$message.warning("请选择执行类型")
+              return false;
+            }
+            if (item.executeAttribute == null) {
+              this.$message.warning("请选择设备点位")
+              return false;
+            }
+            if (item.executeValue == null) {
+              this.$message.warning("请输入下发值")
+              return false;
+            }
+          }
+        }
+      }
+      return true;
+    },
+
+    /************用户取消按钮*****************/
+    cancelUser() {
+      this.userOpen = false
+    },
+    /** 用户多选框选中数据 */
+    handleSelectionChange(selection) {
+      this.userSelectList = selection
+      console.log(selection)
+    },
+  }
+}
+</script>
+
+<style scoped lang="scss">
+.trigger_item {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+::v-deep .trigger .el-form-item {
+  margin-bottom: 0px !important;
+}
+
+.action_item {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+::v-deep .action .el-form-item {
+  margin-bottom: 0px !important;
+}
+</style>

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+
+<mapper namespace="com.ruoyi.efounder.JEnterprise.mapper.partition.PartitionMapper">
+
+    <!--创建表分区-->
+    <insert id="createPartition">
+
+        ALTER TABLE ${tableName} PARTITION BY RANGE (TO_DAYS(${rangeField}))
+            (
+                <foreach collection="partitionSingleList" item="item" index="index" separator=",">
+                    PARTITION ${item.partitionName} VALUES LESS THAN (TO_DAYS(#{item.fieldValue}))
+
+                </foreach>
+
+            );
+
+    </insert>
+
+    <!--添加表分区-->
+    <insert id="addPartition">
+
+        <foreach collection="partitionSingleList" item="item" index="index" separator=";">
+            ALTER TABLE ${tableName} ADD PARTITION (PARTITION  ${item.partitionName} VALUES LESS THAN (TO_DAYS (#{item.fieldValue})))
+        </foreach>
+
+    </insert>
+
+    <!--查询分区信息-->
+    <select id="queryPartition" resultType="com.ruoyi.efounder.JEnterprise.domain.partition.PartitionInfoModel">
+        SELECT
+            partition_name partitionName,
+            partition_expression partitionExpression,
+            partition_description partitionDescription,
+            table_rows  tableRows
+        FROM
+            INFORMATION_SCHEMA.partitions
+        <where>
+            TABLE_SCHEMA = schema()
+            AND TABLE_NAME = #{tableName}
+            <if test="partitionName != null and partitionName != ''" >
+                AND PARTITION_NAME = #{partitionName}
+            </if>
+
+        </where>
+
+    </select>
+
+    <!--删除表分区-->
+    <delete id="deletePartition">
+        Alter table ${tableName} remove partitioning;
+    </delete>
+
+</mapper>
